@@ -11,6 +11,7 @@ const QUICK_LINKS = [
   { href: "/blood-requests", label: "রক্তের অনুরোধসমূহ" },
   { href: "/fraud-donors", label: "প্রতারক ডোনার তালিকা" },
   { href: "/register", label: "ডোনার রেজিস্ট্রেশন" },
+  { href: "/about", label: "আমাদের সম্পর্কে" },
 ];
 
 export default async function Footer() {

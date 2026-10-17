@@ -100,6 +100,7 @@ export const NAV_LINKS = [
   { href: "/blood-requests", label: "রক্তের অনুরোধ" },
   { href: "/fraud-donors", label: "প্রতারক ডোনার" },
   { href: "/register", label: "ডোনার লগইন / রেজিস্ট্রেশন" },
+  { href: "/about", label: "আমাদের সম্পর্কে" },
 ];
 
 export const HOTLINE = "+880 9612-345678";
