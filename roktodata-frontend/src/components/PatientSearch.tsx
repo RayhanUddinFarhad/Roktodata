@@ -7,7 +7,7 @@ import AvailabilityBadge from "@/components/AvailabilityBadge";
 import ComplaintButton from "@/components/ComplaintButton";
 import ThanaSelect from "@/components/ThanaSelect";
 import { ApiError, searchForPatient } from "@/lib/api";
-import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber, type BloodGroup, type Donor } from "@/lib/data";
+import { BLOOD_GROUPS, type BloodGroup, DISTRICTS, type Donor, formatLocation, NOT_MENTIONED, toBanglaNumber } from "@/lib/data";
 
 const fieldClass =
   "h-12 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-800 focus:bg-white focus:outline-none";
@@ -318,9 +318,9 @@ function DonorList({ title, donors, emptyText }: { title: string; donors: Donor[
                 </p>
                 <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
                   <MapPin className="h-3 w-3" fill="currentColor" />
-                  {donor.district}, {donor.upazila}
+                  {formatLocation(donor.district, donor.upazila)}
                   {" | "}শেষ রক্তদান:{" "}
-                  <span className="font-semibold text-slate-700">{donor.lastDonationDate ?? "তথ্য নেই"}</span>
+                  <span className="font-semibold text-slate-700">{donor.lastDonationDate ?? NOT_MENTIONED}</span>
                 </p>
               </div>
               <div className="flex items-center gap-2">

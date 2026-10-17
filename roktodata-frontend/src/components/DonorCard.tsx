@@ -1,7 +1,7 @@
 import { CalendarDays, MapPin, Phone, PhoneCall } from "lucide-react";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import ComplaintButton from "@/components/ComplaintButton";
-import type { Donor } from "@/lib/data";
+import { type Donor, formatLocation, NOT_MENTIONED } from "@/lib/data";
 
 export default function DonorCard({ donor }: { donor: Donor }) {
   return (
@@ -12,7 +12,7 @@ export default function DonorCard({ donor }: { donor: Donor }) {
         </span>
         <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">
           <MapPin className="h-3 w-3 text-red-500" />
-          {donor.district}, {donor.upazila}
+          {formatLocation(donor.district, donor.upazila)}
         </span>
       </div>
 
@@ -20,7 +20,7 @@ export default function DonorCard({ donor }: { donor: Donor }) {
       <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
         <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
         শেষ রক্তদান:{" "}
-        <span className="font-semibold text-slate-700">{donor.lastDonationDate ?? "তথ্য নেই"}</span>
+        <span className="font-semibold text-slate-700">{donor.lastDonationDate ?? NOT_MENTIONED}</span>
       </p>
       <AvailabilityBadge className="mt-2" />
 

@@ -12,7 +12,7 @@ import {
   formatDate,
 } from "@/components/admin/ui";
 import { deleteDonor, getAdminDonors, setDonorStatus, type AdminDonor } from "@/lib/api";
-import type { DonorStatus } from "@/lib/data";
+import { type DonorStatus, formatLocation, NOT_MENTIONED } from "@/lib/data";
 
 // Lists donors. With fixedStatus="Pending" it is the approval queue; otherwise it has a status filter and search.
 export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; fixedStatus?: DonorStatus }) {
@@ -146,11 +146,11 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
                     </a>
                     <span className="flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
-                      {donor.district}, {donor.upazila}
+                      {formatLocation(donor.district, donor.upazila)}
                     </span>
                     <span className="flex items-center gap-1">
                       <CalendarDays className="h-3 w-3" />
-                      শেষ রক্তদান: {donor.lastDonationDate ?? "তথ্য নেই"}
+                      শেষ রক্তদান: {donor.lastDonationDate ?? NOT_MENTIONED}
                     </span>
                     <span>রেজিস্ট্রেশন: {formatDate(donor.createdAt)}</span>
                   </div>

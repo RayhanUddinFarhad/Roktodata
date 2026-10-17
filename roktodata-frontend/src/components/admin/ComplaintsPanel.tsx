@@ -13,7 +13,7 @@ import {
   formatDate,
 } from "@/components/admin/ui";
 import { getAdminComplaints, setComplaintStatus, setDonorStatus, type AdminComplaint } from "@/lib/api";
-import type { ComplaintStatus } from "@/lib/data";
+import { type ComplaintStatus, formatLocation } from "@/lib/data";
 
 export default function ComplaintsPanel({ ctx }: { ctx: AdminContext }) {
   const { token, refreshKey, runAction, onError } = ctx;
@@ -112,7 +112,7 @@ export default function ComplaintsPanel({ ctx }: { ctx: AdminContext }) {
                         </a>
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          {donor.district}, {donor.upazila}
+                          {formatLocation(donor.district, donor.upazila)}
                         </span>
                       </p>
                     </>

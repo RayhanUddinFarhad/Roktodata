@@ -13,11 +13,16 @@ const donorSchema = new mongoose.Schema(
     },
     bloodGroup: { type: String, required: true, enum: BLOOD_GROUPS },
     district: { type: String, required: true, enum: DISTRICTS },
-    upazila: { type: String, required: true, trim: true, maxlength: 60 },
+    // Required for registrations through the site (enforced in validators); may be empty for
+    // imported donors whose thana could not be determined.
+    upazila: { type: String, trim: true, maxlength: 60, default: "" },
     lastDonationDate: { type: Date, default: null },
     // Set by the donor: whether they are currently willing to donate.
     isReadyToDonate: { type: Boolean, default: true },
     status: { type: String, enum: DONOR_STATUS, default: "Pending" },
+    // Where the record came from: "website" for self-registration, or an import batch name
+    // (e.g. "import:blooddoner-docx-2026-10") so a batch can be reviewed or removed together.
+    source: { type: String, trim: true, maxlength: 60, default: "website" },
   },
   { timestamps: true },
 );

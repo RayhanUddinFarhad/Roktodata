@@ -33,6 +33,13 @@ export interface BloodRequest {
   createdAt: string;
 }
 
+// Shown when a donor's last donation date (or other detail) wasn't provided.
+export const NOT_MENTIONED = "উল্লেখ নেই";
+
+// "জেলা, থানা", or just the district when the thana is unknown (some imported donors).
+export const formatLocation = (district: string, upazila?: string | null) =>
+  upazila ? `${district}, ${upazila}` : district;
+
 const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
 export const toBanglaNumber = (value: number | string) =>
   String(value).replace(/\d/g, (digit) => BN_DIGITS[Number(digit)]);
