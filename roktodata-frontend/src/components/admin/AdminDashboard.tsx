@@ -2,14 +2,25 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CircleCheck, CircleX, Clock, ClipboardList, LogOut, MessageSquareWarning, UserCheck, UserX } from "lucide-react";
+import {
+  CircleCheck,
+  CircleX,
+  Clock,
+  ClipboardList,
+  LogOut,
+  MessageSquareWarning,
+  ShieldAlert,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 import LogoMark from "@/components/Logo";
 import ComplaintsPanel from "@/components/admin/ComplaintsPanel";
 import DonorsPanel from "@/components/admin/DonorsPanel";
+import FraudReportsPanel from "@/components/admin/FraudReportsPanel";
 import RequestsPanel from "@/components/admin/RequestsPanel";
 import { ApiError, getAdminStats, type AdminStats } from "@/lib/api";
 
-type Tab = "pending" | "donors" | "requests" | "complaints";
+type Tab = "pending" | "donors" | "requests" | "fraud" | "complaints";
 
 export interface AdminContext {
   token: string;
@@ -75,12 +86,14 @@ export default function AdminDashboard({
     { label: "ব্লক করা ডোনার", value: stats?.blocked, icon: UserX, tone: "bg-slate-200 text-slate-700" },
     { label: "খোলা অভিযোগ", value: stats?.openComplaints, icon: MessageSquareWarning, tone: "bg-red-100 text-red-600" },
     { label: "অপেক্ষমাণ রক্তের অনুরোধ", value: stats?.pendingRequests, icon: ClipboardList, tone: "bg-blue-100 text-indigo-900" },
+    { label: "অপেক্ষমাণ প্রতারণার রিপোর্ট", value: stats?.pendingFraudReports, icon: ShieldAlert, tone: "bg-rose-100 text-rose-700" },
   ];
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "pending", label: "অনুমোদনের অপেক্ষায়", count: stats?.pending },
     { id: "donors", label: "সকল ডোনার" },
     { id: "requests", label: "রক্তের অনুরোধ", count: stats?.pendingRequests },
+    { id: "fraud", label: "প্রতারণার রিপোর্ট", count: stats?.pendingFraudReports },
     { id: "complaints", label: "অভিযোগসমূহ", count: stats?.openComplaints },
   ];
 
@@ -107,7 +120,7 @@ export default function AdminDashboard({
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {statCards.map(({ label, value, icon: Icon, tone }) => (
             <div key={label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${tone}`}>
@@ -143,6 +156,7 @@ export default function AdminDashboard({
           {tab === "pending" && <DonorsPanel key="pending" ctx={ctx} fixedStatus="Pending" />}
           {tab === "donors" && <DonorsPanel key="donors" ctx={ctx} />}
           {tab === "requests" && <RequestsPanel ctx={ctx} />}
+          {tab === "fraud" && <FraudReportsPanel ctx={ctx} />}
           {tab === "complaints" && <ComplaintsPanel ctx={ctx} />}
         </div>
       </main>

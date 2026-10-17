@@ -11,7 +11,7 @@ export function escapeRegex(value) {
 // Finds donors that can be shown publicly: approved by an admin, marked ready to donate,
 // and either never donated or donated at least ELIGIBILITY_DAYS ago.
 // Whoever donated longest ago comes first.
-// `upazila` keeps donors whose upazila starts with it; `excludeUpazila` drops them instead.
+// `upazila` keeps donors in that thana/upazila; `excludeUpazila` drops them instead.
 export async function findDonors({ bloodGroup, district, upazila, excludeUpazila }) {
   const cutoff = new Date(Date.now() - ELIGIBILITY_DAYS * DAY_MS);
 
@@ -24,11 +24,9 @@ export async function findDonors({ bloodGroup, district, upazila, excludeUpazila
   };
   if (bloodGroup) filter.bloodGroup = bloodGroup;
   if (district) filter.district = district;
-  // Prefix match so "ধান" finds "ধানমন্ডি"; anchored regexes can still use the compound index.
-  if (upazila) filter.upazila = mongoose.trusted({ $regex: `^${escapeRegex(upazila)}`, $options: "i" });
-  else if (excludeUpazila) {
-    filter.upazila = mongoose.trusted({ $not: new RegExp(`^${escapeRegex(excludeUpazila)}`, "i") });
-  }
+  // Thanas are picked from a fixed per-district list, so they are matched exactly.
+  if (upazila) filter.upazila = upazila;
+  else if (excludeUpazila) filter.upazila = mongoose.trusted({ $ne: excludeUpazila });
 
   const donors = await Donor.find(filter)
     .sort({ lastDonationDate: 1, _id: 1 })

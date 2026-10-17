@@ -2,9 +2,10 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { env } from "../config/env.js";
-import { COMPLAINT_REASONS } from "../config/constants.js";
+import { COMPLAINT_REASONS, FRAUD_REASONS } from "../config/constants.js";
 import { Complaint } from "../models/Complaint.js";
 import { Donor } from "../models/Donor.js";
+import { FraudReport } from "../models/FraudReport.js";
 import { PatientRequest } from "../models/PatientRequest.js";
 import { AppError } from "../utils/AppError.js";
 import { escapeRegex } from "../utils/findDonors.js";
@@ -36,10 +37,11 @@ export async function login(req, res) {
 
 // GET /api/admin/stats
 export async function getStats(_req, res) {
-  const [byStatus, openComplaints, pendingRequests] = await Promise.all([
+  const [byStatus, openComplaints, pendingRequests, pendingFraudReports] = await Promise.all([
     Donor.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
     Complaint.countDocuments({ status: "Open" }),
     PatientRequest.countDocuments({ status: "Pending" }),
+    FraudReport.countDocuments({ status: "Pending" }),
   ]);
   const count = (status) => byStatus.find((row) => row._id === status)?.count ?? 0;
 
@@ -51,6 +53,7 @@ export async function getStats(_req, res) {
       blocked: count("Blocked"),
       openComplaints,
       pendingRequests,
+      pendingFraudReports,
     },
   });
 }
@@ -227,4 +230,79 @@ export async function deleteRequest(req, res) {
   const request = await PatientRequest.findByIdAndDelete(id);
   if (!request) throw new AppError(404, "অনুরোধ পাওয়া যায়নি।");
   res.json({ success: true, message: "অনুরোধটি মুছে ফেলা হয়েছে।" });
+}
+
+// GET /api/admin/fraud-reports?status=&page=
+// Each report includes the registered donor with that phone number, if any, so the admin can block them.
+export async function listFraudReports(req, res) {
+  const { status, page } = req.validated;
+  const filter = status ? { status } : {};
+
+  const [reports, total] = await Promise.all([
+    FraudReport.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * PAGE_SIZE)
+      .limit(PAGE_SIZE)
+      .lean(),
+    FraudReport.countDocuments(filter),
+  ]);
+
+  const phones = [...new Set(reports.map((report) => report.phoneNumber))];
+  const [donors, approvedCounts] = await Promise.all([
+    Donor.find({ phoneNumber: mongoose.trusted({ $in: phones }) }, "fullName phoneNumber status bloodGroup").lean(),
+    FraudReport.aggregate([
+      { $match: { phoneNumber: { $in: phones }, status: "Approved" } },
+      { $group: { _id: "$phoneNumber", count: { $sum: 1 } } },
+    ]),
+  ]);
+
+  res.json({
+    success: true,
+    total,
+    page,
+    pages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    reports: reports.map((report) => {
+      const donor = donors.find((d) => d.phoneNumber === report.phoneNumber);
+      return {
+        id: report._id.toString(),
+        phoneNumber: report.phoneNumber,
+        name: report.name,
+        reason: report.reason,
+        reasonLabel: FRAUD_REASONS[report.reason],
+        details: report.details,
+        reporterPhone: report.reporterPhone,
+        status: report.status,
+        createdAt: report.createdAt.toISOString(),
+        approvedReportsForNumber: approvedCounts.find((row) => row._id === report.phoneNumber)?.count ?? 0,
+        donor: donor && {
+          id: donor._id.toString(),
+          fullName: donor.fullName,
+          bloodGroup: donor.bloodGroup,
+          status: donor.status,
+        },
+      };
+    }),
+  });
+}
+
+// PATCH /api/admin/fraud-reports/:id/status
+export async function updateFraudReportStatus(req, res) {
+  const { id, status } = req.validated;
+  const report = await FraudReport.findByIdAndUpdate(id, { status }, { returnDocument: "after" });
+  if (!report) throw new AppError(404, "রিপোর্ট পাওয়া যায়নি।");
+
+  const messages = {
+    Approved: "রিপোর্টটি অনুমোদিত হয়েছে। নাম্বারটি প্রতারক তালিকায় দেখানো হচ্ছে।",
+    Rejected: "রিপোর্টটি বাতিল করা হয়েছে।",
+    Pending: "রিপোর্টটি আবার অপেক্ষমাণ তালিকায় রাখা হয়েছে।",
+  };
+  res.json({ success: true, status: report.status, message: messages[report.status] });
+}
+
+// DELETE /api/admin/fraud-reports/:id
+export async function deleteFraudReport(req, res) {
+  const { id } = req.validated;
+  const report = await FraudReport.findByIdAndDelete(id);
+  if (!report) throw new AppError(404, "রিপোর্ট পাওয়া যায়নি।");
+  res.json({ success: true, message: "রিপোর্টটি মুছে ফেলা হয়েছে।" });
 }

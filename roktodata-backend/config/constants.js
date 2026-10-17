@@ -5,6 +5,18 @@ export const DONOR_STATUS = ["Pending", "Active", "Blocked"];
 
 export const COMPLAINT_STATUS = ["Open", "Resolved", "Dismissed"];
 
+// Fraud reports are "Pending" until an admin approves them for the public fraud list.
+export const FRAUD_STATUS = ["Pending", "Approved", "Rejected"];
+
+export const FRAUD_REASONS = {
+  money_taken: "টাকা নিয়ে রক্ত দেননি",
+  asked_money: "রক্তের বিনিময়ে টাকা দাবি করেছেন",
+  fake_identity: "ভুয়া পরিচয় / ভুল রক্তের গ্রুপ",
+  no_show: "কথা দিয়ে আসেননি / ফোন বন্ধ করে দিয়েছেন",
+  harassment: "হয়রানি / খারাপ আচরণ",
+  other: "অন্যান্য",
+};
+
 // Patient blood requests are "Pending" until an admin approves them for the public feed.
 export const REQUEST_STATUS = ["Pending", "Approved", "Rejected", "Fulfilled"];
 

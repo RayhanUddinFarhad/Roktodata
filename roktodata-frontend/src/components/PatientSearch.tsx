@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CircleCheck, Info, Loader2, MapPin, Megaphone, PhoneCall, Search, SearchX } from "lucide-react";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import ComplaintButton from "@/components/ComplaintButton";
+import ThanaSelect from "@/components/ThanaSelect";
 import { ApiError, searchForPatient } from "@/lib/api";
 import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber, type BloodGroup, type Donor } from "@/lib/data";
 
@@ -113,7 +114,15 @@ export default function PatientSearch() {
         </label>
         <label className="block">
           <span className={labelClass}>জেলা</span>
-          <select required value={district} onChange={(e) => setDistrict(e.target.value)} className={fieldClass}>
+          <select
+            required
+            value={district}
+            onChange={(e) => {
+              setDistrict(e.target.value);
+              setUpazila("");
+            }}
+            className={fieldClass}
+          >
             <option value="" disabled>
               জেলা নির্বাচন করুন
             </option>
@@ -125,13 +134,14 @@ export default function PatientSearch() {
           </select>
         </label>
         <label className="block">
-          <span className={labelClass}>থানা / উপজেলা</span>
-          <input
-            type="text"
-            maxLength={60}
+          <span className={labelClass}>
+            থানা / উপজেলা <span className="font-normal text-slate-400">(ঐচ্ছিক)</span>
+          </span>
+          <ThanaSelect
+            district={district}
             value={upazila}
-            onChange={(e) => setUpazila(e.target.value)}
-            placeholder="থানা বা উপজেলার নাম লিখুন"
+            onChange={setUpazila}
+            emptyLabel="পুরো জেলায় খুঁজুন"
             className={fieldClass}
           />
         </label>

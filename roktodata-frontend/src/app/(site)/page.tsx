@@ -1,4 +1,7 @@
 import { Crosshair, Heart, Search, UserCheck, Zap, type LucideIcon } from "lucide-react";
+import DonationBenefits from "@/components/home/DonationBenefits";
+import HowItWorks from "@/components/home/HowItWorks";
+import ShareDonorList from "@/components/home/ShareDonorList";
 import { BLOOD_GROUPS, DISTRICTS } from "@/lib/data";
 
 const FEATURES: { icon: LucideIcon; iconClass: string; title: string; text: string }[] = [
@@ -77,7 +80,7 @@ export default function Home() {
         </form>
       </section>
 
-      <section className="bg-slate-50 px-4 py-11 pb-20">
+      <section className="bg-slate-50 px-4 py-12">
         <div className="mx-auto grid max-w-[808px] gap-6 md:grid-cols-3">
           {FEATURES.map(({ icon: Icon, iconClass, title, text }) => (
             <div
@@ -93,6 +96,10 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <HowItWorks />
+      <DonationBenefits />
+      <ShareDonorList />
     </main>
   );
 }

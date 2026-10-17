@@ -49,6 +49,28 @@ export const COMPLAINT_REASONS = {
 
 export type ComplaintReason = keyof typeof COMPLAINT_REASONS;
 
+// Must stay in sync with FRAUD_REASONS in the backend (config/constants.js).
+export const FRAUD_REASONS = {
+  money_taken: "টাকা নিয়ে রক্ত দেননি",
+  asked_money: "রক্তের বিনিময়ে টাকা দাবি করেছেন",
+  fake_identity: "ভুয়া পরিচয় / ভুল রক্তের গ্রুপ",
+  no_show: "কথা দিয়ে আসেননি / ফোন বন্ধ করে দিয়েছেন",
+  harassment: "হয়রানি / খারাপ আচরণ",
+  other: "অন্যান্য",
+} as const;
+
+export type FraudReason = keyof typeof FRAUD_REASONS;
+export type FraudReportStatus = "Pending" | "Approved" | "Rejected";
+
+// One fraudulent number in the public list, with every admin-approved report against it.
+export interface FraudEntry {
+  phoneNumber: string;
+  names: string[];
+  reportCount: number;
+  lastReportedAt: string;
+  reports: { reason: FraudReason; reasonLabel: string; details: string; createdAt: string }[];
+}
+
 // Must stay in sync with DISTRICTS in the backend (config/constants.js).
 export const DISTRICTS = [
   "ঢাকা", "গাজীপুর", "নারায়ণগঞ্জ", "নরসিংদী", "মানিকগঞ্জ", "মুন্সিগঞ্জ", "টাঙ্গাইল", "কিশোরগঞ্জ",
@@ -69,7 +91,10 @@ export const NAV_LINKS = [
   { href: "/find-donor", label: "ডোনার খুঁজুন" },
   { href: "/patient-search", label: "রোগীর তথ্য দিয়ে খুঁজুন" },
   { href: "/blood-requests", label: "রক্তের অনুরোধ" },
+  { href: "/fraud-donors", label: "প্রতারক ডোনার" },
   { href: "/register", label: "ডোনার লগইন / রেজিস্ট্রেশন" },
 ];
 
 export const HOTLINE = "+880 9612-345678";
+
+export const CONTACT_EMAIL = "roktodata@gmail.com";

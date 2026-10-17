@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { CircleCheck, Flag, Loader2, X } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { CircleCheck, Flag, Loader2 } from "lucide-react";
+import Modal from "@/components/Modal";
 import { ApiError, submitComplaint } from "@/lib/api";
 import { COMPLAINT_REASONS, type ComplaintReason, type Donor } from "@/lib/data";
 
@@ -35,12 +36,6 @@ function ComplaintDialog({ donor, onClose }: { donor: Pick<Donor, "id" | "fullNa
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!reason) return;
@@ -62,31 +57,12 @@ function ComplaintDialog({ donor, onClose }: { donor: Pick<Donor, "id" | "fullNa
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 text-left"
-      onClick={onClose}
-      role="presentation"
+    <Modal
+      title="ডোনারের বিরুদ্ধে অভিযোগ"
+      subtitle={`ডোনার: ${donor.fullName}`}
+      icon={<Flag className="h-5 w-5 text-red-600" />}
+      onClose={onClose}
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="complaint-title"
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 id="complaint-title" className="flex items-center gap-2 text-lg font-bold text-slate-900">
-              <Flag className="h-5 w-5 text-red-600" />
-              ডোনারের বিরুদ্ধে অভিযোগ
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-500">ডোনার: {donor.fullName}</p>
-          </div>
-          <button type="button" onClick={onClose} aria-label="বন্ধ করুন" className="text-slate-400 hover:text-slate-700">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
         {success ? (
           <div className="mt-5 flex flex-col items-center rounded-xl bg-emerald-50 px-4 py-6 text-center">
             <CircleCheck className="h-9 w-9 text-emerald-600" />
@@ -173,7 +149,6 @@ function ComplaintDialog({ donor, onClose }: { donor: Pick<Donor, "id" | "fullNa
             </div>
           </form>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }

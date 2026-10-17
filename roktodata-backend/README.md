@@ -35,6 +35,9 @@ public searches only when **all** of these hold:
 | POST | `/api/patient/search-and-log` | – | Saves the request (Pending) and returns `donors` in the upazila plus `nearbyDonors` elsewhere in the district. One request per phone number per Bangladesh day; a repeat gets 409 with `code: "DUPLICATE_REQUEST"` |
 | GET | `/api/patient/requests?bloodGroup=&district=&page=` | – | Public feed: Approved/Fulfilled requests from the last 30 days, newest first (12 per page) |
 | POST | `/api/complaints` | – | Complaint against a donor (`donorId`, `complainantPhone`, `reason`, `details?`) |
+| POST | `/api/fraud-reports` | – | Report a fraudulent number (`phoneNumber`, `name`, `reason`, `details`, `reporterPhone`); Pending until approved. One active report per reporter per number |
+| GET | `/api/fraud-reports?page=` | – | Public fraud list: approved reports grouped per number (reporter phones never included) |
+| GET | `/api/fraud-reports/check?phone=` | – | `{ isFraud, entry }` for one number |
 | POST | `/api/admin/login` | – | `{ username, password }` → `{ token }` |
 | GET | `/api/admin/stats` | Admin | Counts of donors by status, open complaints, patient requests |
 | GET | `/api/admin/donors?status=&q=&page=` | Admin | Donors (20 per page); `q` searches name or phone prefix |
@@ -45,6 +48,9 @@ public searches only when **all** of these hold:
 | GET | `/api/admin/requests?status=&page=` | Admin | Patient blood requests |
 | PATCH | `/api/admin/requests/:id/status` | Admin | `{ status: "Pending" \| "Approved" \| "Rejected" \| "Fulfilled" }`; Approved/Fulfilled appear in the public feed |
 | DELETE | `/api/admin/requests/:id` | Admin | Deletes a request |
+| GET | `/api/admin/fraud-reports?status=&page=` | Admin | Fraud reports with reporter phone and any registered donor using that number |
+| PATCH | `/api/admin/fraud-reports/:id/status` | Admin | `{ status: "Pending" \| "Approved" \| "Rejected" }`; Approved reports are public |
+| DELETE | `/api/admin/fraud-reports/:id` | Admin | Deletes a report |
 
 \* Only when `REQUIRE_PHONE_VERIFICATION=true`; the token's phone number must match `phoneNumber`.
 Admin routes need `Authorization: Bearer <token from /api/admin/login>`; tokens expire after `JWT_EXPIRES_IN`.

@@ -1,14 +1,17 @@
 import { Router } from "express";
 import {
   deleteDonor,
+  deleteFraudReport,
   deleteRequest,
   getStats,
   listComplaints,
   listDonors,
+  listFraudReports,
   listRequests,
   login,
   updateComplaintStatus,
   updateDonorStatus,
+  updateFraudReportStatus,
   updateRequestStatus,
 } from "../controllers/adminController.js";
 import { adminLoginLimiter } from "../middleware/rateLimiters.js";
@@ -17,10 +20,12 @@ import { validate } from "../middleware/validate.js";
 import {
   adminComplaintListSchema,
   adminDonorListSchema,
+  adminFraudListSchema,
   adminLoginSchema,
   adminRequestListSchema,
   complaintStatusSchema,
   donorStatusSchema,
+  fraudStatusSchema,
   idParamSchema,
   requestStatusSchema,
 } from "../validators/schemas.js";
@@ -59,5 +64,14 @@ router.patch(
   updateRequestStatus,
 );
 router.delete("/requests/:id", validate(idParamSchema, "params"), deleteRequest);
+
+router.get("/fraud-reports", validate(adminFraudListSchema, "query"), listFraudReports);
+router.patch(
+  "/fraud-reports/:id/status",
+  validate(idParamSchema, "params"),
+  validate(fraudStatusSchema, "body"),
+  updateFraudReportStatus,
+);
+router.delete("/fraud-reports/:id", validate(idParamSchema, "params"), deleteFraudReport);
 
 export default router;

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CircleAlert, Funnel, Loader2, RotateCw, SearchX } from "lucide-react";
 import DonorCard from "@/components/DonorCard";
+import ThanaSelect from "@/components/ThanaSelect";
+import { thanasOf } from "@/lib/locations";
 import { ApiError, searchDonors } from "@/lib/api";
 import { BLOOD_GROUPS, DISTRICTS, type Donor } from "@/lib/data";
 
@@ -14,14 +16,18 @@ export default function DonorSearch() {
   const searchParams = useSearchParams();
   const [bloodGroup, setBloodGroup] = useState(searchParams.get("bloodGroup") ?? "");
   const [district, setDistrict] = useState(searchParams.get("district") ?? "");
-  const [thana, setThana] = useState(searchParams.get("upazila") ?? "");
+  // Only accept a thana from the URL if it belongs to the district in the URL.
+  const [thana, setThana] = useState(() => {
+    const fromUrl = searchParams.get("upazila") ?? "";
+    return thanasOf(searchParams.get("district") ?? "").includes(fromUrl) ? fromUrl : "";
+  });
   const [donors, setDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
-    // Wait for the user to stop typing in the thana field before searching.
+    // Briefly wait so quick successive filter changes trigger a single search.
     const timer = setTimeout(async () => {
       setLoading(true);
       setError("");
@@ -70,7 +76,14 @@ export default function DonorSearch() {
           </label>
           <label className="block">
             <span className="mb-1 block text-[11px] text-slate-600">জেলা</span>
-            <select value={district} onChange={(e) => setDistrict(e.target.value)} className={fieldClass}>
+            <select
+              value={district}
+              onChange={(e) => {
+                setDistrict(e.target.value);
+                setThana("");
+              }}
+              className={fieldClass}
+            >
               <option value="">সকল জেলা</option>
               {DISTRICTS.map((name) => (
                 <option key={name} value={name}>
@@ -81,11 +94,11 @@ export default function DonorSearch() {
           </label>
           <label className="block">
             <span className="mb-1 block text-[11px] text-slate-600">থানা</span>
-            <input
-              type="text"
+            <ThanaSelect
+              district={district}
               value={thana}
-              onChange={(e) => setThana(e.target.value)}
-              placeholder="থানার নাম লিখুন..."
+              onChange={setThana}
+              emptyLabel="সকল থানা"
               className={fieldClass}
             />
           </label>

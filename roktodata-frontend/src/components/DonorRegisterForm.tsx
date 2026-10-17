@@ -5,6 +5,7 @@ import { FirebaseError } from "firebase/app";
 import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from "firebase/auth";
 import { CircleCheck, Loader2, ShieldCheck, UserCheck } from "lucide-react";
 import { auth } from "@/lib/firebase";
+import ThanaSelect from "@/components/ThanaSelect";
 import { ApiError, registerOrUpdateDonor } from "@/lib/api";
 import { BLOOD_GROUPS, DISTRICTS, type BloodGroup } from "@/lib/data";
 
@@ -59,7 +60,7 @@ export default function DonorRegisterForm() {
         phoneNumber: phone,
         bloodGroup: bloodGroup as BloodGroup,
         district,
-        upazila: thana.trim(),
+        upazila: thana,
         lastDonationDate: lastDonated || undefined,
         isReadyToDonate,
       },
@@ -191,7 +192,15 @@ export default function DonorRegisterForm() {
 
           <label className="block">
             <span className={labelClass}>জেলা</span>
-            <select required value={district} onChange={(e) => setDistrict(e.target.value)} className={fieldClass}>
+            <select
+              required
+              value={district}
+              onChange={(e) => {
+                setDistrict(e.target.value);
+                setThana("");
+              }}
+              className={fieldClass}
+            >
               <option value="" disabled>
                 জেলা নির্বাচন করুন
               </option>
@@ -204,14 +213,7 @@ export default function DonorRegisterForm() {
           </label>
           <label className="block">
             <span className={labelClass}>থানা / উপজেলা</span>
-            <input
-              type="text"
-              required
-              value={thana}
-              onChange={(e) => setThana(e.target.value)}
-              placeholder="যেমন: মিরসরাই"
-              className={fieldClass}
-            />
+            <ThanaSelect district={district} value={thana} onChange={setThana} required className={fieldClass} />
           </label>
 
           <fieldset className="col-span-2">

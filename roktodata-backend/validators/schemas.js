@@ -6,8 +6,11 @@ import {
   COMPLAINT_STATUS,
   DISTRICTS,
   DONOR_STATUS,
+  FRAUD_REASONS,
+  FRAUD_STATUS,
   REQUEST_STATUS,
 } from "../config/constants.js";
+import { thanasOf } from "../config/locations.js";
 import { dhakaDay, dhakaDayPlus } from "../utils/dhakaDate.js";
 
 // Treat empty strings (e.g. "?district=") as "not provided".
@@ -24,6 +27,23 @@ const optionalText = (label, max) => z.preprocess(emptyToUndefined, text(label, 
 
 const bloodGroup = z.enum(BLOOD_GROUPS, { error: "সঠিক রক্তের গ্রুপ নির্বাচন করুন।" });
 const district = z.enum(DISTRICTS, { error: "সঠিক জেলা নির্বাচন করুন।" });
+
+// Thana/upazila names are chosen from a per-district list (config/locations.js); NFC-normalised so
+// differently encoded Bangla (e.g. "য়" as one or two code points) still matches.
+const thana = z.string({ error: "থানা / উপজেলা নির্বাচন করুন।" }).trim().min(1, "থানা / উপজেলা নির্বাচন করুন।").max(60)
+  .transform((value) => value.normalize("NFC"));
+const optionalThana = z.preprocess(emptyToUndefined, thana.optional());
+
+// Object-level check: the thana must belong to the chosen district.
+const thanaInDistrict = (districtKey, thanaKey) => (data, ctx) => {
+  const value = data[thanaKey];
+  if (!value) return;
+  if (!data[districtKey]) {
+    ctx.addIssue({ code: "custom", path: [thanaKey], message: "থানা বেছে নিতে আগে জেলা নির্বাচন করুন।" });
+  } else if (!thanasOf(data[districtKey]).includes(value)) {
+    ctx.addIssue({ code: "custom", path: [thanaKey], message: "নির্বাচিত জেলার তালিকা থেকে সঠিক থানা / উপজেলা বেছে নিন।" });
+  }
+};
 
 // Accepts 01712345678, +8801712345678 or 8801712345678 (spaces/dashes ignored); stores 01712345678.
 const phone = (label) =>
@@ -44,22 +64,22 @@ export const registerDonorSchema = z.object({
   phoneNumber: phone("মোবাইল নাম্বার"),
   bloodGroup,
   district,
-  upazila: text("থানা / উপজেলা", 60),
+  upazila: thana,
   lastDonationDate: z.preprocess(emptyToUndefined, pastDate.optional()),
   isReadyToDonate: z.boolean({ error: "রক্ত দিতে প্রস্তুত কিনা নির্বাচন করুন।" }),
-});
+}).superRefine(thanaInDistrict("district", "upazila"));
 
 export const searchDonorsSchema = z.object({
   bloodGroup: z.preprocess(emptyToUndefined, bloodGroup.optional()),
   district: z.preprocess(emptyToUndefined, district.optional()),
-  upazila: optionalText("থানা / উপজেলা", 60),
-});
+  upazila: optionalThana,
+}).superRefine(thanaInDistrict("district", "upazila"));
 
 export const patientSearchSchema = z.object({
   patientName: text("রোগীর নাম / কেস আইডি", 100),
   requiredBloodGroup: bloodGroup,
   district,
-  upazila: optionalText("থানা / উপজেলা", 60),
+  upazila: optionalThana,
   hospitalAddress: optionalText("হাসপাতালের ঠিকানা", 200),
   requesterPhone: phone("যোগাযোগের মোবাইল নাম্বার"),
   bagsNeeded: z.preprocess(
@@ -82,7 +102,7 @@ export const patientSearchSchema = z.object({
       .transform((day) => new Date(`${day}T00:00:00.000Z`))
       .optional(),
   ),
-});
+}).superRefine(thanaInDistrict("district", "upazila"));
 
 const page = z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(1000).default(1));
 
@@ -136,4 +156,36 @@ export const adminRequestListSchema = z.object({
 
 export const requestStatusSchema = z.object({
   status: z.enum(REQUEST_STATUS, { error: "সঠিক স্ট্যাটাস দিন।" }),
+});
+
+// ---- Fraud reports ----
+
+export const fraudReportSchema = z
+  .object({
+    phoneNumber: phone("প্রতারকের মোবাইল নাম্বার"),
+    name: text("প্রতারকের নাম", 100),
+    reason: z.enum(Object.keys(FRAUD_REASONS), { error: "প্রতারণার ধরন নির্বাচন করুন।" }),
+    details: z
+      .string({ error: "কীভাবে প্রতারণা করেছেন তা লিখুন।" })
+      .trim()
+      .min(10, "কীভাবে প্রতারণা করেছেন তা একটু বিস্তারিত লিখুন (কমপক্ষে ১০ অক্ষর)।")
+      .max(1000, "বিস্তারিত সর্বোচ্চ ১০০০ অক্ষরের হতে পারে।"),
+    reporterPhone: phone("আপনার মোবাইল নাম্বার"),
+  })
+  .refine((data) => data.phoneNumber !== data.reporterPhone, {
+    path: ["reporterPhone"],
+    message: "নিজের নাম্বারের বিরুদ্ধে রিপোর্ট করা যাবে না।",
+  });
+
+export const fraudListSchema = z.object({ page });
+
+export const fraudCheckSchema = z.object({ phone: phone("মোবাইল নাম্বার") });
+
+export const adminFraudListSchema = z.object({
+  status: z.preprocess(emptyToUndefined, z.enum(FRAUD_STATUS).optional()),
+  page,
+});
+
+export const fraudStatusSchema = z.object({
+  status: z.enum(FRAUD_STATUS, { error: "সঠিক স্ট্যাটাস দিন।" }),
 });

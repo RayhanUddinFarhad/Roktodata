@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { cacheLife } from "next/cache";
-import { Phone } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import LogoMark from "@/components/Logo";
-import { HOTLINE } from "@/lib/data";
+import { CONTACT_EMAIL, HOTLINE } from "@/lib/data";
 
 const QUICK_LINKS = [
   { href: "/", label: "হোম পেজ" },
   { href: "/find-donor", label: "ডোনার তালিকা" },
   { href: "/patient-search", label: "রোগীর জন্য সার্চ" },
   { href: "/blood-requests", label: "রক্তের অনুরোধসমূহ" },
+  { href: "/fraud-donors", label: "প্রতারক ডোনার তালিকা" },
   { href: "/register", label: "ডোনার রেজিস্ট্রেশন" },
 ];
 
@@ -53,6 +54,10 @@ export default async function Footer() {
             {HOTLINE}
           </a>
           <p className="mt-1 text-xs text-slate-500">২৪ ঘণ্টা সেবা চালু রয়েছে।</p>
+          <a href={`mailto:${CONTACT_EMAIL}`} className="mt-3 flex items-center gap-2 text-sm hover:text-white">
+            <Mail className="h-4 w-4" />
+            {CONTACT_EMAIL}
+          </a>
         </div>
       </div>
       <div className="border-t border-slate-800 py-4 text-center text-xs text-slate-500">

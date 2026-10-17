@@ -5,6 +5,9 @@ import type {
   ComplaintStatus,
   Donor,
   DonorStatus,
+  FraudEntry,
+  FraudReason,
+  FraudReportStatus,
   RequestStatus,
 } from "@/lib/data";
 
@@ -134,6 +137,32 @@ export function submitComplaint(payload: ComplaintPayload) {
   return request<{ message: string }>("/api/complaints", jsonRequest("POST", payload));
 }
 
+// ---- Fraud reports ----
+
+export interface FraudReportPayload {
+  phoneNumber: string;
+  name: string;
+  reason: FraudReason;
+  details: string;
+  reporterPhone: string;
+}
+
+// Submits a report for admin review; it appears publicly only after approval.
+export function submitFraudReport(payload: FraudReportPayload) {
+  return request<{ message: string }>("/api/fraud-reports", jsonRequest("POST", payload));
+}
+
+export function getFraudEntries(page = 1) {
+  return request<Paginated & { entries: FraudEntry[] }>(`/api/fraud-reports?${toQuery({ page })}`);
+}
+
+// Whether a number has admin-approved fraud reports against it.
+export function checkFraudNumber(phone: string) {
+  return request<{ phoneNumber: string; isFraud: boolean; entry: FraudEntry | null }>(
+    `/api/fraud-reports/check?${toQuery({ phone })}`,
+  );
+}
+
 // ---- Admin ----
 
 export interface AdminStats {
@@ -142,6 +171,7 @@ export interface AdminStats {
   blocked: number;
   openComplaints: number;
   pendingRequests: number;
+  pendingFraudReports: number;
 }
 
 export interface AdminDonor extends Donor {
@@ -214,4 +244,35 @@ export function setRequestStatus(token: string, id: string, status: RequestStatu
 
 export function deleteRequest(token: string, id: string) {
   return request<{ message: string }>(`/api/admin/requests/${id}`, jsonRequest("DELETE", undefined, auth(token)));
+}
+
+export interface AdminFraudReport {
+  id: string;
+  phoneNumber: string;
+  name: string;
+  reason: FraudReason;
+  reasonLabel: string;
+  details: string;
+  reporterPhone: string;
+  status: FraudReportStatus;
+  createdAt: string;
+  approvedReportsForNumber: number;
+  donor?: { id: string; fullName: string; bloodGroup: string; status: DonorStatus };
+}
+
+export function getAdminFraudReports(token: string, params: { status?: FraudReportStatus; page?: number }) {
+  return request<Paginated & { reports: AdminFraudReport[] }>(`/api/admin/fraud-reports?${toQuery(params)}`, {
+    headers: auth(token),
+  });
+}
+
+export function setFraudReportStatus(token: string, id: string, status: FraudReportStatus) {
+  return request<{ message: string }>(
+    `/api/admin/fraud-reports/${id}/status`,
+    jsonRequest("PATCH", { status }, auth(token)),
+  );
+}
+
+export function deleteFraudReport(token: string, id: string) {
+  return request<{ message: string }>(`/api/admin/fraud-reports/${id}`, jsonRequest("DELETE", undefined, auth(token)));
 }

@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Inbox, Loader2 } from "lucide-react";
-import type { ComplaintStatus, DonorStatus, RequestStatus } from "@/lib/data";
+import type { ComplaintStatus, DonorStatus, FraudReportStatus, RequestStatus } from "@/lib/data";
 
 const DONOR_STATUS: Record<DonorStatus, { label: string; tone: string }> = {
   Pending: { label: "অপেক্ষমাণ", tone: "bg-amber-100 text-amber-800" },
@@ -29,7 +29,22 @@ export function RequestStatusBadge({ status }: { status: RequestStatus }) {
   return <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${tone}`}>{label}</span>;
 }
 
-export const DONOR_STATUS_LABELS =Object.fromEntries(
+const FRAUD_STATUS: Record<FraudReportStatus, { label: string; tone: string }> = {
+  Pending: { label: "অপেক্ষমাণ", tone: "bg-amber-100 text-amber-800" },
+  Approved: { label: "তালিকাভুক্ত", tone: "bg-red-100 text-red-700" },
+  Rejected: { label: "বাতিল", tone: "bg-slate-200 text-slate-600" },
+};
+
+export const FRAUD_STATUS_LABELS = Object.fromEntries(
+  Object.entries(FRAUD_STATUS).map(([key, value]) => [key, value.label]),
+) as Record<FraudReportStatus, string>;
+
+export function FraudStatusBadge({ status }: { status: FraudReportStatus }) {
+  const { label, tone } = FRAUD_STATUS[status];
+  return <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${tone}`}>{label}</span>;
+}
+
+export const DONOR_STATUS_LABELS = Object.fromEntries(
   Object.entries(DONOR_STATUS).map(([key, value]) => [key, value.label]),
 ) as Record<DonorStatus, string>;
 
