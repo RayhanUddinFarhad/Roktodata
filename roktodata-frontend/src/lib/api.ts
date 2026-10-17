@@ -1,0 +1,217 @@
+import type {
+  BloodGroup,
+  BloodRequest,
+  ComplaintReason,
+  ComplaintStatus,
+  Donor,
+  DonorStatus,
+  RequestStatus,
+} from "@/lib/data";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+
+// An error whose message comes from the API and is safe to show to the user (in Bangla).
+// `code` identifies specific cases, e.g. "DUPLICATE_REQUEST".
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status = 0,
+    readonly code?: string,
+  ) {
+    super(message);
+  }
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, init);
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    throw new ApiError("সার্ভারের সাথে সংযোগ করা যাচ্ছে না। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।");
+  }
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.success) {
+    throw new ApiError(data?.message ?? "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।", res.status, data?.code);
+  }
+  return data as T;
+}
+
+function jsonRequest(method: string, body?: unknown, headers: Record<string, string> = {}): RequestInit {
+  return {
+    method,
+    headers: { "Content-Type": "application/json", ...headers },
+    ...(body !== undefined && { body: JSON.stringify(body) }),
+  };
+}
+
+const toQuery = (params: Record<string, string | number | undefined>) => {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && String(value).trim()) query.set(key, String(value).trim());
+  }
+  return query.toString();
+};
+
+// ---- Public ----
+
+export interface SearchResult {
+  message?: string;
+  count: number;
+  donors: Donor[];
+}
+
+export interface DonorSearchFilters {
+  bloodGroup?: string;
+  district?: string;
+  upazila?: string;
+}
+
+export function searchDonors(filters: DonorSearchFilters, signal?: AbortSignal) {
+  return request<SearchResult>(`/api/donors/search?${toQuery({ ...filters })}`, { signal });
+}
+
+export interface DonorPayload {
+  fullName: string;
+  phoneNumber: string;
+  bloodGroup: BloodGroup;
+  district: string;
+  upazila: string;
+  lastDonationDate?: string;
+  isReadyToDonate: boolean;
+}
+
+// Creates the donor (pending admin approval), or updates them if the phone number already exists.
+// When phone verification is on, the Firebase ID token proves the user owns the phone number.
+export function registerOrUpdateDonor(donor: DonorPayload, idToken?: string) {
+  return request<{ message: string; isNew: boolean; status: DonorStatus }>(
+    "/api/donors/register-or-update",
+    jsonRequest("POST", donor, idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+  );
+}
+
+export interface PatientRequestPayload {
+  patientName: string;
+  requiredBloodGroup: BloodGroup;
+  district: string;
+  upazila?: string;
+  hospitalAddress?: string;
+  requesterPhone: string;
+  bagsNeeded: number;
+  neededDate?: string;
+}
+
+// Saves the request for admin review and returns donors in the same upazila (`donors`)
+// and elsewhere in the same district (`nearbyDonors`). One request per phone number per day:
+// a repeat fails with ApiError code "DUPLICATE_REQUEST".
+export function searchForPatient(payload: PatientRequestPayload) {
+  return request<SearchResult & { nearbyDonors: Donor[] }>(
+    "/api/patient/search-and-log",
+    jsonRequest("POST", payload),
+  );
+}
+
+export interface Paginated {
+  total: number;
+  page: number;
+  pages: number;
+}
+
+// Public feed of admin-approved blood requests.
+export function getBloodRequests(params: { bloodGroup?: string; district?: string; page?: number }) {
+  return request<Paginated & { requests: BloodRequest[] }>(`/api/patient/requests?${toQuery(params)}`);
+}
+
+export interface ComplaintPayload {
+  donorId: string;
+  complainantPhone: string;
+  reason: ComplaintReason;
+  details?: string;
+}
+
+export function submitComplaint(payload: ComplaintPayload) {
+  return request<{ message: string }>("/api/complaints", jsonRequest("POST", payload));
+}
+
+// ---- Admin ----
+
+export interface AdminStats {
+  pending: number;
+  active: number;
+  blocked: number;
+  openComplaints: number;
+  pendingRequests: number;
+}
+
+export interface AdminDonor extends Donor {
+  isReadyToDonate: boolean;
+  status: DonorStatus;
+  createdAt: string;
+  openComplaints: number;
+}
+
+export interface AdminComplaint {
+  id: string;
+  complainantPhone: string;
+  reason: ComplaintReason;
+  reasonLabel: string;
+  details: string;
+  status: ComplaintStatus;
+  createdAt: string;
+  donor: (Pick<Donor, "id" | "fullName" | "phoneNumber" | "bloodGroup" | "district" | "upazila"> & { status: DonorStatus }) | null;
+}
+
+const auth =(token: string) => ({ Authorization: `Bearer ${token}` });
+
+export function adminLogin(username: string, password: string) {
+  return request<{ token: string; message: string }>(
+    "/api/admin/login",
+    jsonRequest("POST", { username, password }),
+  );
+}
+
+export function getAdminStats(token: string) {
+  return request<{ stats: AdminStats }>("/api/admin/stats", { headers: auth(token) });
+}
+
+export function getAdminDonors(token: string, params: { status?: DonorStatus; q?: string; page?: number }) {
+  return request<Paginated & { donors: AdminDonor[] }>(`/api/admin/donors?${toQuery(params)}`, {
+    headers: auth(token),
+  });
+}
+
+export function setDonorStatus(token: string, id: string, status: DonorStatus) {
+  return request<{ message: string }>(`/api/admin/donors/${id}/status`, jsonRequest("PATCH", { status }, auth(token)));
+}
+
+export function deleteDonor(token: string, id: string) {
+  return request<{ message: string }>(`/api/admin/donors/${id}`, jsonRequest("DELETE", undefined, auth(token)));
+}
+
+export function getAdminComplaints(token: string, params: { status?: ComplaintStatus; page?: number }) {
+  return request<Paginated & { complaints: AdminComplaint[] }>(`/api/admin/complaints?${toQuery(params)}`, {
+    headers: auth(token),
+  });
+}
+
+export function setComplaintStatus(token: string, id: string, status: ComplaintStatus) {
+  return request<{ message: string }>(
+    `/api/admin/complaints/${id}/status`,
+    jsonRequest("PATCH", { status }, auth(token)),
+  );
+}
+
+export function getAdminRequests(token: string, params: { status?: RequestStatus; page?: number }) {
+  return request<Paginated & { requests: BloodRequest[] }>(`/api/admin/requests?${toQuery(params)}`, {
+    headers: auth(token),
+  });
+}
+
+export function setRequestStatus(token: string, id: string, status: RequestStatus) {
+  return request<{ message: string }>(`/api/admin/requests/${id}/status`, jsonRequest("PATCH", { status }, auth(token)));
+}
+
+export function deleteRequest(token: string, id: string) {
+  return request<{ message: string }>(`/api/admin/requests/${id}`, jsonRequest("DELETE", undefined, auth(token)));
+}

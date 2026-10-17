@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Secrets: never commit real environment files (templates like .env.example are fine)
+.env
+.env.*
+!.env.example
+
+# Next.js build output and caches
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Logs
+*.log
+.next-dev.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
