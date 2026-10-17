@@ -1,6 +1,7 @@
 import { env } from "./config/env.js";
 import { connectDB, disconnectDB } from "./config/db.js";
 import app from "./app.js";
+import { ensureRequestExpiryIndex } from "./models/PatientRequest.js";
 
 try {
   await connectDB();
@@ -8,6 +9,11 @@ try {
   console.error("Could not connect to MongoDB:", err.message);
   process.exit(1);
 }
+
+// Not fatal: the API still works, past-date requests just aren't auto-deleted.
+await ensureRequestExpiryIndex().catch((err) =>
+  console.error("Could not create the blood request expiry index:", err.message),
+);
 
 const server = app.listen(env.PORT, () => {
   console.log(`Roktodata API listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);

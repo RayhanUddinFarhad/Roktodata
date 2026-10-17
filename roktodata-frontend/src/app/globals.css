@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-hind-siliguri), ui-sans-serif, system-ui, sans-serif;
+  /* --font-digits covers only digits, so everything else falls through to the next font. */
+  --font-sans: var(--font-digits), var(--font-hind-siliguri), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-digits), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 body {

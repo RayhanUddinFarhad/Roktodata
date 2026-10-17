@@ -14,7 +14,9 @@ npm run dev            # http://localhost:5000, restarts on source changes
 `npm run dev` watches the source folders (`config`, `controllers`, `middleware`, `models`, `routes`,
 `utils`, `validators`). Restart manually after editing `app.js`, `server.js` or `.env`.
 
-Production: `NODE_ENV=production npm start`. Indexes are built automatically only outside production.
+Production: `NODE_ENV=production npm start`. Indexes are built automatically only outside production,
+except the blood request expiry index, which `server.js` always creates: MongoDB deletes a request once
+its needed date has passed in Bangladesh (requests without a needed date are kept).
 
 ## Donor visibility
 
@@ -46,7 +48,8 @@ public searches only when **all** of these hold:
 | GET | `/api/admin/complaints?status=&page=` | Admin | Complaints with donor details |
 | PATCH | `/api/admin/complaints/:id/status` | Admin | `{ status: "Open" \| "Resolved" \| "Dismissed" }` |
 | GET | `/api/admin/requests?status=&page=` | Admin | Patient blood requests |
-| PATCH | `/api/admin/requests/:id/status` | Admin | `{ status: "Pending" \| "Approved" \| "Rejected" \| "Fulfilled" }`; Approved/Fulfilled appear in the public feed |
+| PATCH | `/api/admin/requests/:id/status` | Admin | `{ status: "Pending" \| "Approved" \| "Rejected" \| "Fulfilled", note? }`; Approved/Fulfilled appear in the public feed |
+| PATCH | `/api/admin/requests/:id/note` | Admin | `{ note }` (max 300 chars, empty clears it): admin update shown on the public post |
 | DELETE | `/api/admin/requests/:id` | Admin | Deletes a request |
 | GET | `/api/admin/fraud-reports?status=&page=` | Admin | Fraud reports with reporter phone and any registered donor using that number |
 | PATCH | `/api/admin/fraud-reports/:id/status` | Admin | `{ status: "Pending" \| "Approved" \| "Rejected" }`; Approved reports are public |

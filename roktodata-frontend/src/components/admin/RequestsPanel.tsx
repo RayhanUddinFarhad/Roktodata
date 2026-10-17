@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   CalendarClock,
   Check,
@@ -23,11 +24,9 @@ import {
   RequestStatusBadge,
   formatDate,
 } from "@/components/admin/ui";
+import { DEFAULT_FULFILLED_NOTE, RequestNoteEditor, type NoteMode } from "@/components/admin/RequestNoteEditor";
 import { deleteRequest, getAdminRequests, setRequestNote, setRequestStatus } from "@/lib/api";
 import { toBanglaNumber, type BloodRequest, type RequestStatus } from "@/lib/data";
-
-const DEFAULT_FULFILLED_NOTE = "রক্ত ম্যানেজ হয়েছে। সহযোগিতার জন্য সবাইকে ধন্যবাদ।";
-const NOTE_MAX = 300;
 
 // Patient blood requests: approving one posts it on the public "রক্তের অনুরোধ" page.
 export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
@@ -61,8 +60,8 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
     };
   }, [token, requestKey, status, page, onError]);
 
-  // The request whose public note is being written: "fulfill" also marks it as fulfilled.
-  const [editor, setEditor] = useState<{ id: string; mode: "fulfill" | "note"; draft: string } | null>(null);
+  // The request whose public note is being written.
+  const [editor, setEditor] = useState<{ id: string; mode: NoteMode; draft: string } | null>(null);
 
   async function act(request: BloodRequest, action: () => Promise<{ message: string }>) {
     setBusyId(request.id);
@@ -74,7 +73,7 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
   const changeStatus = (request: BloodRequest, next: RequestStatus) =>
     act(request, () => setRequestStatus(token, request.id, next));
 
-  const openEditor = (request: BloodRequest, mode: "fulfill" | "note") =>
+  const openEditor = (request: BloodRequest, mode: NoteMode) =>
     setEditor({ id: request.id, mode, draft: request.adminNote || (mode === "fulfill" ? DEFAULT_FULFILLED_NOTE : "") });
 
   async function saveNote(request: BloodRequest) {
@@ -94,9 +93,16 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
   return (
     <section>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-slate-500">
-          অনুমোদন দিলে অনুরোধটি &quot;রক্তের অনুরোধ&quot; পাতায় পোস্ট হবে। মোট {data?.total ?? "…"}টি
-        </p>
+        <div className="text-sm text-slate-500">
+          <p>অনুমোদন দিলে অনুরোধটি &quot;রক্তের অনুরোধ&quot; পাতায় পোস্ট হবে। মোট {data?.total ?? "…"}টি</p>
+          <p className="mt-0.5 text-xs">
+            পোস্ট করা অনুরোধ দেখতে ফিল্টারে &quot;পোস্ট করা হয়েছে&quot; বাছুন, অথবা{" "}
+            <Link href="/blood-requests" className="font-semibold text-red-600 hover:underline">
+              রক্তের অনুরোধ পাতায়
+            </Link>{" "}
+            গিয়ে সরাসরি আপডেট বা ডিলিট করুন।
+          </p>
+        </div>
         <select
           value={status}
           onChange={(e) => {
@@ -214,37 +220,14 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
               </div>
 
               {editing && editor && (
-                <div className="mt-3 border-t border-slate-100 pt-3">
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-slate-700">
-                      {editor.mode === "fulfill"
-                        ? "রক্ত ম্যানেজ হয়েছে — পোস্টে যে আপডেট দেখাবে তা লিখুন"
-                        : "পোস্টে দেখানোর জন্য নোট লিখুন (ফাঁকা রাখলে নোট মুছে যাবে)"}
-                    </span>
-                    <textarea
-                      value={editor.draft}
-                      onChange={(e) => setEditor({ ...editor, draft: e.target.value })}
-                      maxLength={NOTE_MAX}
-                      rows={2}
-                      autoFocus
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
-                    />
-                  </label>
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[11px] text-slate-400">
-                      {toBanglaNumber(editor.draft.length)}/{toBanglaNumber(NOTE_MAX)}
-                    </span>
-                    <div className="flex gap-2">
-                      <ActionButton tone="gray" disabled={busy} onClick={() => setEditor(null)}>
-                        <X className="h-3.5 w-3.5" /> বাদ দিন
-                      </ActionButton>
-                      <ActionButton tone="green" disabled={busy} onClick={() => saveNote(request)}>
-                        <Check className="h-3.5 w-3.5" />
-                        {editor.mode === "fulfill" ? "ম্যানেজ হয়েছে হিসেবে চিহ্নিত করুন" : "সংরক্ষণ করুন"}
-                      </ActionButton>
-                    </div>
-                  </div>
-                </div>
+                <RequestNoteEditor
+                  mode={editor.mode}
+                  draft={editor.draft}
+                  onDraft={(draft) => setEditor({ ...editor, draft })}
+                  busy={busy}
+                  onCancel={() => setEditor(null)}
+                  onSave={() => saveNote(request)}
+                />
               )}
             </li>
           );

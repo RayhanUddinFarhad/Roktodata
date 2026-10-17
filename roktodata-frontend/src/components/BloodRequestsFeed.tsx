@@ -16,6 +16,8 @@ import {
   Plus,
   User,
 } from "lucide-react";
+import RequestAdminControls from "@/components/admin/RequestAdminControls";
+import { useAdminToken } from "@/lib/adminToken";
 import { ApiError, getBloodRequests } from "@/lib/api";
 import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber, type BloodRequest } from "@/lib/data";
 
@@ -23,6 +25,8 @@ const fieldClass =
   "h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-red-500 focus:outline-none";
 
 export default function BloodRequestsFeed() {
+  // When an admin is logged in (in this tab), each post gets admin controls.
+  const adminToken = useAdminToken();
   const [bloodGroup, setBloodGroup] = useState("");
   const [district, setDistrict] = useState("");
   const [page, setPage] = useState(1);
@@ -126,7 +130,18 @@ export default function BloodRequestsFeed() {
         <>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {requests.map((request) => (
-              <RequestPost key={request.id} request={request} />
+              <RequestPost
+                key={request.id}
+                request={request}
+                adminToken={adminToken}
+                onAdminChange={(updated) =>
+                  setRequests((current) =>
+                    updated
+                      ? current.map((item) => (item.id === updated.id ? updated : item))
+                      : current.filter((item) => item.id !== request.id),
+                  )
+                }
+              />
             ))}
           </div>
           {page < pages && (
@@ -148,7 +163,15 @@ export default function BloodRequestsFeed() {
   );
 }
 
-function RequestPost({ request }: { request: BloodRequest }) {
+function RequestPost({
+  request,
+  adminToken,
+  onAdminChange,
+}: {
+  request: BloodRequest;
+  adminToken: string | null | undefined;
+  onAdminChange: (request: BloodRequest | null) => void;
+}) {
   const fulfilled = request.status === "Fulfilled";
   const location = request.upazila ? `${request.upazila}, ${request.district}` : request.district;
 
@@ -229,6 +252,8 @@ function RequestPost({ request }: { request: BloodRequest }) {
           </a>
         </footer>
       )}
+
+      {adminToken && <RequestAdminControls request={request} token={adminToken} onChange={onAdminChange} />}
     </article>
   );
 }

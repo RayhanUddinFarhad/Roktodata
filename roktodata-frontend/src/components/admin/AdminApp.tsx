@@ -1,56 +1,23 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useState } from "react";
 import { Loader2 } from "lucide-react";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminLogin from "@/components/admin/AdminLogin";
-
-const TOKEN_KEY = "roktodata-admin-token";
-const TOKEN_EVENT = "roktodata-admin-token-change";
-
-// The token lives in sessionStorage, so closing the tab logs the admin out.
-// If storage is blocked, it is kept in memory for this page load instead.
-let memoryToken: string | null = null;
-
-function readToken(): string | null {
-  try {
-    return sessionStorage.getItem(TOKEN_KEY);
-  } catch {
-    return memoryToken;
-  }
-}
-
-function writeToken(token: string | null) {
-  memoryToken = token;
-  try {
-    if (token) sessionStorage.setItem(TOKEN_KEY, token);
-    else sessionStorage.removeItem(TOKEN_KEY);
-  } catch {}
-  window.dispatchEvent(new Event(TOKEN_EVENT));
-}
-
-function subscribe(onChange: () => void) {
-  window.addEventListener(TOKEN_EVENT, onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    window.removeEventListener(TOKEN_EVENT, onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
+import { useAdminToken, writeAdminToken } from "@/lib/adminToken";
 
 export default function AdminApp() {
-  // undefined during server rendering, before the browser's storage can be read.
-  const token = useSyncExternalStore(subscribe, readToken, () => undefined);
+  const token = useAdminToken();
   const [notice, setNotice] = useState("");
 
   const login = useCallback((newToken: string) => {
     setNotice("");
-    writeToken(newToken);
+    writeAdminToken(newToken);
   }, []);
 
   const logout = useCallback((message = "") => {
     setNotice(message);
-    writeToken(null);
+    writeAdminToken(null);
   }, []);
 
   if (token === undefined) {

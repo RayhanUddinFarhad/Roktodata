@@ -27,6 +27,15 @@ patientRequestSchema.index(
   { unique: true, partialFilterExpression: { requestDay: { $type: "string" } } },
 );
 patientRequestSchema.index({ status: 1, createdAt: -1 });
+// neededDate is stored as midnight UTC of the needed day; MongoDB deletes the request once that day
+// has ended in Bangladesh (UTC+6, so 18:00 UTC). Requests without a needed date never expire.
+const EXPIRY_INDEX = { name: "neededDate_expiry", expireAfterSeconds: 18 * 60 * 60 };
+patientRequestSchema.index({ neededDate: 1 }, EXPIRY_INDEX);
 patientRequestSchema.index({ createdAt: -1 });
 
 export const PatientRequest = mongoose.model("PatientRequest", patientRequestSchema);
+
+// Indexes aren't built automatically in production, but auto-deletion depends on this one.
+export async function ensureRequestExpiryIndex() {
+  await PatientRequest.collection.createIndex({ neededDate: 1 }, EXPIRY_INDEX);
+}
