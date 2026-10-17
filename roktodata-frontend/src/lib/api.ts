@@ -11,7 +11,8 @@ import type {
   RequestStatus,
 } from "@/lib/data";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+// Trailing slashes are stripped so "https://api.example.com/" doesn't produce "//api/..." paths.
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000").replace(/\/+$/, "");
 
 // An error whose message comes from the API and is safe to show to the user (in Bangla).
 // `code` identifies specific cases, e.g. "DUPLICATE_REQUEST".
