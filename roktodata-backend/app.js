@@ -34,6 +34,11 @@ app.use(morgan(isProduction ? "combined" : "dev"));
 app.use(express.json({ limit: "10kb" }));
 app.use(sanitizeInput);
 
+// Friendly response for anyone opening the API's base URL in a browser.
+app.get("/", (_req, res) => {
+  res.json({ success: true, message: "Roktodata API চলছে।", health: "/api/health" });
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({ success: true, database: mongoose.connection.readyState === 1 ? "connected" : "disconnected" });
 });
