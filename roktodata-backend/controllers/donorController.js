@@ -15,7 +15,7 @@ export async function registerOrUpdateDonor(req, res) {
 
   if (existing) {
     if (existing.status === "Blocked") {
-      throw new AppError(403, "এই প্রোফাইলটি ব্লক করা হয়েছে। অনুগ্রহ করে হটলাইনে যোগাযোগ করুন।");
+      throw new AppError(403, "এই প্রোফাইলটি ব্লক করা হয়েছে। বিস্তারিত জানতে Roktodatainfo@gmail.com-এ ইমেইল করুন।");
     }
     existing.set(details);
     if (lastDonationDate) existing.lastDonationDate = lastDonationDate;

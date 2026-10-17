@@ -103,6 +103,6 @@ export const NAV_LINKS = [
   { href: "/about", label: "আমাদের সম্পর্কে" },
 ];
 
-export const HOTLINE = "+880 9612-345678";
+export const CONTACT_EMAIL = "Roktodatainfo@gmail.com";
 
-export const CONTACT_EMAIL = "roktodata@gmail.com";
+export const DEVELOPER_NAME = "রায়হান উদ্দিন ফরহাদ";

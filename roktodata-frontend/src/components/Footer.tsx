@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { cacheLife } from "next/cache";
-import { Mail, Phone } from "lucide-react";
+import { Mail } from "lucide-react";
 import LogoMark from "@/components/Logo";
-import { CONTACT_EMAIL, HOTLINE } from "@/lib/data";
+import { CONTACT_EMAIL, DEVELOPER_NAME } from "@/lib/data";
 
 const QUICK_LINKS = [
   { href: "/", label: "হোম পেজ" },
@@ -45,24 +45,22 @@ export default async function Footer() {
         </div>
 
         <div>
-          <h4 className="font-semibold text-white">জরুরী হটলাইন</h4>
-          <p className="mt-3 text-sm">রক্তের প্রয়োজনে যোগাযোগ করুন:</p>
+          <h4 className="font-semibold text-white">যোগাযোগ</h4>
+          <p className="mt-3 text-sm">যেকোনো প্রশ্ন, পরামর্শ বা ডোনার তালিকা পাঠাতে ইমেইল করুন:</p>
           <a
-            href={`tel:${HOTLINE.replace(/[\s-]/g, "")}`}
-            className="mt-1 flex items-center gap-2 text-lg font-bold text-red-500"
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="mt-2 flex items-center gap-2 break-all font-semibold text-red-400 hover:text-red-300"
           >
-            <Phone className="h-5 w-5" fill="currentColor" />
-            {HOTLINE}
-          </a>
-          <p className="mt-1 text-xs text-slate-500">২৪ ঘণ্টা সেবা চালু রয়েছে।</p>
-          <a href={`mailto:${CONTACT_EMAIL}`} className="mt-3 flex items-center gap-2 text-sm hover:text-white">
-            <Mail className="h-4 w-4" />
+            <Mail className="h-4 w-4 shrink-0" />
             {CONTACT_EMAIL}
           </a>
         </div>
       </div>
-      <div className="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
-        © {new Date().getFullYear()} রক্তদাতা (RoktoData)। সর্বস্বত্ব সংরক্ষিত।
+      <div className="border-t border-slate-800 px-4 py-4 text-center text-xs text-slate-500">
+        © {new Date().getFullYear()} রক্তদাতা (RoktoData)। সর্বস্বত্ব সংরক্ষিত। ডেভেলপ করেছেন{" "}
+        <Link href="/about" className="font-semibold text-slate-300 hover:text-white">
+          {DEVELOPER_NAME}
+        </Link>
       </div>
     </footer>
   );
