@@ -101,6 +101,7 @@ export async function listDonors(req, res) {
       lastDonationDate: toDate(donor.lastDonationDate),
       isReadyToDonate: donor.isReadyToDonate,
       status: donor.status,
+      blockReason: donor.blockReason ?? "",
       createdAt: donor.createdAt.toISOString(),
       openComplaints: openComplaintsFor(donor._id),
     })),
@@ -109,13 +110,15 @@ export async function listDonors(req, res) {
 
 // PATCH /api/admin/donors/:id/status
 export async function updateDonorStatus(req, res) {
-  const { id, status } = req.validated;
-  const donor = await Donor.findByIdAndUpdate(id, { status }, { returnDocument: "after" });
+  const { id, status, reason } = req.validated;
+  const update =
+    status === "Blocked" ? { status, blockReason: reason, blockedAt: new Date() } : { status, blockReason: "", blockedAt: null };
+  const donor = await Donor.findByIdAndUpdate(id, update, { returnDocument: "after" });
   if (!donor) throw new AppError(404, "ডোনার পাওয়া যায়নি।");
 
   const messages = {
     Active: "ডোনার অনুমোদন করা হয়েছে। এখন ওয়েবসাইটে দেখা যাবে।",
-    Blocked: "ডোনার ব্লক করা হয়েছে।",
+    Blocked: "ডোনার ব্লক করা হয়েছে এবং কারণসহ প্রতারক তালিকায় যোগ করা হয়েছে।",
     Pending: "ডোনারকে অপেক্ষমাণ তালিকায় রাখা হয়েছে।",
   };
   res.json({ success: true, status: donor.status, message: messages[donor.status] });

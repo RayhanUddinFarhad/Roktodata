@@ -136,9 +136,16 @@ export const adminDonorListSchema = z.object({
   page: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(1000).default(1)),
 });
 
-export const donorStatusSchema = z.object({
-  status: z.enum(DONOR_STATUS, { error: "সঠিক স্ট্যাটাস দিন।" }),
-});
+// Blocking needs a reason: it is shown publicly in the fraud list.
+export const donorStatusSchema = z
+  .object({
+    status: z.enum(DONOR_STATUS, { error: "সঠিক স্ট্যাটাস দিন।" }),
+    reason: optionalText("ব্লক করার কারণ", 300),
+  })
+  .refine((data) => data.status !== "Blocked" || data.reason, {
+    message: "ব্লক করার কারণ লিখুন। কারণটি প্রতারক তালিকায় দেখানো হবে।",
+    path: ["reason"],
+  });
 
 export const adminComplaintListSchema = z.object({
   status: z.preprocess(emptyToUndefined, z.enum(COMPLAINT_STATUS).optional()),

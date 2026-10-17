@@ -5,6 +5,7 @@ import { Ban, Check, MapPin, Phone, RotateCw, X } from "lucide-react";
 import type { AdminContext } from "@/components/admin/AdminDashboard";
 import {
   ActionButton,
+  askBlockReason,
   COMPLAINT_STATUS_LABELS,
   ComplaintStatusBadge,
   DonorStatusBadge,
@@ -138,9 +139,11 @@ export default function ComplaintsPanel({ ctx }: { ctx: AdminContext }) {
                     tone="red"
                     disabled={busy}
                     onClick={() => {
-                      if (window.confirm(`${donor.fullName}-কে ব্লক করবেন? ব্লক করলে ওয়েবসাইটে দেখা যাবে না।`)) {
-                        act(complaint, () => setDonorStatus(token, donor.id, "Blocked"));
-                      }
+                      const suggestion = complaint.details
+                        ? `${complaint.reasonLabel} — ${complaint.details}`
+                        : complaint.reasonLabel;
+                      const reason = askBlockReason(donor.fullName, suggestion);
+                      if (reason) act(complaint, () => setDonorStatus(token, donor.id, "Blocked", reason));
                     }}
                   >
                     <Ban className="h-3.5 w-3.5" /> ডোনার ব্লক করুন

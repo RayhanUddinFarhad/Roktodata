@@ -178,6 +178,8 @@ export interface AdminStats {
 export interface AdminDonor extends Donor {
   isReadyToDonate: boolean;
   status: DonorStatus;
+  // Why the admin blocked them (shown in the public fraud list); "" unless Blocked.
+  blockReason: string;
   createdAt: string;
   openComplaints: number;
 }
@@ -212,8 +214,12 @@ export function getAdminDonors(token: string, params: { status?: DonorStatus; q?
   });
 }
 
-export function setDonorStatus(token: string, id: string, status: DonorStatus) {
-  return request<{ message: string }>(`/api/admin/donors/${id}/status`, jsonRequest("PATCH", { status }, auth(token)));
+// Blocking needs a reason, which is shown publicly in the fraud list.
+export function setDonorStatus(token: string, id: string, status: DonorStatus, reason?: string) {
+  return request<{ message: string }>(
+    `/api/admin/donors/${id}/status`,
+    jsonRequest("PATCH", { status, reason }, auth(token)),
+  );
 }
 
 export function deleteDonor(token: string, id: string) {

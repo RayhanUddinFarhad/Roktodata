@@ -38,12 +38,12 @@ public searches only when **all** of these hold:
 | GET | `/api/patient/requests?bloodGroup=&district=&page=` | – | Public feed: Approved/Fulfilled requests from the last 30 days, newest first (12 per page) |
 | POST | `/api/complaints` | – | Complaint against a donor (`donorId`, `complainantPhone`, `reason`, `details?`) |
 | POST | `/api/fraud-reports` | – | Report a fraudulent number (`phoneNumber`, `name`, `reason`, `details`, `reporterPhone`); Pending until approved. One active report per reporter per number |
-| GET | `/api/fraud-reports?page=` | – | Public fraud list: approved reports grouped per number (reporter phones never included) |
+| GET | `/api/fraud-reports?page=` | – | Public fraud list: approved reports and blocked donors (block reason + reasons of non-dismissed complaints, without complaint details) grouped per number (reporter/complainant phones never included) |
 | GET | `/api/fraud-reports/check?phone=` | – | `{ isFraud, entry }` for one number |
 | POST | `/api/admin/login` | – | `{ username, password }` → `{ token }` |
 | GET | `/api/admin/stats` | Admin | Counts of donors by status, open complaints, patient requests |
 | GET | `/api/admin/donors?status=&q=&page=` | Admin | Donors (20 per page); `q` searches name or phone prefix |
-| PATCH | `/api/admin/donors/:id/status` | Admin | `{ status: "Pending" \| "Active" \| "Blocked" }` |
+| PATCH | `/api/admin/donors/:id/status` | Admin | `{ status: "Pending" \| "Active" \| "Blocked", reason }`; `reason` (max 300) is required to block and is shown in the public fraud list; unblocking clears it |
 | DELETE | `/api/admin/donors/:id` | Admin | Deletes the donor and their complaints |
 | GET | `/api/admin/complaints?status=&page=` | Admin | Complaints with donor details |
 | PATCH | `/api/admin/complaints/:id/status` | Admin | `{ status: "Open" \| "Resolved" \| "Dismissed" }` |

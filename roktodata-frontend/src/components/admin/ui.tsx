@@ -65,6 +65,21 @@ export function ComplaintStatusBadge({ status }: { status: ComplaintStatus }) {
 // "2026-10-17T11:14:45.810Z" -> "2026-10-17"
 export const formatDate = (iso: string) => iso.slice(0, 10);
 
+// Asks why a donor is being blocked (shown publicly in the fraud list); null if cancelled or left empty.
+export function askBlockReason(name: string, suggestion = ""): string | null {
+  const answer = window.prompt(
+    `${name || "এই ডোনার"}-কে কেন ব্লক করছেন? কারণটি "প্রতারক ডোনার" তালিকায় সবার জন্য দেখানো হবে।`,
+    suggestion,
+  );
+  if (answer === null) return null;
+  const reason = answer.trim().slice(0, 300);
+  if (!reason) {
+    window.alert("ব্লক করার কারণ লিখতে হবে।");
+    return null;
+  }
+  return reason;
+}
+
 const BUTTON_TONES = {
   green: "bg-emerald-600 text-white hover:bg-emerald-700",
   red: "bg-red-600 text-white hover:bg-red-700",

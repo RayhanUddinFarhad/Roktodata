@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { CircleAlert, Loader2, Search, ShieldAlert, ShieldCheck, TriangleAlert } from "lucide-react";
+import { Ban, CircleAlert, Loader2, Search, ShieldAlert, ShieldCheck, TriangleAlert } from "lucide-react";
 import FraudReportButton from "@/components/FraudReportButton";
 import { ApiError, checkFraudNumber, getFraudEntries } from "@/lib/api";
 import { toBanglaNumber, type FraudEntry } from "@/lib/data";
@@ -96,6 +96,10 @@ function NumberCheck() {
               <ShieldAlert className="h-5 w-5" />
               সতর্কতা! {result.phoneNumber} নাম্বারটি প্রতারক হিসেবে চিহ্নিত
             </p>
+            {result.entry.names.length > 0 && (
+              <p className="mt-1 text-sm font-semibold text-slate-800">{result.entry.names.join(" / ")}</p>
+            )}
+            {result.entry.blockedDonor && <BlockedDonorBadge />}
             <FraudEntryDetails entry={result.entry} />
           </div>
         ) : (
@@ -170,12 +174,15 @@ function FraudList() {
                 <header className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-mono text-lg font-bold text-red-600">{entry.phoneNumber}</p>
-                    <p className="text-sm font-semibold text-slate-800">{entry.names.join(" / ")}</p>
+                    {entry.names.length > 0 && (
+                      <p className="text-sm font-semibold text-slate-800">{entry.names.join(" / ")}</p>
+                    )}
                   </div>
                   <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
                     {toBanglaNumber(entry.reportCount)}টি রিপোর্ট
                   </span>
                 </header>
+                {entry.blockedDonor && <BlockedDonorBadge />}
                 <FraudEntryDetails entry={entry} />
               </article>
             ))}
@@ -203,14 +210,24 @@ function FraudEntryDetails({ entry }: { entry: FraudEntry }) {
   return (
     <ul className="mt-3 space-y-2">
       {entry.reports.map((report, index) => (
-        <li key={index} className="rounded-lg bg-slate-50 px-3 py-2 text-sm">
+        <li key={index} className={`rounded-lg px-3 py-2 text-sm ${report.source === "admin" ? "bg-red-50" : "bg-slate-50"}`}>
           <p className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-semibold text-red-700">{report.reasonLabel}</span>
             <span className="text-[11px] text-slate-400">{toBanglaNumber(report.createdAt.slice(0, 10))}</span>
           </p>
-          <p className="mt-1 whitespace-pre-line text-slate-700">{report.details}</p>
+          {report.details && <p className="mt-1 whitespace-pre-line text-slate-700">{report.details}</p>}
         </li>
       ))}
     </ul>
+  );
+}
+
+// The number belongs to a donor registered on this site whom the admin has blocked.
+function BlockedDonorBadge() {
+  return (
+    <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+      <Ban className="h-3 w-3" />
+      নিবন্ধিত ডোনার · অ্যাডমিন ব্লক করেছেন
+    </p>
   );
 }

@@ -71,13 +71,22 @@ export const FRAUD_REASONS = {
 export type FraudReason = keyof typeof FRAUD_REASONS;
 export type FraudReportStatus = "Pending" | "Approved" | "Rejected";
 
-// One fraudulent number in the public list, with every admin-approved report against it.
+// One fraudulent number in the public list: every admin-approved fraud report against it and,
+// if it belongs to a donor the admin blocked, the block reason and complaint reasons.
 export interface FraudEntry {
   phoneNumber: string;
   names: string[];
   reportCount: number;
   lastReportedAt: string;
-  reports: { reason: FraudReason; reasonLabel: string; details: string; createdAt: string }[];
+  blockedDonor: boolean;
+  reports: {
+    // "report": fraud report, "admin": the admin's block reason, "complaint": a complaint (details stay private)
+    source: "report" | "admin" | "complaint";
+    reason: string;
+    reasonLabel: string;
+    details: string;
+    createdAt: string;
+  }[];
 }
 
 // Must stay in sync with DISTRICTS in the backend (config/constants.js).

@@ -5,6 +5,7 @@ import { Ban, Check, Phone, RotateCw, Trash2, UserRound, X } from "lucide-react"
 import type { AdminContext } from "@/components/admin/AdminDashboard";
 import {
   ActionButton,
+  askBlockReason,
   DonorStatusBadge,
   FRAUD_STATUS_LABELS,
   FraudStatusBadge,
@@ -146,9 +147,8 @@ export default function FraudReportsPanel({ ctx }: { ctx: AdminContext }) {
                     tone="red"
                     disabled={busy}
                     onClick={() => {
-                      if (window.confirm(`${donor.fullName}-কে ব্লক করবেন? ব্লক করলে ওয়েবসাইটে দেখা যাবে না।`)) {
-                        act(report, () => setDonorStatus(token, donor.id, "Blocked"));
-                      }
+                      const reason = askBlockReason(donor.fullName, report.reasonLabel);
+                      if (reason) act(report, () => setDonorStatus(token, donor.id, "Blocked", reason));
                     }}
                   >
                     <Ban className="h-3.5 w-3.5" /> ডোনার ব্লক করুন

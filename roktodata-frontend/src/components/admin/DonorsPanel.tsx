@@ -5,6 +5,7 @@ import { Ban, CalendarDays, Check, MapPin, MessageSquareWarning, Phone, RotateCw
 import type { AdminContext } from "@/components/admin/AdminDashboard";
 import {
   ActionButton,
+  askBlockReason,
   DONOR_STATUS_LABELS,
   DonorStatusBadge,
   ListState,
@@ -154,6 +155,11 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
                     </span>
                     <span>রেজিস্ট্রেশন: {formatDate(donor.createdAt)}</span>
                   </div>
+                  {donor.status === "Blocked" && donor.blockReason && (
+                    <p className="mt-2 rounded-md bg-red-50 px-2.5 py-1.5 text-xs text-red-800">
+                      ব্লকের কারণ (প্রতারক তালিকায় দেখানো হচ্ছে): {donor.blockReason}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -172,7 +178,14 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
                     </>
                   )}
                   {donor.status === "Active" && (
-                    <ActionButton tone="red" disabled={busy} onClick={() => changeStatus(donor, "Blocked")}>
+                    <ActionButton
+                      tone="red"
+                      disabled={busy}
+                      onClick={() => {
+                        const reason = askBlockReason(donor.fullName);
+                        if (reason) act(donor, () => setDonorStatus(token, donor.id, "Blocked", reason));
+                      }}
+                    >
                       <Ban className="h-3.5 w-3.5" /> ব্লক করুন
                     </ActionButton>
                   )}
