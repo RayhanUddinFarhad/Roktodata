@@ -239,8 +239,16 @@ export function getAdminRequests(token: string, params: { status?: RequestStatus
   });
 }
 
-export function setRequestStatus(token: string, id: string, status: RequestStatus) {
-  return request<{ message: string }>(`/api/admin/requests/${id}/status`, jsonRequest("PATCH", { status }, auth(token)));
+export function setRequestStatus(token: string, id: string, status: RequestStatus, note?: string) {
+  return request<{ message: string }>(
+    `/api/admin/requests/${id}/status`,
+    jsonRequest("PATCH", { status, note }, auth(token)),
+  );
+}
+
+// Empty note clears it.
+export function setRequestNote(token: string, id: string, note: string) {
+  return request<{ message: string }>(`/api/admin/requests/${id}/note`, jsonRequest("PATCH", { note }, auth(token)));
 }
 
 export function deleteRequest(token: string, id: string) {

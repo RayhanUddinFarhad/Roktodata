@@ -1,7 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarClock, Check, CircleCheck, Hospital, MapPin, Phone, RotateCw, Trash2, X } from "lucide-react";
+import {
+  CalendarClock,
+  Check,
+  CircleCheck,
+  Hospital,
+  MapPin,
+  MessageSquareText,
+  PencilLine,
+  Phone,
+  RotateCw,
+  Trash2,
+  X,
+} from "lucide-react";
 import type { AdminContext } from "@/components/admin/AdminDashboard";
 import {
   ActionButton,
@@ -11,8 +23,11 @@ import {
   RequestStatusBadge,
   formatDate,
 } from "@/components/admin/ui";
-import { deleteRequest, getAdminRequests, setRequestStatus } from "@/lib/api";
+import { deleteRequest, getAdminRequests, setRequestNote, setRequestStatus } from "@/lib/api";
 import { toBanglaNumber, type BloodRequest, type RequestStatus } from "@/lib/data";
+
+const DEFAULT_FULFILLED_NOTE = "রক্ত ম্যানেজ হয়েছে। সহযোগিতার জন্য সবাইকে ধন্যবাদ।";
+const NOTE_MAX = 300;
 
 // Patient blood requests: approving one posts it on the public "রক্তের অনুরোধ" page.
 export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
@@ -46,14 +61,33 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
     };
   }, [token, requestKey, status, page, onError]);
 
+  // The request whose public note is being written: "fulfill" also marks it as fulfilled.
+  const [editor, setEditor] = useState<{ id: string; mode: "fulfill" | "note"; draft: string } | null>(null);
+
   async function act(request: BloodRequest, action: () => Promise<{ message: string }>) {
     setBusyId(request.id);
-    await runAction(action);
+    const ok = await runAction(action);
     setBusyId(null);
+    return ok;
   }
 
   const changeStatus = (request: BloodRequest, next: RequestStatus) =>
     act(request, () => setRequestStatus(token, request.id, next));
+
+  const openEditor = (request: BloodRequest, mode: "fulfill" | "note") =>
+    setEditor({ id: request.id, mode, draft: request.adminNote || (mode === "fulfill" ? DEFAULT_FULFILLED_NOTE : "") });
+
+  async function saveNote(request: BloodRequest) {
+    if (!editor) return;
+    const note = editor.draft.trim();
+    const ok = await act(request, () =>
+      editor.mode === "fulfill"
+        ? setRequestStatus(token, request.id, "Fulfilled", note)
+        : setRequestNote(token, request.id, note),
+    );
+    // Keep the draft open on failure so it isn't lost.
+    if (ok) setEditor(null);
+  }
 
   const requests = data?.requests ?? [];
 
@@ -85,6 +119,7 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
       <ul className={`space-y-3 ${loading ? "opacity-60" : ""}`}>
         {requests.map((request) => {
           const busy = busyId === request.id;
+          const editing = editor?.id === request.id;
           return (
             <li key={request.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -123,6 +158,12 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
                     )}
                     <span>অনুরোধ: {formatDate(request.createdAt)}</span>
                   </div>
+                  {request.adminNote && !editing && (
+                    <p className="mt-2 flex items-start gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1.5 text-xs text-emerald-800">
+                      <MessageSquareText className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <span className="whitespace-pre-line">{request.adminNote}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -138,13 +179,18 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
                   )}
                   {request.status === "Approved" && (
                     <>
-                      <ActionButton tone="green" disabled={busy} onClick={() => changeStatus(request, "Fulfilled")}>
-                        <CircleCheck className="h-3.5 w-3.5" /> রক্ত পাওয়া গেছে
+                      <ActionButton tone="green" disabled={busy} onClick={() => openEditor(request, "fulfill")}>
+                        <CircleCheck className="h-3.5 w-3.5" /> রক্ত ম্যানেজ হয়েছে
                       </ActionButton>
                       <ActionButton tone="gray" disabled={busy} onClick={() => changeStatus(request, "Pending")}>
                         <RotateCw className="h-3.5 w-3.5" /> পোস্ট সরান
                       </ActionButton>
                     </>
+                  )}
+                  {(request.status === "Approved" || request.status === "Fulfilled") && (
+                    <ActionButton tone="gray" disabled={busy} onClick={() => openEditor(request, "note")}>
+                      <PencilLine className="h-3.5 w-3.5" /> {request.adminNote ? "নোট এডিট" : "নোট লিখুন"}
+                    </ActionButton>
                   )}
                   {(request.status === "Rejected" || request.status === "Fulfilled") && (
                     <ActionButton tone="gray" disabled={busy} onClick={() => changeStatus(request, "Pending")}>
@@ -152,18 +198,54 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
                     </ActionButton>
                   )}
                   <ActionButton
-                    tone="gray"
+                    tone="outlineRed"
                     disabled={busy}
                     onClick={() => {
-                      if (window.confirm(`${request.patientName}-এর অনুরোধটি স্থায়ীভাবে মুছে ফেলবেন?`)) {
+                      const posted = request.status === "Approved" || request.status === "Fulfilled";
+                      const warning = posted ? " এটি \"রক্তের অনুরোধ\" পাতা থেকেও সরে যাবে।" : "";
+                      if (window.confirm(`${request.patientName}-এর অনুরোধটি স্থায়ীভাবে মুছে ফেলবেন?${warning}`)) {
                         act(request, () => deleteRequest(token, request.id));
                       }
                     }}
                   >
-                    <Trash2 className="h-3.5 w-3.5" /> মুছুন
+                    <Trash2 className="h-3.5 w-3.5" /> ডিলিট
                   </ActionButton>
                 </div>
               </div>
+
+              {editing && editor && (
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-semibold text-slate-700">
+                      {editor.mode === "fulfill"
+                        ? "রক্ত ম্যানেজ হয়েছে — পোস্টে যে আপডেট দেখাবে তা লিখুন"
+                        : "পোস্টে দেখানোর জন্য নোট লিখুন (ফাঁকা রাখলে নোট মুছে যাবে)"}
+                    </span>
+                    <textarea
+                      value={editor.draft}
+                      onChange={(e) => setEditor({ ...editor, draft: e.target.value })}
+                      maxLength={NOTE_MAX}
+                      rows={2}
+                      autoFocus
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+                    />
+                  </label>
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[11px] text-slate-400">
+                      {toBanglaNumber(editor.draft.length)}/{toBanglaNumber(NOTE_MAX)}
+                    </span>
+                    <div className="flex gap-2">
+                      <ActionButton tone="gray" disabled={busy} onClick={() => setEditor(null)}>
+                        <X className="h-3.5 w-3.5" /> বাদ দিন
+                      </ActionButton>
+                      <ActionButton tone="green" disabled={busy} onClick={() => saveNote(request)}>
+                        <Check className="h-3.5 w-3.5" />
+                        {editor.mode === "fulfill" ? "ম্যানেজ হয়েছে হিসেবে চিহ্নিত করুন" : "সংরক্ষণ করুন"}
+                      </ActionButton>
+                    </div>
+                  </div>
+                </div>
+              )}
             </li>
           );
         })}

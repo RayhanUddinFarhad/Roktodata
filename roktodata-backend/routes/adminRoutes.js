@@ -12,6 +12,7 @@ import {
   updateComplaintStatus,
   updateDonorStatus,
   updateFraudReportStatus,
+  updateRequestNote,
   updateRequestStatus,
 } from "../controllers/adminController.js";
 import { adminLoginLimiter } from "../middleware/rateLimiters.js";
@@ -27,6 +28,7 @@ import {
   donorStatusSchema,
   fraudStatusSchema,
   idParamSchema,
+  requestNoteSchema,
   requestStatusSchema,
 } from "../validators/schemas.js";
 
@@ -62,6 +64,12 @@ router.patch(
   validate(idParamSchema, "params"),
   validate(requestStatusSchema, "body"),
   updateRequestStatus,
+);
+router.patch(
+  "/requests/:id/note",
+  validate(idParamSchema, "params"),
+  validate(requestNoteSchema, "body"),
+  updateRequestNote,
 );
 router.delete("/requests/:id", validate(idParamSchema, "params"), deleteRequest);
 

@@ -154,9 +154,18 @@ export const adminRequestListSchema = z.object({
   page,
 });
 
+// An empty note clears it.
+const adminNote = z
+  .string({ error: "নোট লিখুন।" })
+  .trim()
+  .max(300, "নোট সর্বোচ্চ ৩০০ অক্ষরের হতে পারে।");
+
 export const requestStatusSchema = z.object({
   status: z.enum(REQUEST_STATUS, { error: "সঠিক স্ট্যাটাস দিন।" }),
+  note: adminNote.optional(),
 });
+
+export const requestNoteSchema = z.object({ note: adminNote });
 
 // ---- Fraud reports ----
 

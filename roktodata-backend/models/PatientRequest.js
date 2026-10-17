@@ -13,6 +13,8 @@ const patientRequestSchema = new mongoose.Schema(
     neededDate: { type: Date, default: null },
     // Shown in the public feed only once an admin approves it.
     status: { type: String, enum: REQUEST_STATUS, default: "Pending" },
+    // Admin's public update on the post, e.g. "রক্ত ম্যানেজ হয়েছে।"
+    adminNote: { type: String, trim: true, maxlength: 300, default: "" },
     // Bangladesh calendar day ("YYYY-MM-DD") the request was made; enforces one request per number per day.
     requestDay: { type: String, required: true },
   },

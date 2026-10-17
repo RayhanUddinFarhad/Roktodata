@@ -211,8 +211,9 @@ export async function listRequests(req, res) {
 
 // PATCH /api/admin/requests/:id/status
 export async function updateRequestStatus(req, res) {
-  const { id, status } = req.validated;
-  const request = await PatientRequest.findByIdAndUpdate(id, { status }, { returnDocument: "after" });
+  const { id, status, note } = req.validated;
+  const update = note === undefined ? { status } : { status, adminNote: note };
+  const request = await PatientRequest.findByIdAndUpdate(id, update, { returnDocument: "after" });
   if (!request) throw new AppError(404, "অনুরোধ পাওয়া যায়নি।");
 
   const messages = {
@@ -222,6 +223,18 @@ export async function updateRequestStatus(req, res) {
     Pending: "অনুরোধটি আবার অপেক্ষমাণ তালিকায় রাখা হয়েছে।",
   };
   res.json({ success: true, status: request.status, message: messages[request.status] });
+}
+
+// PATCH /api/admin/requests/:id/note (shown on the public post; empty clears it)
+export async function updateRequestNote(req, res) {
+  const { id, note } = req.validated;
+  const request = await PatientRequest.findByIdAndUpdate(id, { adminNote: note }, { returnDocument: "after" });
+  if (!request) throw new AppError(404, "অনুরোধ পাওয়া যায়নি।");
+  res.json({
+    success: true,
+    adminNote: request.adminNote,
+    message: request.adminNote ? "নোট সংরক্ষণ করা হয়েছে।" : "নোট মুছে ফেলা হয়েছে।",
+  });
 }
 
 // DELETE /api/admin/requests/:id

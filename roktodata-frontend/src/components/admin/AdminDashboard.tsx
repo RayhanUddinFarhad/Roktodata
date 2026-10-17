@@ -25,8 +25,8 @@ type Tab = "pending" | "donors" | "requests" | "fraud" | "complaints";
 export interface AdminContext {
   token: string;
   refreshKey: number;
-  // Runs an admin action, shows its result message and refreshes lists and stats.
-  runAction: (action: () => Promise<{ message: string }>) => Promise<void>;
+  // Runs an admin action, shows its result message and refreshes lists and stats. Resolves to whether it succeeded.
+  runAction: (action: () => Promise<{ message: string }>) => Promise<boolean>;
   // Reports a failed load (logs out on an expired session).
   onError: (err: unknown) => void;
 }
@@ -59,8 +59,10 @@ export default function AdminDashboard({
         const { message } = await action();
         setToast({ ok: true, text: message });
         setRefreshKey((key) => key + 1);
+        return true;
       } catch (err) {
         onError(err);
+        return false;
       }
     },
     [onError],

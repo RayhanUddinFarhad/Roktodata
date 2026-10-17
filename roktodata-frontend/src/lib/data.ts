@@ -30,6 +30,8 @@ export interface BloodRequest {
   bagsNeeded: number;
   neededDate: string | null;
   status: RequestStatus;
+  // Admin's public update on the post, e.g. "রক্ত ম্যানেজ হয়েছে।" ("" when none).
+  adminNote: string;
   createdAt: string;
 }
 

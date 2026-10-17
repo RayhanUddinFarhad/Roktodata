@@ -58,6 +58,7 @@ const toPublicRequest = (request) => ({
   bagsNeeded: request.bagsNeeded ?? 1,
   neededDate: request.neededDate ? request.neededDate.toISOString().slice(0, 10) : null,
   status: request.status,
+  adminNote: request.adminNote ?? "",
   createdAt: request.createdAt.toISOString(),
 });
 

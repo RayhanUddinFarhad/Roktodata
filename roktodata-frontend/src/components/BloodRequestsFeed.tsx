@@ -11,6 +11,7 @@ import {
   Loader2,
   MapPin,
   Megaphone,
+  MessageSquareText,
   PhoneCall,
   Plus,
   User,
@@ -201,6 +202,20 @@ function RequestPost({ request }: { request: BloodRequest }) {
           </div>
         )}
       </dl>
+
+      {request.adminNote && (
+        <p
+          className={`mt-4 flex items-start gap-2 rounded-lg px-3 py-2 text-sm ${
+            fulfilled ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"
+          }`}
+        >
+          <MessageSquareText className="mt-0.5 h-4 w-4 shrink-0" />
+          <span className="whitespace-pre-line">
+            <span className="sr-only">অ্যাডমিনের আপডেট: </span>
+            {request.adminNote}
+          </span>
+        </p>
+      )}
 
       {!fulfilled && (
         <footer className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
