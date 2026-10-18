@@ -66,7 +66,9 @@ export default async function DistrictDonorsPage({ params }: PageProps<"/donors/
           </span>
           <h1 className="mt-2 text-2xl font-bold text-slate-900">{district} জেলার রক্তদাতা</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
-            {total > 0 ? (
+            {!stats.available ? (
+              <>নিচে রক্তের গ্রুপ ও থানা বেছে নিয়ে {district} জেলার রক্তদাতা খুঁজুন এবং সরাসরি ফোন করুন।</>
+            ) : total > 0 ? (
               <>
                 {district} জেলায় এখন <strong className="text-slate-900">{toBanglaNumber(total)} জন</strong> রক্তদাতা রক্ত দিতে
                 প্রস্তুত। নিচে রক্তের গ্রুপ ও থানা বেছে নিয়ে খুঁজুন এবং সরাসরি ফোন করুন।
