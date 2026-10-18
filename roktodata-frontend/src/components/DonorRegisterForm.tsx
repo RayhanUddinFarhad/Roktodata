@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CircleCheck, Loader2, MapPin, MessageSquareText, Pencil, Phone, RotateCw, ShieldCheck, UserCheck } from "lucide-react";
 import OtpInput from "@/components/OtpInput";
 import ThanaSelect from "@/components/ThanaSelect";
-import { ApiError, registerOrUpdateDonor, sendOtp, verifyOtp } from "@/lib/api";
+import { ApiError, previewName, registerOrUpdateDonor, sendOtp, verifyOtp } from "@/lib/api";
 import { BLOOD_GROUPS, DISTRICTS, formatLocation, toBanglaNumber, type BloodGroup } from "@/lib/data";
 
 const fieldClass =
@@ -45,6 +45,8 @@ export default function DonorRegisterForm() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  // The name as the site will save and show it (English is converted to Bangla); empty until known.
+  const [shownName, setShownName] = useState("");
   // When the current code expires and when a new one may be requested (ms timestamps).
   const [expiresAt, setExpiresAt] = useState(0);
   const [resendAt, setResendAt] = useState(0);
@@ -80,6 +82,7 @@ export default function DonorRegisterForm() {
       verificationToken,
     );
     setSuccessMessage(result.message);
+    setShownName(result.fullName);
     setStep("done");
   }
 
@@ -98,6 +101,7 @@ export default function DonorRegisterForm() {
     e.preventDefault();
     setError("");
     setNotice("");
+    setShownName("");
     if (!PHONE_PATTERN.test(phone)) {
       setError("সঠিক ১১ ডিজিটের মোবাইল নাম্বার দিন (যেমন: 01712345678)।");
       return;
@@ -112,6 +116,10 @@ export default function DonorRegisterForm() {
       // Coming back to edit details: an already verified number, or a code sent moments ago, is reused.
       if (!verified && !(sentToRef.current === phone && Date.now() < expiresAt)) await requestCode();
       setStep("otp");
+      // Only a preview: if it fails the typed name is shown, and the server converts it on save anyway.
+      previewName(name.trim())
+        .then((result) => setShownName(result.fullName))
+        .catch(() => {});
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -230,6 +238,9 @@ export default function DonorRegisterForm() {
               placeholder="আপনার নাম লিখুন"
               className={fieldClass}
             />
+            <span className="mt-1 block text-[10px] text-slate-500">
+              বাংলায় লেখা ভালো। ইংরেজিতে লিখলে ওয়েবসাইটে বাংলায় রূপান্তর করে দেখানো হবে।
+            </span>
           </label>
 
           <label className="block">
@@ -433,7 +444,7 @@ export default function DonorRegisterForm() {
             <div className="mt-2 flex items-center gap-3">
               <span className="rounded-md bg-red-50 px-2.5 py-1 text-sm font-bold text-red-600">{bloodGroup}</span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-slate-900">{name}</p>
+                <p className="truncate text-sm font-bold text-slate-900">{shownName || name}</p>
                 <p className="flex items-center gap-1 text-[11px] text-slate-500">
                   <MapPin className="h-3 w-3 text-red-500" />
                   {formatLocation(district, thana)}
@@ -444,6 +455,11 @@ export default function DonorRegisterForm() {
                 </p>
               </div>
             </div>
+            {shownName && shownName !== name.trim() && (
+              <p className="mt-2 border-t border-slate-200 pt-2 text-[11px] leading-relaxed text-slate-500">
+                ওয়েবসাইটে নামটি বাংলায় এভাবে দেখাবে। বানান ভুল হলে &quot;পরিবর্তন করুন&quot; চেপে নামটি নিজেই বাংলায় লিখুন।
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -451,7 +467,7 @@ export default function DonorRegisterForm() {
       {step === "done" && (
         <div className="mt-6 flex flex-col items-center rounded-xl bg-emerald-50 px-4 py-8 text-center">
           <CircleCheck className="h-10 w-10 text-emerald-600" />
-          <p className="mt-3 font-bold text-slate-900">ধন্যবাদ, {name}!</p>
+          <p className="mt-3 font-bold text-slate-900">ধন্যবাদ, {shownName || name}!</p>
           <p className="mt-1 text-sm text-slate-600">{successMessage}</p>
           <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-emerald-700">
             <ShieldCheck className="h-3.5 w-3.5" />

@@ -1,11 +1,14 @@
 import { Donor } from "../models/Donor.js";
 import { AppError } from "../utils/AppError.js";
+import { toBanglaName } from "../utils/banglaName.js";
 import { SEARCH_PAGE_SIZE } from "../config/constants.js";
 import { findDonors, visibleDonorFilter } from "../utils/findDonors.js";
 
 // POST /api/donors/register-or-update
 export async function registerOrUpdateDonor(req, res) {
-  const { phoneNumber, lastDonationDate, ...details } = req.validated;
+  const { phoneNumber, lastDonationDate, ...rest } = req.validated;
+  // Names are shown in Bangla on the site; English input is converted.
+  const details = { ...rest, fullName: toBanglaName(rest.fullName) };
 
   // With phone verification on, the number confirmed by SMS code must match the profile being written.
   if (req.verifiedPhone && req.verifiedPhone !== phoneNumber) {
@@ -24,6 +27,7 @@ export async function registerOrUpdateDonor(req, res) {
     return res.json({
       success: true,
       isNew: false,
+      fullName: existing.fullName,
       status: existing.status,
       message:
         existing.status === "Pending"
@@ -36,9 +40,15 @@ export async function registerOrUpdateDonor(req, res) {
   res.status(201).json({
     success: true,
     isNew: true,
+    fullName: donor.fullName,
     status: donor.status,
     message: "ধন্যবাদ! আপনার রেজিস্ট্রেশন সম্পন্ন হয়েছে। অ্যাডমিন অনুমোদনের পর আপনার প্রোফাইল ওয়েবসাইটে দেখা যাবে।",
   });
+}
+
+// GET /api/donors/name-preview?name= — how a name will be saved and shown (English -> Bangla).
+export function previewName(req, res) {
+  res.json({ success: true, fullName: toBanglaName(req.validated.name) });
 }
 
 // GET /api/donors/search

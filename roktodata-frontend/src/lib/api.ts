@@ -144,9 +144,14 @@ export function verifyOtp(phoneNumber: string, code: string) {
   );
 }
 
+// How a name will be saved and shown on the site (English parts converted to Bangla).
+export function previewName(name: string, signal?: AbortSignal) {
+  return request<{ fullName: string }>(`/api/donors/name-preview?${new URLSearchParams({ name })}`, { signal });
+}
+
 // `verificationToken` comes from verifyOtp; the server requires it while phone verification is on.
 export function registerOrUpdateDonor(donor: DonorPayload, verificationToken?: string) {
-  return request<{ message: string; isNew: boolean; status: DonorStatus }>(
+  return request<{ message: string; isNew: boolean; status: DonorStatus; fullName: string }>(
     "/api/donors/register-or-update",
     jsonRequest("POST", donor, verificationToken ? { Authorization: `Bearer ${verificationToken}` } : {}),
   );

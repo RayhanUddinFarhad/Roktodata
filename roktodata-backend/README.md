@@ -34,8 +34,9 @@ public searches only when **all** of these hold:
 | GET | `/api/health` | – | Server and database status |
 | POST | `/api/otp/send` | – | `{ phoneNumber }`: SMS a 6-digit code (valid 5 min). 60 s between codes, 5 per number and `OTP_DAILY_LIMIT` site-wide per 24 h; blocked donors get 403 |
 | POST | `/api/otp/verify` | – | `{ phoneNumber, code }` → `{ verificationToken }` (valid 15 min). 5 wrong tries lock the code; each code works once |
-| POST | `/api/donors/register-or-update` | Phone token* | Creates the donor (Pending), or updates them if the phone number exists |
+| POST | `/api/donors/register-or-update` | Phone token* | Creates the donor (Pending), or updates them if the phone number exists. English names are saved in Bangla (`utils/banglaName.js`); the response includes the saved `fullName` |
 | GET | `/api/donors/search?bloodGroup=&district=&upazila=&page=` | – | Visible donors, 60 per page: donors with a name first, then longest since last donation. Returns `total`, `page`, `pages`, `pageSize` |
+| GET | `/api/donors/name-preview?name=` | – | `{ fullName }`: the name as it will be saved (English parts converted to Bangla) |
 | GET | `/api/donors/stats` | – | Counts of visible donors: `{ total, byDistrict: { [district]: { total, groups: { [bloodGroup]: count } } } }` (no personal data) |
 | POST | `/api/patient/search-and-log` | – | Saves the request (Pending) and returns `donors` in the upazila plus `nearbyDonors` elsewhere in the district. One request per phone number per Bangladesh day; a repeat gets 409 with `code: "DUPLICATE_REQUEST"` |
 | GET | `/api/patient/requests?bloodGroup=&district=&page=` | – | Public feed: Approved/Fulfilled requests from the last 30 days, newest first (12 per page) |

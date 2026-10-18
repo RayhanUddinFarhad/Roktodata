@@ -196,6 +196,8 @@ export const fraudReportSchema = z
 
 export const fraudListSchema = z.object({ page });
 
+export const namePreviewSchema = z.object({ name: text("নাম", 100) });
+
 export const otpSendSchema = z.object({ phoneNumber: phone("মোবাইল নাম্বার") });
 
 export const otpVerifySchema = z.object({
