@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Roktodata website
 
-## Getting Started
+Next.js 16 frontend for [রক্তদাতা · Roktodata](https://www.roktodata.org). See the
+[main README](../README.md) for the full project overview.
 
-First, run the development server:
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL: the Express API (default http://localhost:5000)
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The API in [`../roktodata-backend`](../roktodata-backend) must be running for searches and forms.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` / `npm start` | Production build and server |
+| `npm run lint` | ESLint |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Pages
 
-## Learn More
+| Route | Page |
+| --- | --- |
+| `/` | Home: quick search, how it works, donation benefits |
+| `/find-donor` | Donor search by blood group, district and thana (60 per page) |
+| `/donors`, `/donors/<district>` | District index and one page per district with donor counts |
+| `/patient-search` | Submit a patient's request and get matching donors at once |
+| `/blood-requests` | Public feed of approved requests |
+| `/register` | Donor registration or update with SMS code verification |
+| `/fraud-donors` | Fraud list, number check and reporting |
+| `/about` | About the project |
+| `/admin` | Admin panel (not indexed by search engines) |
 
-To learn more about Next.js, take a look at the following resources:
+## Notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Bangla first.** Text, digits (`toBanglaNumber`) and location names are in Bangla. Districts and
+  thanas live in `src/lib/locations.ts` and must match the backend's `config/locations.js`.
+- **Cache Components** are enabled (`next.config.ts`). District donor counts come from
+  `GET /api/donors/stats` through a `"use cache"` function (`src/lib/stats.ts`) and refresh hourly.
+- **SEO.** `src/lib/seo.ts` has the site URL, district slugs and `pageMetadata()`, which every public
+  page uses for its title, description, canonical URL and share image (`public/og-image.png`).
+- **Cold starts.** `ApiWarmup` pings the API on page load, and the API client retries with a timeout,
+  so a sleeping free-tier API doesn't leave searches stuck.

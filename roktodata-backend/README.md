@@ -1,6 +1,7 @@
 # Roktodata API
 
-Express + MongoDB (Mongoose) backend for the Roktodata frontend.
+Express + MongoDB (Mongoose) backend for [রক্তদাতা · Roktodata](https://www.roktodata.org). See the
+[main README](../README.md) for the project overview and every environment variable.
 
 ## Setup
 
@@ -67,13 +68,13 @@ All error responses are `{ success: false, message }` with a Bengali message.
 ## Structure
 
 ```
-config/       env validation, MongoDB connection, constants
+config/       env validation, MongoDB connection, constants, districts/thanas, name dictionary
 models/       Donor, PatientRequest, Complaint, FraudReport, OtpCode
 validators/   zod request schemas
 middleware/   sanitization, validation, phone token check, admin auth, rate limits, error handling
 controllers/  route handlers
-routes/       /api/otp, /api/donors, /api/patient, /api/complaints, /api/admin
-utils/        shared donor search, SMS sending, phone tokens, AppError
+routes/       /api/otp, /api/donors, /api/patient, /api/complaints, /api/fraud-reports, /api/admin
+utils/        shared donor search, SMS sending, Bangla names, phone tokens, AppError
 scripts/      seed.js
 app.js        Express app (security middleware, routes)
 server.js     DB connection, startup, graceful shutdown
