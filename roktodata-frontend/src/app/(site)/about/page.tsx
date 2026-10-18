@@ -5,11 +5,14 @@ import { BadgeCheck, Building2, Code2, HandHeart, Heart, Mail, Search, ShieldChe
 import { SectionHeading } from "@/components/home/HowItWorks";
 import developerPic from "@/lib/developer-pic.jpg";
 import { CONTACT_EMAIL } from "@/lib/data";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "আমাদের সম্পর্কে | রক্তদাতা",
-  description: "রক্তদাতা কেন, কীভাবে কাজ করে এবং কে তৈরি করেছেন।",
-};
+  description:
+    "রক্তদাতা কেন, কীভাবে কাজ করে এবং কে তৈরি করেছেন।",
+  path: "/about",
+});
 
 const VALUES: { icon: LucideIcon; tone: string; title: string; text: string }[] = [
   {

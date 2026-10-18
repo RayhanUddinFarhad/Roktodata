@@ -1,7 +1,7 @@
 import { Donor } from "../models/Donor.js";
 import { AppError } from "../utils/AppError.js";
 import { SEARCH_PAGE_SIZE } from "../config/constants.js";
-import { findDonors } from "../utils/findDonors.js";
+import { findDonors, visibleDonorFilter } from "../utils/findDonors.js";
 
 // POST /api/donors/register-or-update
 export async function registerOrUpdateDonor(req, res) {
@@ -54,4 +54,24 @@ export async function searchDonors(req, res) {
     pages: Math.max(1, Math.ceil(total / SEARCH_PAGE_SIZE)),
     donors,
   });
+}
+
+// GET /api/donors/stats — counts of visible donors per district and blood group, for the
+// public district pages. No personal data.
+export async function donorStats(_req, res) {
+  const rows = await Donor.aggregate([
+    { $match: visibleDonorFilter() },
+    { $group: { _id: { district: "$district", bloodGroup: "$bloodGroup" }, count: { $sum: 1 } } },
+  ]);
+  const byDistrict = {};
+  let total = 0;
+  for (const { _id, count } of rows) {
+    const entry = (byDistrict[_id.district] ??= { total: 0, groups: {} });
+    entry.groups[_id.bloodGroup] = count;
+    entry.total += count;
+    total += count;
+  }
+  // Counts change slowly; let browsers and the frontend cache them for a while.
+  res.set("Cache-Control", "public, max-age=600");
+  res.json({ success: true, total, byDistrict });
 }

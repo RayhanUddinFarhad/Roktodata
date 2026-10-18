@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import DonorSearch from "@/components/DonorSearch";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "ডোনার খুঁজুন | রক্তদাতা",
-};
+  description:
+    "A+, B+, O+, AB+ সহ সব রক্তের গ্রুপের রক্তদাতা খুঁজুন জেলা ও থানা অনুযায়ী। যাঁরা এখন রক্ত দিতে পারবেন, শুধু তাঁদেরই দেখানো হয়।",
+  path: "/find-donor",
+});
 
 export default function FindDonorPage() {
   return (

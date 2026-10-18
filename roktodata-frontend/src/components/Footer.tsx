@@ -7,6 +7,7 @@ import { CONTACT_EMAIL, DEVELOPER_NAME } from "@/lib/data";
 const QUICK_LINKS = [
   { href: "/", label: "হোম পেজ" },
   { href: "/find-donor", label: "ডোনার তালিকা" },
+  { href: "/donors", label: "জেলাভিত্তিক রক্তদাতা" },
   { href: "/patient-search", label: "রোগীর জন্য সার্চ" },
   { href: "/blood-requests", label: "রক্তের অনুরোধসমূহ" },
   { href: "/fraud-donors", label: "প্রতারক ডোনার তালিকা" },

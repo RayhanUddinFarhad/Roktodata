@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerOrUpdateDonor, searchDonors } from "../controllers/donorController.js";
+import { donorStats, registerOrUpdateDonor, searchDonors } from "../controllers/donorController.js";
 import { registerLimiter } from "../middleware/rateLimiters.js";
 import { validate } from "../middleware/validate.js";
 import { requirePhoneVerification } from "../middleware/requirePhoneVerification.js";
@@ -16,5 +16,6 @@ router.post(
 );
 
 router.get("/search", validate(searchDonorsSchema, "query"), searchDonors);
+router.get("/stats", donorStats);
 
 export default router;

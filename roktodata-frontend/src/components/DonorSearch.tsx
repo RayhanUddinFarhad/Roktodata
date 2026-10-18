@@ -13,15 +13,25 @@ import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber } from "@/lib/data";
 const fieldClass =
   "h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-red-500 focus:outline-none";
 
-export default function DonorSearch() {
+// `defaultDistrict` preselects a district (district pages); `headingLevel` lets a page that has
+// its own <h1> render the filter title as <h2>.
+export default function DonorSearch({
+  defaultDistrict = "",
+  headingLevel = "h1",
+}: {
+  defaultDistrict?: string;
+  headingLevel?: "h1" | "h2";
+}) {
   const searchParams = useSearchParams();
+  const initialDistrict = searchParams.get("district") ?? defaultDistrict;
   const [bloodGroup, setBloodGroup] = useState(searchParams.get("bloodGroup") ?? "");
-  const [district, setDistrict] = useState(searchParams.get("district") ?? "");
-  // Only accept a thana from the URL if it belongs to the district in the URL.
+  const [district, setDistrict] = useState(initialDistrict);
+  // Only accept a thana from the URL if it belongs to the chosen district.
   const [thana, setThana] = useState(() => {
     const fromUrl = searchParams.get("upazila") ?? "";
-    return thanasOf(searchParams.get("district") ?? "").includes(fromUrl) ? fromUrl : "";
+    return thanasOf(initialDistrict).includes(fromUrl) ? fromUrl : "";
   });
+  const Heading = headingLevel;
   const [page, setPage] = useState(1);
   const [result, setResult] = useState<DonorSearchPage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,10 +96,10 @@ export default function DonorSearch() {
   return (
     <>
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h1 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+        <Heading className="flex items-center gap-2 text-lg font-bold text-slate-900">
           <Funnel className="h-5 w-5 text-red-600" fill="currentColor" />
           রক্তদাতা ফিল্টার ও অনুসন্ধান
-        </h1>
+        </Heading>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
           <label className="block">

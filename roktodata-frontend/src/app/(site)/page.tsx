@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import { Crosshair, Heart, Search, UserCheck, Zap, type LucideIcon } from "lucide-react";
 import DonationBenefits from "@/components/home/DonationBenefits";
 import HowItWorks from "@/components/home/HowItWorks";
 import ShareDonorList from "@/components/home/ShareDonorList";
 import { BLOOD_GROUPS, DISTRICTS } from "@/lib/data";
+import { pageMetadata } from "@/lib/seo";
 
 const FEATURES: { icon: LucideIcon; iconClass: string; title: string; text: string }[] = [
   {
@@ -27,6 +29,13 @@ const FEATURES: { icon: LucideIcon; iconClass: string; title: string; text: stri
 
 const selectClass =
   "h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-red-500 focus:outline-none";
+
+export const metadata: Metadata = pageMetadata({
+  title: "রক্তদাতা | সারাদেশের রক্তদাতাদের ডিজিটাল নেটওয়ার্ক",
+  description:
+    "সারাদেশের হাজারো রক্তদাতার তালিকা। রক্তের গ্রুপ, জেলা ও থানা দিয়ে কাছের রক্তদাতা খুঁজে সরাসরি ফোন করুন। সম্পূর্ণ বিনামূল্যে, লগইন ছাড়াই।",
+  path: "/",
+});
 
 export default function Home() {
   return (

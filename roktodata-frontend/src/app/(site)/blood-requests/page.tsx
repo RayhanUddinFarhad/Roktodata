@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import BloodRequestsFeed from "@/components/BloodRequestsFeed";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "রক্তের অনুরোধ | রক্তদাতা",
-  description: "যাঁদের রক্ত প্রয়োজন, তাঁদের যাচাইকৃত অনুরোধ। রক্ত দিতে পারলে সরাসরি যোগাযোগ করুন।",
-};
+  description:
+    "যাঁদের রক্ত প্রয়োজন, তাঁদের যাচাইকৃত অনুরোধ। রক্ত দিতে পারলে সরাসরি যোগাযোগ করুন।",
+  path: "/blood-requests",
+});
 
 export default function BloodRequestsPage() {
   return (

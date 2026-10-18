@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import FraudDonors from "@/components/FraudDonors";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "প্রতারক ডোনার তালিকা | রক্তদাতা",
-  description: "রক্তদানের নামে প্রতারণা করা নাম্বারের যাচাইকৃত তালিকা। নাম্বার দিয়ে যাচাই করুন বা প্রতারকের তথ্য দিন।",
-};
+  description:
+    "রক্তদানের নামে প্রতারণা করা নাম্বারের যাচাইকৃত তালিকা। নাম্বার দিয়ে যাচাই করুন বা প্রতারকের তথ্য দিন।",
+  path: "/fraud-donors",
+});
 
 export default function FraudDonorsPage() {
   return (

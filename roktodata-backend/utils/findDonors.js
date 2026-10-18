@@ -8,25 +8,28 @@ export function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// Finds donors that can be shown publicly: approved by an admin, marked ready to donate,
-// and either never donated or donated at least ELIGIBILITY_DAYS ago.
-// Donors with a name come first, then whoever donated longest ago.
-// `upazila` keeps donors in that thana/upazila; `excludeUpazila` drops them instead.
-// Returns one page of donors plus the total number of matches.
-export async function findDonors({ bloodGroup, district, upazila, excludeUpazila, page = 1, limit = SEARCH_PAGE_SIZE }) {
+// Donors that can be shown publicly: approved by an admin, marked ready to donate, and either
+// never donated or donated at least ELIGIBILITY_DAYS ago. The date operator is built here, so it
+// is marked trusted to stop sanitizeFilter from neutralising it.
+export function visibleDonorFilter() {
   const cutoff = new Date(Date.now() - ELIGIBILITY_DAYS * DAY_MS);
-
-  // Operator objects are built here from validated values, so they are marked trusted
-  // to stop sanitizeFilter from neutralising them.
-  const filter = {
+  return {
     status: "Active",
     isReadyToDonate: true,
     $or: [{ lastDonationDate: null }, { lastDonationDate: mongoose.trusted({ $lte: cutoff }) }],
   };
+}
+
+// Finds visible donors (see visibleDonorFilter). Donors with a name come first, then whoever donated longest ago.
+// `upazila` keeps donors in that thana/upazila; `excludeUpazila` drops them instead.
+// Returns one page of donors plus the total number of matches.
+export async function findDonors({ bloodGroup, district, upazila, excludeUpazila, page = 1, limit = SEARCH_PAGE_SIZE }) {
+  const filter = visibleDonorFilter();
   if (bloodGroup) filter.bloodGroup = bloodGroup;
   if (district) filter.district = district;
   // Thanas are picked from a fixed per-district list, so they are matched exactly.
   if (upazila) filter.upazila = upazila;
+  // Built from a validated value, so marked trusted like the date operator.
   else if (excludeUpazila) filter.upazila = mongoose.trusted({ $ne: excludeUpazila });
 
   const [result] = await Donor.aggregate([
