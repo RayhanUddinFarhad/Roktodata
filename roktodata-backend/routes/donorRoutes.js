@@ -2,7 +2,7 @@ import { Router } from "express";
 import { registerOrUpdateDonor, searchDonors } from "../controllers/donorController.js";
 import { registerLimiter } from "../middleware/rateLimiters.js";
 import { validate } from "../middleware/validate.js";
-import { phoneVerification } from "../middleware/verifyFirebaseToken.js";
+import { requirePhoneVerification } from "../middleware/requirePhoneVerification.js";
 import { registerDonorSchema, searchDonorsSchema } from "../validators/schemas.js";
 
 const router = Router();
@@ -10,7 +10,7 @@ const router = Router();
 router.post(
   "/register-or-update",
   registerLimiter,
-  phoneVerification,
+  requirePhoneVerification,
   validate(registerDonorSchema, "body"),
   registerOrUpdateDonor,
 );

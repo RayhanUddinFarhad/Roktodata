@@ -16,6 +16,9 @@ export const apiLimiter = limiter(15, 300);
 
 // Writes are limited more tightly.
 export const registerLimiter = limiter(60, 20);
+// Each code costs an SMS; per-number limits live in otpController.
+export const otpSendLimiter = limiter(60, 10);
+export const otpVerifyLimiter = limiter(15, 30);
 export const patientSearchLimiter = limiter(15, 30);
 export const complaintLimiter = limiter(60, 10);
 // Only reports that were actually saved count, so typos and validation errors don't lock people out.

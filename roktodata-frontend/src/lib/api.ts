@@ -126,10 +126,29 @@ export interface DonorPayload {
 
 // Creates the donor (pending admin approval), or updates them if the phone number already exists.
 // When phone verification is on, the Firebase ID token proves the user owns the phone number.
-export function registerOrUpdateDonor(donor: DonorPayload, idToken?: string) {
+// Sends a 6-digit SMS code. Fails with ApiError code "OTP_COOLDOWN" (wait before resending),
+// "OTP_DAILY_LIMIT" or "SMS_FAILED".
+export function sendOtp(phoneNumber: string) {
+  return request<{ message: string; expiresInSeconds: number; resendInSeconds: number }>(
+    "/api/otp/send",
+    jsonRequest("POST", { phoneNumber }),
+    { retries: 2 },
+  );
+}
+
+// Exchanges the code for a short-lived token proving the number belongs to the user.
+export function verifyOtp(phoneNumber: string, code: string) {
+  return request<{ message: string; verificationToken: string; expiresInSeconds: number }>(
+    "/api/otp/verify",
+    jsonRequest("POST", { phoneNumber, code }),
+  );
+}
+
+// `verificationToken` comes from verifyOtp; the server requires it while phone verification is on.
+export function registerOrUpdateDonor(donor: DonorPayload, verificationToken?: string) {
   return request<{ message: string; isNew: boolean; status: DonorStatus }>(
     "/api/donors/register-or-update",
-    jsonRequest("POST", donor, idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+    jsonRequest("POST", donor, verificationToken ? { Authorization: `Bearer ${verificationToken}` } : {}),
   );
 }
 

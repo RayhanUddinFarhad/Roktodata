@@ -1,13 +1,11 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
-import { FirebaseError } from "firebase/app";
-import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from "firebase/auth";
-import { CircleCheck, Loader2, ShieldCheck, UserCheck } from "lucide-react";
-import { auth } from "@/lib/firebase";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { CircleCheck, Loader2, MapPin, MessageSquareText, Pencil, Phone, RotateCw, ShieldCheck, UserCheck } from "lucide-react";
+import OtpInput from "@/components/OtpInput";
 import ThanaSelect from "@/components/ThanaSelect";
-import { ApiError, registerOrUpdateDonor } from "@/lib/api";
-import { BLOOD_GROUPS, DISTRICTS, type BloodGroup } from "@/lib/data";
+import { ApiError, registerOrUpdateDonor, sendOtp, verifyOtp } from "@/lib/api";
+import { BLOOD_GROUPS, DISTRICTS, formatLocation, toBanglaNumber, type BloodGroup } from "@/lib/data";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-red-500 focus:bg-white focus:outline-none";
@@ -16,23 +14,19 @@ const labelClass = "mb-1.5 block text-xs font-semibold text-slate-700";
 
 const PHONE_PATTERN = /^01[3-9]\d{8}$/;
 
-const FIREBASE_ERRORS: Record<string, string> = {
-  "auth/invalid-phone-number": "মোবাইল নাম্বারটি সঠিক নয়।",
-  "auth/too-many-requests": "অনেকবার চেষ্টা করা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।",
-  "auth/invalid-verification-code": "ভেরিফিকেশন কোডটি সঠিক নয়।",
-  "auth/code-expired": "কোডের মেয়াদ শেষ হয়ে গেছে। আবার কোড পাঠান।",
-  "auth/operation-not-allowed": "ফোন দিয়ে লগইন এখনো চালু করা হয়নি।",
-  "auth/configuration-not-found": "ফোন দিয়ে লগইন এখনো চালু করা হয়নি।",
-};
-
-// Must match REQUIRE_PHONE_VERIFICATION in the backend. When off, donors save with just their number.
-const PHONE_VERIFICATION = process.env.NEXT_PUBLIC_PHONE_VERIFICATION === "true";
+const STEPS = ["তথ্য দিন", "নাম্বার যাচাই", "সম্পন্ন"] as const;
 
 function errorMessage(err: unknown) {
-  if (err instanceof FirebaseError && FIREBASE_ERRORS[err.code]) return FIREBASE_ERRORS[err.code];
   if (err instanceof ApiError) return err.message;
   return "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।";
 }
+
+// 01712345678 -> "01712-345678"
+const prettyPhone = (phone: string) => `${phone.slice(0, 5)}-${phone.slice(5)}`;
+
+// Seconds -> "৪:০৫"
+const clock = (seconds: number) =>
+  toBanglaNumber(`${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`);
 
 type Step = "form" | "otp" | "done";
 
@@ -47,13 +41,32 @@ export default function DonorRegisterForm() {
   const [isReadyToDonate, setIsReadyToDonate] = useState(true);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  // When the current code expires and when a new one may be requested (ms timestamps).
+  const [expiresAt, setExpiresAt] = useState(0);
+  const [resendAt, setResendAt] = useState(0);
+  // Set when a code is sent and then every second on the code screen (not during prerender).
+  const [now, setNow] = useState(0);
 
-  const verifierRef = useRef<RecaptchaVerifier | null>(null);
-  const confirmationRef = useRef<ConfirmationResult | null>(null);
+  // Number the last code went to, and the token from a successful verification, so a failed
+  // save (or going back to fix a detail) doesn't need a new SMS.
+  const sentToRef = useRef("");
+  const [verification, setVerification] = useState<{ phone: string; token: string } | null>(null);
 
-  async function saveDonor(idToken?: string) {
+  useEffect(() => {
+    if (step !== "otp") return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [step]);
+
+  const secondsLeft = Math.max(0, Math.ceil((expiresAt - now) / 1000));
+  const resendIn = Math.max(0, Math.ceil((resendAt - now) / 1000));
+  const verified = verification?.phone === phone;
+
+  async function saveDonor(verificationToken: string) {
     const result = await registerOrUpdateDonor(
       {
         fullName: name.trim(),
@@ -64,15 +77,27 @@ export default function DonorRegisterForm() {
         lastDonationDate: lastDonated || undefined,
         isReadyToDonate,
       },
-      idToken,
+      verificationToken,
     );
     setSuccessMessage(result.message);
     setStep("done");
   }
 
+  async function requestCode() {
+    const result = await sendOtp(phone);
+    const sentAt = Date.now();
+    sentToRef.current = phone;
+    setExpiresAt(sentAt + result.expiresInSeconds * 1000);
+    setResendAt(sentAt + result.resendInSeconds * 1000);
+    setNow(sentAt);
+    setCode("");
+    setNotice(result.message);
+  }
+
   async function submitForm(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+    setNotice("");
     if (!PHONE_PATTERN.test(phone)) {
       setError("সঠিক ১১ ডিজিটের মোবাইল নাম্বার দিন (যেমন: 01712345678)।");
       return;
@@ -84,42 +109,51 @@ export default function DonorRegisterForm() {
 
     setLoading(true);
     try {
-      if (!PHONE_VERIFICATION) {
-        await saveDonor();
-        return;
-      }
-      auth.languageCode = "bn";
-      verifierRef.current ??= new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
-      confirmationRef.current = await signInWithPhoneNumber(auth, `+88${phone}`, verifierRef.current);
+      // Coming back to edit details: an already verified number, or a code sent moments ago, is reused.
+      if (!verified && !(sentToRef.current === phone && Date.now() < expiresAt)) await requestCode();
       setStep("otp");
     } catch (err) {
-      verifierRef.current?.clear();
-      verifierRef.current = null;
       setError(errorMessage(err));
     } finally {
       setLoading(false);
     }
   }
 
-  async function verifyAndSave(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!confirmationRef.current) return;
+  async function resendCode() {
+    setError("");
+    setResending(true);
+    try {
+      await requestCode();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setResending(false);
+    }
+  }
+
+  async function verifyAndSave(entered: string) {
+    if (loading) return;
     setError("");
     setLoading(true);
     try {
-      // A code can only be used once, so if saving failed after a successful
-      // verification, retry with the already signed-in user.
-      const user =
-        auth.currentUser?.phoneNumber === `+88${phone}`
-          ? auth.currentUser
-          : (await confirmationRef.current.confirm(code.trim())).user;
-      await saveDonor(await user.getIdToken());
+      let token = verified ? verification.token : "";
+      if (!token) {
+        ({ verificationToken: token } = await verifyOtp(phone, entered));
+        setVerification({ phone, token });
+      }
+      await saveDonor(token);
     } catch (err) {
+      // An expired verification needs a fresh code.
+      if (err instanceof ApiError && err.code === "PHONE_NOT_VERIFIED") setVerification(null);
+      if (err instanceof ApiError && err.code !== "OTP_INVALID") setCode("");
       setError(errorMessage(err));
     } finally {
       setLoading(false);
     }
   }
+
+  // Past the last step once saved, so every step shows as complete.
+  const stepIndex = step === "form" ? 0 : step === "otp" ? 1 : STEPS.length;
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -132,6 +166,37 @@ export default function DonorRegisterForm() {
           আপনার মোবাইল নাম্বার দিন। নাম্বার আগে থেকে রেজিস্টার্ড থাকলে তথ্য আপডেট হবে, না হলে নতুন ডোনার হিসেবে যুক্ত হবেন।
         </p>
       </div>
+
+      <ol className="mt-5 flex items-center" aria-label="ধাপ">
+        {STEPS.map((label, index) => (
+          <li key={label} className={`flex items-center ${index < STEPS.length - 1 ? "flex-1" : ""}`}>
+            <span className="flex flex-col items-center gap-1">
+              <span
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                  index < stepIndex
+                    ? "bg-emerald-500 text-white"
+                    : index === stepIndex
+                      ? "bg-red-600 text-white shadow-md shadow-red-600/30"
+                      : "bg-slate-100 text-slate-400"
+                }`}
+                aria-current={index === stepIndex ? "step" : undefined}
+              >
+                {index < stepIndex ? <CircleCheck className="h-4 w-4" /> : toBanglaNumber(index + 1)}
+              </span>
+              <span
+                className={`whitespace-nowrap text-[10px] font-semibold ${index === stepIndex ? "text-red-600" : "text-slate-500"}`}
+              >
+                {label}
+              </span>
+            </span>
+            {index < STEPS.length - 1 && (
+              <span
+                className={`mx-2 mb-4 h-0.5 flex-1 rounded-full ${index < stepIndex ? "bg-emerald-400" : "bg-slate-200"}`}
+              />
+            )}
+          </li>
+        ))}
+      </ol>
 
       {step === "form" && (
         <form onSubmit={submitForm} className="mt-6 grid grid-cols-2 gap-x-3 gap-y-4">
@@ -151,7 +216,7 @@ export default function DonorRegisterForm() {
               />
             </span>
             <span className="mt-1 block text-[10px] text-slate-500">
-              সঠিক ১১ ডিজিটের মোবাইল নাম্বার দিন। একই নাম্বারে একাধিক প্রোফাইল থাকবে না।
+              সঠিক ১১ ডিজিটের মোবাইল নাম্বার দিন। এই নাম্বারে SMS-এ একটি যাচাই কোড যাবে। একই নাম্বারে একাধিক প্রোফাইল থাকবে না।
             </span>
           </label>
 
@@ -255,53 +320,132 @@ export default function DonorRegisterForm() {
             className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-semibold text-white shadow-md shadow-red-600/30 hover:bg-red-700 disabled:opacity-60"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
-            তথ্য সংরক্ষণ বা আপডেট করুন
+            {verified ? "পরবর্তী: তথ্য সংরক্ষণ" : "পরবর্তী: নাম্বার যাচাই"}
           </button>
         </form>
       )}
 
       {step === "otp" && (
-        <form onSubmit={verifyAndSave} className="mt-6 space-y-4">
-          <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-indigo-900">
-            +88{phone} নাম্বারে একটি ৬ ডিজিটের ভেরিফিকেশন কোড পাঠানো হয়েছে।
-          </p>
-          <label className="block">
-            <span className={labelClass}>ভেরিফিকেশন কোড</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              required
-              maxLength={6}
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              placeholder="______"
-              className={`${fieldClass} text-center tracking-[0.5em]`}
-            />
-          </label>
+        <div className="mt-6">
+          <div className="flex flex-col items-center text-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 ring-8 ring-red-50/50">
+              <MessageSquareText className="h-7 w-7 text-red-600" />
+            </span>
+            <h2 className="mt-4 text-lg font-bold text-slate-900">মোবাইল নাম্বার যাচাই করুন</h2>
+            <p className="mt-1 text-xs text-slate-600">নিচের নাম্বারে SMS-এ পাঠানো ৬ ডিজিটের কোডটি লিখুন</p>
+            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 font-mono text-sm font-semibold text-slate-800">
+              <Phone className="h-3.5 w-3.5 text-emerald-600" fill="currentColor" />
+              +88 {prettyPhone(phone)}
+            </span>
+          </div>
 
-          {error && <p className="text-xs text-red-600">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading || code.length !== 6}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-            যাচাই করে সংরক্ষণ করুন
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStep("form");
-              setCode("");
-              setError("");
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              verifyAndSave(code);
             }}
-            className="w-full text-xs text-slate-500 hover:text-slate-800"
+            className="mt-6 space-y-4"
           >
-            ← নাম্বার পরিবর্তন করুন
-          </button>
-        </form>
+            {verified ? (
+              <p className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-700">
+                <ShieldCheck className="h-4 w-4" />
+                নাম্বারটি যাচাই করা হয়েছে। তথ্য সংরক্ষণ করুন।
+              </p>
+            ) : (
+              <>
+                <OtpInput
+                  value={code}
+                  disabled={loading}
+                  invalid={Boolean(error)}
+                  onChange={(next) => {
+                    setCode(next);
+                    setError("");
+                    if (next.length === 6) verifyAndSave(next);
+                  }}
+                />
+                <p className="text-center text-[11px] text-slate-500">
+                  {secondsLeft > 0 ? (
+                    <>
+                      কোডের মেয়াদ বাকি{" "}
+                      <span className="font-mono font-semibold text-slate-700">{clock(secondsLeft)}</span> মিনিট
+                    </>
+                  ) : (
+                    <span className="font-semibold text-red-600">কোডের মেয়াদ শেষ। নতুন কোড পাঠান।</span>
+                  )}
+                </p>
+              </>
+            )}
+
+            {error ? (
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-xs text-red-600">{error}</p>
+            ) : (
+              notice && !verified && <p className="text-center text-xs text-emerald-700">{notice}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || (!verified && (code.length !== 6 || secondsLeft === 0))}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-semibold text-white shadow-md shadow-red-600/30 hover:bg-red-700 disabled:opacity-60 disabled:shadow-none"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+              {verified ? "তথ্য সংরক্ষণ করুন" : "যাচাই করে সংরক্ষণ করুন"}
+            </button>
+
+            {!verified && (
+              <p className="flex items-center justify-center gap-1 text-xs text-slate-500">
+                কোড পাননি?
+                {resendIn > 0 ? (
+                  <span>
+                    <span className="font-mono font-semibold text-slate-700">{toBanglaNumber(resendIn)}</span> সেকেন্ড পর আবার
+                    পাঠাতে পারবেন
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={resendCode}
+                    disabled={resending}
+                    className="inline-flex items-center gap-1 font-semibold text-red-600 hover:text-red-700 disabled:opacity-60"
+                  >
+                    <RotateCw className={`h-3 w-3 ${resending ? "animate-spin" : ""}`} />
+                    আবার কোড পাঠান
+                  </button>
+                )}
+              </p>
+            )}
+          </form>
+
+          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-slate-500">যে তথ্য সংরক্ষণ হবে</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("form");
+                  setCode("");
+                  setError("");
+                }}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-red-600"
+              >
+                <Pencil className="h-3 w-3" />
+                পরিবর্তন করুন
+              </button>
+            </div>
+            <div className="mt-2 flex items-center gap-3">
+              <span className="rounded-md bg-red-50 px-2.5 py-1 text-sm font-bold text-red-600">{bloodGroup}</span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-slate-900">{name}</p>
+                <p className="flex items-center gap-1 text-[11px] text-slate-500">
+                  <MapPin className="h-3 w-3 text-red-500" />
+                  {formatLocation(district, thana)}
+                  <span className="text-slate-300">•</span>
+                  <span className={isReadyToDonate ? "text-emerald-600" : "text-amber-600"}>
+                    {isReadyToDonate ? "রক্ত দিতে প্রস্তুত" : "এখন প্রস্তুত নই"}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {step === "done" && (
@@ -309,10 +453,12 @@ export default function DonorRegisterForm() {
           <CircleCheck className="h-10 w-10 text-emerald-600" />
           <p className="mt-3 font-bold text-slate-900">ধন্যবাদ, {name}!</p>
           <p className="mt-1 text-sm text-slate-600">{successMessage}</p>
+          <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-emerald-700">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            যাচাইকৃত নাম্বার: {prettyPhone(phone)}
+          </span>
         </div>
       )}
-
-      <div id="recaptcha-container" />
     </section>
   );
 }

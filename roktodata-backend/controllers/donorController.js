@@ -7,8 +7,8 @@ import { findDonors } from "../utils/findDonors.js";
 export async function registerOrUpdateDonor(req, res) {
   const { phoneNumber, lastDonationDate, ...details } = req.validated;
 
-  // With phone verification on, the verified Firebase phone number must match the profile being written.
-  if (req.user && req.user.phone_number !== `+88${phoneNumber}`) {
+  // With phone verification on, the number confirmed by SMS code must match the profile being written.
+  if (req.verifiedPhone && req.verifiedPhone !== phoneNumber) {
     throw new AppError(403, "যাচাই করা মোবাইল নাম্বারের সাথে প্রদত্ত নাম্বার মিলছে না।");
   }
 

@@ -11,6 +11,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import complaintRoutes from "./routes/complaintRoutes.js";
 import donorRoutes from "./routes/donorRoutes.js";
 import fraudRoutes from "./routes/fraudRoutes.js";
+import otpRoutes from "./routes/otpRoutes.js";
 import patientRoutes from "./routes/patientRoutes.js";
 
 const app = express();
@@ -44,6 +45,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api", apiLimiter);
+app.use("/api/otp", otpRoutes);
 app.use("/api/donors", donorRoutes);
 app.use("/api/patient", patientRoutes);
 app.use("/api/complaints", complaintRoutes);

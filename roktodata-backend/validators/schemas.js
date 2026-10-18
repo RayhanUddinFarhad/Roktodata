@@ -196,7 +196,14 @@ export const fraudReportSchema = z
 
 export const fraudListSchema = z.object({ page });
 
-export const fraudCheckSchema = z.object({ phone: phone("মোবাইল নাম্বার") });
+export const otpSendSchema = z.object({ phoneNumber: phone("মোবাইল নাম্বার") });
+
+export const otpVerifySchema = z.object({
+  phoneNumber: phone("মোবাইল নাম্বার"),
+  code: z.string({ error: "ভেরিফিকেশন কোড দিন।" }).trim().regex(/^\d{6}$/, "৬ ডিজিটের ভেরিফিকেশন কোড দিন।"),
+});
+
+export const fraudCheckSchema =z.object({ phone: phone("মোবাইল নাম্বার") });
 
 export const adminFraudListSchema = z.object({
   status: z.preprocess(emptyToUndefined, z.enum(FRAUD_STATUS).optional()),

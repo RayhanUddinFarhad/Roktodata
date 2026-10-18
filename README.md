@@ -14,7 +14,7 @@ or update their availability, and admins approve donors and blood requests befor
 - **Patient search** (`/patient-search`): submit patient details to get matching donors immediately;
   the request is posted publicly after admin approval (one request per phone number per day)
 - **Blood requests** (`/blood-requests`): public feed of approved requests with a call button
-- **Donor registration** (`/register`): register or update by phone number, including "ready to donate"
+- **Donor registration** (`/register`): register or update by phone number, confirmed with a 6-digit SMS code (sms.net.bd), including "ready to donate"
 - **Complaints**: report a donor from any donor card
 - **Fraud donors** (`/fraud-donors`): check a number against the admin-approved fraud list, or report one
 - **Thana dropdowns**: every location form picks the thana/upazila from the chosen district's list
@@ -36,7 +36,7 @@ npm run dev
 # 2. Frontend (in a second terminal)
 cd roktodata-frontend
 npm install
-cp .env.example .env.local   # fill in the Firebase web config
+cp .env.example .env.local   # set NEXT_PUBLIC_API_URL
 npm run dev
 ```
 
