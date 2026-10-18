@@ -40,6 +40,12 @@ export const ELIGIBILITY_DAYS = 90;
 
 export const MAX_SEARCH_RESULTS = 100;
 
+// Donors per page in the public donor search.
+export const SEARCH_PAGE_SIZE = 60;
+
+// Name stored for imported donors whose name wasn't provided; they are listed after named donors.
+export const NO_NAME = "নাম উল্লেখ নেই";
+
 // Bangladesh mobile numbers in local 11-digit format, e.g. 01712345678.
 export const BD_PHONE_REGEX = /^01[3-9]\d{8}$/;
 

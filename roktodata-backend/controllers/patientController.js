@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { REQUEST_FEED_DAYS } from "../config/constants.js";
+import { MAX_SEARCH_RESULTS, REQUEST_FEED_DAYS } from "../config/constants.js";
 import { PatientRequest } from "../models/PatientRequest.js";
 import { AppError } from "../utils/AppError.js";
 import { dhakaDay } from "../utils/dhakaDate.js";
@@ -32,18 +32,22 @@ export async function searchAndLog(req, res) {
     throw err;
   }
 
-  const filters = { bloodGroup: request.requiredBloodGroup, district: request.district };
-  const [donors, nearbyDonors] = await Promise.all([
+  // The first MAX_SEARCH_RESULTS of each list; the totals tell the page when there are more.
+  const filters = { bloodGroup: request.requiredBloodGroup, district: request.district, limit: MAX_SEARCH_RESULTS };
+  const none = { donors: [], total: 0 };
+  const [local, nearby] = await Promise.all([
     findDonors({ ...filters, upazila: request.upazila }),
-    request.upazila ? findDonors({ ...filters, excludeUpazila: request.upazila }) : [],
+    request.upazila ? findDonors({ ...filters, excludeUpazila: request.upazila }) : none,
   ]);
 
   res.status(201).json({
     success: true,
     message: "আপনার অনুরোধটি আমরা পেয়েছি।",
-    count: donors.length,
-    donors,
-    nearbyDonors,
+    count: local.total,
+    total: local.total,
+    donors: local.donors,
+    nearbyTotal: nearby.total,
+    nearbyDonors: nearby.donors,
   });
 }
 

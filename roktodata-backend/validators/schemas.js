@@ -73,6 +73,7 @@ export const searchDonorsSchema = z.object({
   bloodGroup: z.preprocess(emptyToUndefined, bloodGroup.optional()),
   district: z.preprocess(emptyToUndefined, district.optional()),
   upazila: optionalThana,
+  page: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(10000).default(1)),
 }).superRefine(thanaInDistrict("district", "upazila"));
 
 export const patientSearchSchema = z.object({
@@ -204,4 +205,9 @@ export const adminFraudListSchema = z.object({
 
 export const fraudStatusSchema = z.object({
   status: z.enum(FRAUD_STATUS, { error: "সঠিক স্ট্যাটাস দিন।" }),
+});
+
+// Show (true) or hide (false) a blocked donor in the public fraud list.
+export const fraudListingSchema = z.object({
+  listed: z.boolean({ error: "প্রতারক তালিকায় দেখানো হবে কিনা জানান।" }),
 });

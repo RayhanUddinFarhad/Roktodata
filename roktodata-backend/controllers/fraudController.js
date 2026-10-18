@@ -12,7 +12,7 @@ const PAGE_SIZE = 12;
 // numbers stay private (they were written for the admin), so only the reason is shown.
 function blockedDonorRows(match) {
   return [
-    { $match: { ...match, status: "Blocked" } },
+    { $match: { ...match, status: "Blocked", hiddenFromFraudList: { $ne: true } } },
     {
       $lookup: {
         from: Complaint.collection.name,

@@ -33,7 +33,7 @@ public searches only when **all** of these hold:
 | ------ | ---- | ---- | ----------- |
 | GET | `/api/health` | – | Server and database status |
 | POST | `/api/donors/register-or-update` | Firebase ID token* | Creates the donor (Pending), or updates them if the phone number exists |
-| GET | `/api/donors/search?bloodGroup=&district=&upazila=` | – | Visible donors, longest since last donation first |
+| GET | `/api/donors/search?bloodGroup=&district=&upazila=&page=` | – | Visible donors, 60 per page: donors with a name first, then longest since last donation. Returns `total`, `page`, `pages`, `pageSize` |
 | POST | `/api/patient/search-and-log` | – | Saves the request (Pending) and returns `donors` in the upazila plus `nearbyDonors` elsewhere in the district. One request per phone number per Bangladesh day; a repeat gets 409 with `code: "DUPLICATE_REQUEST"` |
 | GET | `/api/patient/requests?bloodGroup=&district=&page=` | – | Public feed: Approved/Fulfilled requests from the last 30 days, newest first (12 per page) |
 | POST | `/api/complaints` | – | Complaint against a donor (`donorId`, `complainantPhone`, `reason`, `details?`) |
@@ -44,6 +44,7 @@ public searches only when **all** of these hold:
 | GET | `/api/admin/stats` | Admin | Counts of donors by status, open complaints, patient requests |
 | GET | `/api/admin/donors?status=&q=&page=` | Admin | Donors (20 per page); `q` searches name or phone prefix |
 | PATCH | `/api/admin/donors/:id/status` | Admin | `{ status: "Pending" \| "Active" \| "Blocked", reason }`; `reason` (max 300) is required to block and is shown in the public fraud list; unblocking clears it |
+| PATCH | `/api/admin/donors/:id/fraud-list` | Admin | `{ listed: boolean }`: show or hide a blocked donor in the public fraud list; they stay blocked. Blocking again lists them again |
 | DELETE | `/api/admin/donors/:id` | Admin | Deletes the donor and their complaints |
 | GET | `/api/admin/complaints?status=&page=` | Admin | Complaints with donor details |
 | PATCH | `/api/admin/complaints/:id/status` | Admin | `{ status: "Open" \| "Resolved" \| "Dismissed" }` |

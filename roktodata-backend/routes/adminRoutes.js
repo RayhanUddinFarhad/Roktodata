@@ -8,6 +8,7 @@ import {
   listDonors,
   listFraudReports,
   listRequests,
+  setDonorFraudListing,
   login,
   updateComplaintStatus,
   updateDonorStatus,
@@ -26,6 +27,7 @@ import {
   adminRequestListSchema,
   complaintStatusSchema,
   donorStatusSchema,
+  fraudListingSchema,
   fraudStatusSchema,
   idParamSchema,
   requestNoteSchema,
@@ -47,6 +49,12 @@ router.patch(
   validate(idParamSchema, "params"),
   validate(donorStatusSchema, "body"),
   updateDonorStatus,
+);
+router.patch(
+  "/donors/:id/fraud-list",
+  validate(idParamSchema, "params"),
+  validate(fraudListingSchema, "body"),
+  setDonorFraudListing,
 );
 router.delete("/donors/:id", validate(idParamSchema, "params"), deleteDonor);
 

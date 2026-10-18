@@ -15,7 +15,16 @@ const fieldClass =
 const labelClass = "mb-2 block text-sm font-semibold text-slate-700";
 
 type Result =
-  | { kind: "found"; donors: Donor[]; nearbyDonors: Donor[]; bloodGroup: string; district: string; upazila: string }
+  | {
+      kind: "found";
+      donors: Donor[];
+      total: number;
+      nearbyDonors: Donor[];
+      nearbyTotal: number;
+      bloodGroup: string;
+      district: string;
+      upazila: string;
+    }
   | { kind: "duplicate"; message: string; bloodGroup: string; district: string };
 
 export default function PatientSearch() {
@@ -55,7 +64,9 @@ export default function PatientSearch() {
       setResult({
         kind: "found",
         donors: response.donors,
+        total: response.total,
         nearbyDonors: response.nearbyDonors,
+        nearbyTotal: response.nearbyTotal,
         bloodGroup,
         district,
         upazila: upazila.trim(),
@@ -251,7 +262,9 @@ function DuplicateNotice({ result }: { result: Extract<Result, { kind: "duplicat
 function FoundDonors({ result }: { result: Extract<Result, { kind: "found" }> }) {
   const { donors, nearbyDonors, bloodGroup, district, upazila } = result;
   const area = upazila ? `${upazila}, ${district}` : district;
-  const total = donors.length + nearbyDonors.length;
+  // Totals across all matches; each list below shows at most the first 100.
+  const total = result.total + result.nearbyTotal;
+  const localHref = `/find-donor?${new URLSearchParams({ bloodGroup, district, ...(upazila && { upazila }) })}`;
 
   return (
     <div className="mt-8 border-t border-slate-200 pt-6">
@@ -281,14 +294,18 @@ function FoundDonors({ result }: { result: Extract<Result, { kind: "found" }> })
       ) : (
         <>
           <DonorList
-            title={`${area} এলাকার ${bloodGroup} ডোনার (${toBanglaNumber(donors.length)} জন)`}
+            title={`${area} এলাকার ${bloodGroup} ডোনার (${toBanglaNumber(result.total)} জন)`}
             donors={donors}
+            total={result.total}
+            moreHref={localHref}
             emptyText={upazila ? `${upazila}-এ এই গ্রুপের কোনো ডোনার পাওয়া যায়নি। নিচে একই জেলার অন্যান্য ডোনার দেখুন।` : ""}
           />
           {nearbyDonors.length > 0 && (
             <DonorList
-              title={`${district} জেলার অন্যান্য এলাকার ${bloodGroup} ডোনার (${toBanglaNumber(nearbyDonors.length)} জন)`}
+              title={`${district} জেলার অন্যান্য এলাকার ${bloodGroup} ডোনার (${toBanglaNumber(result.nearbyTotal)} জন)`}
               donors={nearbyDonors}
+              total={result.nearbyTotal}
+              moreHref={findDonorHref(bloodGroup, district)}
             />
           )}
         </>
@@ -297,7 +314,19 @@ function FoundDonors({ result }: { result: Extract<Result, { kind: "found" }> })
   );
 }
 
-function DonorList({ title, donors, emptyText }: { title: string; donors: Donor[]; emptyText?: string }) {
+function DonorList({
+  title,
+  donors,
+  total,
+  moreHref,
+  emptyText,
+}: {
+  title: string;
+  donors: Donor[];
+  total: number;
+  moreHref: string;
+  emptyText?: string;
+}) {
   return (
     <div className="mt-6">
       <h2 className="text-lg font-bold text-slate-900">{title}</h2>
@@ -336,6 +365,11 @@ function DonorList({ title, donors, emptyText }: { title: string; donors: Donor[
             </li>
           ))}
         </ul>
+      )}
+      {total > donors.length && (
+        <Link href={moreHref} className="mt-3 inline-block text-sm font-semibold text-red-600 hover:underline">
+          আরও {toBanglaNumber(total - donors.length)} জন আছেন, &quot;ডোনার খুঁজুন&quot; পাতায় সবাইকে দেখুন →
+        </Link>
       )}
     </div>
   );

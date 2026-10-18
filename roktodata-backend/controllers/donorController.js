@@ -1,5 +1,6 @@
 import { Donor } from "../models/Donor.js";
 import { AppError } from "../utils/AppError.js";
+import { SEARCH_PAGE_SIZE } from "../config/constants.js";
 import { findDonors } from "../utils/findDonors.js";
 
 // POST /api/donors/register-or-update
@@ -42,6 +43,15 @@ export async function registerOrUpdateDonor(req, res) {
 
 // GET /api/donors/search
 export async function searchDonors(req, res) {
-  const donors = await findDonors(req.validated);
-  res.json({ success: true, count: donors.length, donors });
+  const { page, ...filters } = req.validated;
+  const { donors, total } = await findDonors({ ...filters, page, limit: SEARCH_PAGE_SIZE });
+  res.json({
+    success: true,
+    count: total,
+    total,
+    page,
+    pageSize: SEARCH_PAGE_SIZE,
+    pages: Math.max(1, Math.ceil(total / SEARCH_PAGE_SIZE)),
+    donors,
+  });
 }

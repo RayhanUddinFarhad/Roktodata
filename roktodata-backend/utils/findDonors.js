@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Donor } from "../models/Donor.js";
-import { ELIGIBILITY_DAYS, MAX_SEARCH_RESULTS } from "../config/constants.js";
+import { ELIGIBILITY_DAYS, NO_NAME, SEARCH_PAGE_SIZE } from "../config/constants.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -10,9 +10,10 @@ export function escapeRegex(value) {
 
 // Finds donors that can be shown publicly: approved by an admin, marked ready to donate,
 // and either never donated or donated at least ELIGIBILITY_DAYS ago.
-// Whoever donated longest ago comes first.
+// Donors with a name come first, then whoever donated longest ago.
 // `upazila` keeps donors in that thana/upazila; `excludeUpazila` drops them instead.
-export async function findDonors({ bloodGroup, district, upazila, excludeUpazila }) {
+// Returns one page of donors plus the total number of matches.
+export async function findDonors({ bloodGroup, district, upazila, excludeUpazila, page = 1, limit = SEARCH_PAGE_SIZE }) {
   const cutoff = new Date(Date.now() - ELIGIBILITY_DAYS * DAY_MS);
 
   // Operator objects are built here from validated values, so they are marked trusted
@@ -28,19 +29,32 @@ export async function findDonors({ bloodGroup, district, upazila, excludeUpazila
   if (upazila) filter.upazila = upazila;
   else if (excludeUpazila) filter.upazila = mongoose.trusted({ $ne: excludeUpazila });
 
-  const donors = await Donor.find(filter)
-    .sort({ lastDonationDate: 1, _id: 1 })
-    .limit(MAX_SEARCH_RESULTS)
-    .select("fullName phoneNumber bloodGroup district upazila lastDonationDate")
-    .lean();
+  const [result] = await Donor.aggregate([
+    { $match: filter },
+    { $addFields: { hasName: { $ne: ["$fullName", NO_NAME] } } },
+    { $sort: { hasName: -1, lastDonationDate: 1, _id: 1 } },
+    {
+      $facet: {
+        donors: [
+          { $skip: (page - 1) * limit },
+          { $limit: limit },
+          { $project: { fullName: 1, phoneNumber: 1, bloodGroup: 1, district: 1, upazila: 1, lastDonationDate: 1 } },
+        ],
+        total: [{ $count: "count" }],
+      },
+    },
+  ]);
 
-  return donors.map((donor) => ({
-    id: donor._id.toString(),
-    fullName: donor.fullName,
-    phoneNumber: donor.phoneNumber,
-    bloodGroup: donor.bloodGroup,
-    district: donor.district,
-    upazila: donor.upazila,
-    lastDonationDate: donor.lastDonationDate ? donor.lastDonationDate.toISOString().slice(0, 10) : null,
-  }));
+  return {
+    total: result.total[0]?.count ?? 0,
+    donors: result.donors.map((donor) => ({
+      id: donor._id.toString(),
+      fullName: donor.fullName,
+      phoneNumber: donor.phoneNumber,
+      bloodGroup: donor.bloodGroup,
+      district: donor.district,
+      upazila: donor.upazila,
+      lastDonationDate: donor.lastDonationDate ? donor.lastDonationDate.toISOString().slice(0, 10) : null,
+    })),
+  };
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import ApiWarmup from "@/components/ApiWarmup";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -6,6 +7,7 @@ import Footer from "@/components/Footer";
 export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <>
+      <ApiWarmup />
       <Navbar />
       {children}
       <Footer />

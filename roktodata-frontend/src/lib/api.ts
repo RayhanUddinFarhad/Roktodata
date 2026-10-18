@@ -26,13 +26,36 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+const OFFLINE_MESSAGE = "সার্ভারের সাথে সংযোগ করা যাচ্ছে না। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।";
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const isCallerAbort = (err: unknown) => err instanceof DOMException && err.name === "AbortError";
+
+// Gives up on a single attempt after `ms`, while still honouring the caller's own abort signal.
+function withTimeout(signal: AbortSignal | null | undefined, ms: number): AbortSignal | undefined {
+  if (typeof AbortSignal === "undefined" || !("timeout" in AbortSignal)) return signal ?? undefined;
+  const timeout = AbortSignal.timeout(ms);
+  if (!signal) return timeout;
+  return "any" in AbortSignal ? AbortSignal.any([signal, timeout]) : signal;
+}
+
+async function request<T>(path: string, init?: RequestInit, { retries = 0 } = {}): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, init);
+    res = await fetch(`${API_URL}${path}`, { ...init, signal: retries ? withTimeout(init?.signal, 30_000) : init?.signal });
   } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") throw err;
-    throw new ApiError("সার্ভারের সাথে সংযোগ করা যাচ্ছে না। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।");
+    if (isCallerAbort(err) && init?.signal?.aborted) throw err;
+    // Network error or our per-attempt timeout: the free-tier server may still be waking up.
+    if (retries > 0) {
+      await wait(3000);
+      return request<T>(path, init, { retries: retries - 1 });
+    }
+    throw new ApiError(OFFLINE_MESSAGE);
+  }
+
+  // The hosting proxy answers 502/503/504 while the API is starting.
+  if (retries > 0 && [502, 503, 504].includes(res.status)) {
+    await wait(3000);
+    return request<T>(path, init, { retries: retries - 1 });
   }
 
   const data = await res.json().catch(() => null);
@@ -60,6 +83,12 @@ const toQuery = (params: Record<string, string | number | undefined>) => {
 
 // ---- Public ----
 
+// Starts the API early (e.g. on page load) so it is awake by the time the user searches.
+// The free hosting plan puts the server to sleep after a period without visitors.
+export function warmUpApi() {
+  fetch(`${API_URL}/api/health`, { cache: "no-store" }).catch(() => {});
+}
+
 export interface SearchResult {
   message?: string;
   count: number;
@@ -72,8 +101,17 @@ export interface DonorSearchFilters {
   upazila?: string;
 }
 
-export function searchDonors(filters: DonorSearchFilters, signal?: AbortSignal) {
-  return request<SearchResult>(`/api/donors/search?${toQuery({ ...filters })}`, { signal });
+// One page of the donor search; `total` is the number of matching donors across all pages.
+export interface DonorSearchPage {
+  total: number;
+  page: number;
+  pages: number;
+  pageSize: number;
+  donors: Donor[];
+}
+
+export function searchDonors(filters: DonorSearchFilters, page: number, signal?: AbortSignal) {
+  return request<DonorSearchPage>(`/api/donors/search?${toQuery({ ...filters, page })}`, { signal }, { retries: 2 });
 }
 
 export interface DonorPayload {
@@ -110,7 +148,7 @@ export interface PatientRequestPayload {
 // and elsewhere in the same district (`nearbyDonors`). One request per phone number per day:
 // a repeat fails with ApiError code "DUPLICATE_REQUEST".
 export function searchForPatient(payload: PatientRequestPayload) {
-  return request<SearchResult & { nearbyDonors: Donor[] }>(
+  return request<SearchResult & { total: number; nearbyDonors: Donor[]; nearbyTotal: number }>(
     "/api/patient/search-and-log",
     jsonRequest("POST", payload),
   );
@@ -180,6 +218,8 @@ export interface AdminDonor extends Donor {
   status: DonorStatus;
   // Why the admin blocked them (shown in the public fraud list); "" unless Blocked.
   blockReason: string;
+  // Blocked and currently shown in the public fraud list.
+  inFraudList: boolean;
   createdAt: string;
   openComplaints: number;
 }
@@ -220,6 +260,11 @@ export function setDonorStatus(token: string, id: string, status: DonorStatus, r
     `/api/admin/donors/${id}/status`,
     jsonRequest("PATCH", { status, reason }, auth(token)),
   );
+}
+
+// Shows or hides a blocked donor in the public fraud list (they stay blocked).
+export function setDonorFraudListing(token: string, id: string, listed: boolean) {
+  return request<{ message: string }>(`/api/admin/donors/${id}/fraud-list`, jsonRequest("PATCH", { listed }, auth(token)));
 }
 
 export function deleteDonor(token: string, id: string) {

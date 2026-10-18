@@ -102,6 +102,8 @@ export async function listDonors(req, res) {
       isReadyToDonate: donor.isReadyToDonate,
       status: donor.status,
       blockReason: donor.blockReason ?? "",
+      // Blocked donors are listed publicly as fraudulent unless the admin hid them.
+      inFraudList: donor.status === "Blocked" && !donor.hiddenFromFraudList,
       createdAt: donor.createdAt.toISOString(),
       openComplaints: openComplaintsFor(donor._id),
     })),
@@ -111,8 +113,11 @@ export async function listDonors(req, res) {
 // PATCH /api/admin/donors/:id/status
 export async function updateDonorStatus(req, res) {
   const { id, status, reason } = req.validated;
+  // A newly blocked donor is listed in the public fraud list until the admin removes them from it.
   const update =
-    status === "Blocked" ? { status, blockReason: reason, blockedAt: new Date() } : { status, blockReason: "", blockedAt: null };
+    status === "Blocked"
+      ? { status, blockReason: reason, blockedAt: new Date(), hiddenFromFraudList: false }
+      : { status, blockReason: "", blockedAt: null, hiddenFromFraudList: false };
   const donor = await Donor.findByIdAndUpdate(id, update, { returnDocument: "after" });
   if (!donor) throw new AppError(404, "ডোনার পাওয়া যায়নি।");
 
@@ -122,6 +127,26 @@ export async function updateDonorStatus(req, res) {
     Pending: "ডোনারকে অপেক্ষমাণ তালিকায় রাখা হয়েছে।",
   };
   res.json({ success: true, status: donor.status, message: messages[donor.status] });
+}
+
+// PATCH /api/admin/donors/:id/fraud-list  { listed: boolean }
+// Shows or hides a blocked donor in the public fraud list; the donor stays blocked either way.
+export async function setDonorFraudListing(req, res) {
+  const { id, listed } = req.validated;
+  const donor = await Donor.findById(id);
+  if (!donor) throw new AppError(404, "ডোনার পাওয়া যায়নি।");
+  if (donor.status !== "Blocked") {
+    throw new AppError(400, "শুধু ব্লক করা ডোনারকে প্রতারক তালিকায় দেখানো বা সরানো যায়।");
+  }
+  donor.hiddenFromFraudList = !listed;
+  await donor.save();
+  res.json({
+    success: true,
+    listed,
+    message: listed
+      ? "ডোনারকে আবার প্রতারক তালিকায় দেখানো হচ্ছে।"
+      : "ডোনারকে প্রতারক তালিকা থেকে সরানো হয়েছে। তিনি ব্লক অবস্থাতেই আছেন।",
+  });
 }
 
 // DELETE /api/admin/donors/:id (reject a registration or remove a donor)

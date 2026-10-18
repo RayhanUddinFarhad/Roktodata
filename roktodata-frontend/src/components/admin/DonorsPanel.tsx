@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Ban, CalendarDays, Check, MapPin, MessageSquareWarning, Phone, RotateCw, Search, Trash2 } from "lucide-react";
+import { Ban, CalendarDays, Check, Eye, EyeOff, MapPin, MessageSquareWarning, Phone, RotateCw, Search, Trash2 } from "lucide-react";
 import type { AdminContext } from "@/components/admin/AdminDashboard";
 import {
   ActionButton,
@@ -12,10 +12,22 @@ import {
   Pagination,
   formatDate,
 } from "@/components/admin/ui";
-import { deleteDonor, getAdminDonors, setDonorStatus, type AdminDonor } from "@/lib/api";
+import { deleteDonor, getAdminDonors, setDonorFraudListing, setDonorStatus, type AdminDonor } from "@/lib/api";
 import { type DonorStatus, formatLocation, NOT_MENTIONED } from "@/lib/data";
 
-// Lists donors. With fixedStatus="Pending" it is the approval queue; otherwise it has a status filter and search.
+// Lists donors. With fixedStatus="Pending" it is the approval queue, with fixedStatus="Blocked" the blocked
+// donors behind the public fraud list; otherwise it has a status filter and search.
+const FIXED_TEXT: Partial<Record<DonorStatus, { intro: string; empty: string }>> = {
+  Pending: {
+    intro: "নতুন রেজিস্ট্রেশনগুলো যাচাই করে অনুমোদন দিন। অনুমোদনের আগে এরা ওয়েবসাইটে দেখা যাবে না।",
+    empty: "অনুমোদনের অপেক্ষায় কোনো ডোনার নেই।",
+  },
+  Blocked: {
+    intro:
+      "ব্লক করা ডোনাররা কারণসহ \"প্রতারক ডোনার\" পাতায় দেখান। কাউকে সেখান থেকে সরাতে \"প্রতারক তালিকা থেকে সরান\" চাপুন; তিনি ব্লক অবস্থাতেই থাকবেন।",
+    empty: "কোনো ব্লক করা ডোনার নেই।",
+  },
+};
 export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; fixedStatus?: DonorStatus }) {
   const { token, refreshKey, runAction, onError } = ctx;
   const [status, setStatus] = useState<DonorStatus | "">(fixedStatus ?? "");
@@ -104,15 +116,13 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
       )}
 
       <p className="mb-3 text-sm text-slate-500">
-        {fixedStatus
-          ? "নতুন রেজিস্ট্রেশনগুলো যাচাই করে অনুমোদন দিন। অনুমোদনের আগে এরা ওয়েবসাইটে দেখা যাবে না।"
-          : `মোট ${data?.total ?? "…"} জন ডোনার`}
+        {fixedStatus ? FIXED_TEXT[fixedStatus]?.intro : `মোট ${data?.total ?? "…"} জন ডোনার`}
       </p>
 
       <ListState
         loading={loading}
         empty={donors.length === 0}
-        emptyText={fixedStatus ? "অনুমোদনের অপেক্ষায় কোনো ডোনার নেই।" : "কোনো ডোনার পাওয়া যায়নি।"}
+        emptyText={(fixedStatus && FIXED_TEXT[fixedStatus]?.empty) || "কোনো ডোনার পাওয়া যায়নি।"}
       />
 
       <ul className={`space-y-3 ${loading ? "opacity-60" : ""}`}>
@@ -155,9 +165,16 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
                     </span>
                     <span>রেজিস্ট্রেশন: {formatDate(donor.createdAt)}</span>
                   </div>
-                  {donor.status === "Blocked" && donor.blockReason && (
-                    <p className="mt-2 rounded-md bg-red-50 px-2.5 py-1.5 text-xs text-red-800">
-                      ব্লকের কারণ (প্রতারক তালিকায় দেখানো হচ্ছে): {donor.blockReason}
+                  {donor.status === "Blocked" && (
+                    <p
+                      className={`mt-2 rounded-md px-2.5 py-1.5 text-xs ${
+                        donor.inFraudList ? "bg-red-50 text-red-800" : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      <span className="font-semibold">
+                        {donor.inFraudList ? "প্রতারক তালিকায় দেখানো হচ্ছে" : "প্রতারক তালিকা থেকে সরানো হয়েছে"}
+                      </span>
+                      {donor.blockReason && <> · ব্লকের কারণ: {donor.blockReason}</>}
                     </p>
                   )}
                 </div>
@@ -189,6 +206,28 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
                       <Ban className="h-3.5 w-3.5" /> ব্লক করুন
                     </ActionButton>
                   )}
+                  {donor.status === "Blocked" &&
+                    (donor.inFraudList ? (
+                      <ActionButton
+                        tone="outlineRed"
+                        disabled={busy}
+                        onClick={() => {
+                          if (window.confirm(`${donor.fullName}-কে প্রতারক তালিকা থেকে সরাবেন? তিনি ব্লক অবস্থাতেই থাকবেন।`)) {
+                            act(donor, () => setDonorFraudListing(token, donor.id, false));
+                          }
+                        }}
+                      >
+                        <EyeOff className="h-3.5 w-3.5" /> প্রতারক তালিকা থেকে সরান
+                      </ActionButton>
+                    ) : (
+                      <ActionButton
+                        tone="gray"
+                        disabled={busy}
+                        onClick={() => act(donor, () => setDonorFraudListing(token, donor.id, true))}
+                      >
+                        <Eye className="h-3.5 w-3.5" /> প্রতারক তালিকায় দেখান
+                      </ActionButton>
+                    ))}
                   {donor.status === "Blocked" && (
                     <ActionButton tone="green" disabled={busy} onClick={() => changeStatus(donor, "Active")}>
                       <RotateCw className="h-3.5 w-3.5" /> আনব্লক

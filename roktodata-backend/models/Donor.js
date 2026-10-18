@@ -23,6 +23,8 @@ const donorSchema = new mongoose.Schema(
     // Set while Blocked: a blocked donor is listed publicly as fraudulent with this reason.
     blockReason: { type: String, trim: true, maxlength: 300, default: "" },
     blockedAt: { type: Date, default: null },
+    // Lets an admin keep a donor blocked while removing them from the public fraud list.
+    hiddenFromFraudList: { type: Boolean, default: false },
     // Where the record came from: "website" for self-registration, or an import batch name
     // (e.g. "import:blooddoner-docx-2026-10") so a batch can be reviewed or removed together.
     source: { type: String, trim: true, maxlength: 60, default: "website" },

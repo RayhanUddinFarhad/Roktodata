@@ -16,7 +16,7 @@ import {
 import LogoMark from "@/components/Logo";
 import ComplaintsPanel from "@/components/admin/ComplaintsPanel";
 import DonorsPanel from "@/components/admin/DonorsPanel";
-import FraudReportsPanel from "@/components/admin/FraudReportsPanel";
+import FraudTab from "@/components/admin/FraudTab";
 import RequestsPanel from "@/components/admin/RequestsPanel";
 import { ApiError, getAdminStats, type AdminStats } from "@/lib/api";
 
@@ -158,7 +158,7 @@ export default function AdminDashboard({
           {tab === "pending" && <DonorsPanel key="pending" ctx={ctx} fixedStatus="Pending" />}
           {tab === "donors" && <DonorsPanel key="donors" ctx={ctx} />}
           {tab === "requests" && <RequestsPanel ctx={ctx} />}
-          {tab === "fraud" && <FraudReportsPanel ctx={ctx} />}
+          {tab === "fraud" && <FraudTab ctx={ctx} />}
           {tab === "complaints" && <ComplaintsPanel ctx={ctx} />}
         </div>
       </main>
