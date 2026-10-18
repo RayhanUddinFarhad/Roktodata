@@ -7,7 +7,7 @@ import { pageMetadata } from "@/lib/seo";
 import { getDonorStats } from "@/lib/stats";
 
 export const metadata: Metadata = pageMetadata({
-  title: "জেলাভিত্তিক রক্তদাতা | রক্তদাতা",
+  title: "জেলাভিত্তিক রক্তের ডোনার | Blood Donors by District | রক্তদাতা",
   description:
     "বাংলাদেশের ৬৪ জেলার রক্তদাতাদের তালিকা। আপনার জেলা বেছে নিয়ে রক্তের গ্রুপ ও থানা অনুযায়ী রক্তদাতা খুঁজুন এবং সরাসরি ফোন করুন।",
   path: "/donors",
@@ -24,6 +24,7 @@ export default async function DistrictsPage() {
             ৬৪ জেলা
           </span>
           <h1 className="mt-2 text-2xl font-bold text-slate-900">জেলাভিত্তিক রক্তদাতা</h1>
+          <p className="mt-0.5 text-sm font-semibold text-slate-500">Blood donors in all 64 districts of Bangladesh</p>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
             {stats.total > 0 && (
               <>

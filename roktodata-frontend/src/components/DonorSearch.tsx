@@ -13,18 +13,20 @@ import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber } from "@/lib/data";
 const fieldClass =
   "h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-red-500 focus:outline-none";
 
-// `defaultDistrict` preselects a district (district pages); `headingLevel` lets a page that has
-// its own <h1> render the filter title as <h2>.
+// `defaultDistrict` / `defaultBloodGroup` preselect filters (district and blood group pages);
+// `headingLevel` lets a page that has its own <h1> render the filter title as <h2>.
 export default function DonorSearch({
   defaultDistrict = "",
+  defaultBloodGroup = "",
   headingLevel = "h1",
 }: {
   defaultDistrict?: string;
+  defaultBloodGroup?: string;
   headingLevel?: "h1" | "h2";
 }) {
   const searchParams = useSearchParams();
   const initialDistrict = searchParams.get("district") ?? defaultDistrict;
-  const [bloodGroup, setBloodGroup] = useState(searchParams.get("bloodGroup") ?? "");
+  const [bloodGroup, setBloodGroup] = useState(searchParams.get("bloodGroup") ?? defaultBloodGroup);
   const [district, setDistrict] = useState(initialDistrict);
   // Only accept a thana from the URL if it belongs to the chosen district.
   const [thana, setThana] = useState(() => {

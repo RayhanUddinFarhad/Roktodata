@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { BloodGroup } from "@/lib/data";
 
 // Public address of the site, used for canonical URLs, the sitemap and share previews.
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.roktodata.org").replace(/\/+$/, "");
@@ -90,10 +91,22 @@ export const OG_IMAGE = {
 };
 
 // Title, description, canonical URL and share preview for a public page. `path` is relative to SITE_URL.
-export function pageMetadata({ title, description, path }: { title: string; description: string; path: string }): Metadata {
+// `noindex` keeps a page out of search results (e.g. a district page with no donors yet).
+export function pageMetadata({
+  title,
+  description,
+  path,
+  noindex = false,
+}: {
+  title: string;
+  description: string;
+  path: string;
+  noindex?: boolean;
+}): Metadata {
   return {
     title,
     description,
+    ...(noindex && { robots: { index: false, follow: true } }),
     alternates: { canonical: path },
     openGraph: {
       type: "website",
@@ -107,3 +120,43 @@ export function pageMetadata({ title, description, path }: { title: string; desc
     twitter: { card: "summary_large_image", title, description, images: [OG_IMAGE.url] },
   };
 }
+
+// English district names as people search for them; the second name is the other common spelling
+// ("Chittagong" is still searched far more than "Chattogram").
+const DISTRICT_EN_OVERRIDES: Record<string, [string, string?]> = {
+  chattogram: ["Chittagong", "Chattogram"],
+  cumilla: ["Comilla", "Cumilla"],
+  barishal: ["Barisal", "Barishal"],
+  jashore: ["Jessore", "Jashore"],
+  bogura: ["Bogra", "Bogura"],
+  "coxs-bazar": ["Cox's Bazar"],
+  jhalokathi: ["Jhalokathi", "Jhalakathi"],
+  netrokona: ["Netrokona", "Netrakona"],
+  chapainawabganj: ["Chapainawabganj", "Nawabganj"],
+};
+
+// "Chittagong (Chattogram)", "Dhaka".
+export function districtEnglish(slug: string): string {
+  const [name, alt] = DISTRICT_EN_OVERRIDES[slug] ?? [slug.charAt(0).toUpperCase() + slug.slice(1)];
+  return alt ? `${name} (${alt})` : name;
+}
+
+// The first English name only, for short titles: "Chittagong".
+export const districtEnglishShort = (slug: string) => districtEnglish(slug).replace(/ \(.*\)$/, "");
+
+// Blood group pages: /donors/<district>/<group slug>.
+const GROUPS: [BloodGroup, string, string, string][] = [
+  ["A+", "a-positive", "A positive", "এ পজিটিভ"],
+  ["A-", "a-negative", "A negative", "এ নেগেটিভ"],
+  ["B+", "b-positive", "B positive", "বি পজিটিভ"],
+  ["B-", "b-negative", "B negative", "বি নেগেটিভ"],
+  ["AB+", "ab-positive", "AB positive", "এবি পজিটিভ"],
+  ["AB-", "ab-negative", "AB negative", "এবি নেগেটিভ"],
+  ["O+", "o-positive", "O positive", "ও পজিটিভ"],
+  ["O-", "o-negative", "O negative", "ও নেগেটিভ"],
+];
+export const groupSlug = (group: BloodGroup) => GROUPS.find(([g]) => g === group)![1];
+export const groupFromSlug = (slug: string) => GROUPS.find(([, s]) => s === slug)?.[0];
+export const groupEnglish = (group: BloodGroup) => GROUPS.find(([g]) => g === group)![2];
+export const groupBangla = (group: BloodGroup) => GROUPS.find(([g]) => g === group)![3];
+export const groupSlugs = () => GROUPS.map(([, slug]) => slug);

@@ -5,9 +5,19 @@ import { Suspense } from "react";
 import { ChevronRight, HeartPulse, MapPin, Siren, UserPlus } from "lucide-react";
 import DistrictLinks from "@/components/DistrictLinks";
 import DonorSearch from "@/components/DonorSearch";
+import Faq from "@/components/Faq";
 import JsonLd from "@/components/JsonLd";
 import { BLOOD_GROUPS, toBanglaNumber } from "@/lib/data";
-import { districtFromSlug, districtSlugs, pageMetadata, SITE_NAME, SITE_URL } from "@/lib/seo";
+import {
+  districtEnglish,
+  districtEnglishShort,
+  districtFromSlug,
+  districtSlugs,
+  groupSlug,
+  pageMetadata,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 import { districtStats, getDonorStats } from "@/lib/stats";
 
 export function generateStaticParams() {
@@ -18,10 +28,14 @@ export async function generateMetadata({ params }: PageProps<"/donors/[district]
   const { district: slug } = await params;
   const district = districtFromSlug(slug);
   if (!district) return {};
+  const stats = await getDonorStats();
+  const en = districtEnglishShort(slug);
   return pageMetadata({
-    title: `${district} জেলার রক্তদাতা | রক্তদাতা`,
-    description: `${district} জেলায় A+, B+, O+, AB+ সহ সব গ্রুপের রক্তদাতা খুঁজুন থানা অনুযায়ী। যাঁরা এখন রক্ত দিতে পারবেন তাঁদের সাথে সরাসরি ফোনে যোগাযোগ করুন, বিনামূল্যে।`,
+    title: `${district} জেলার রক্তের ডোনার | Blood Donor in ${en} | রক্তদাতা`,
+    description: `${district} জেলায় রক্তের ডোনার (ব্লাড ডোনার) খুঁজুন: A+, B+, O+, AB+ সহ সব গ্রুপ, থানা অনুযায়ী, সরাসরি ফোনে, বিনামূল্যে। Find a blood donor in ${districtEnglish(slug)} and call them directly.`,
     path: `/donors/${slug}`,
+    // A district with no donors yet would be an empty page in search results.
+    noindex: stats.available && districtStats(stats, district).total === 0,
   });
 }
 
@@ -32,6 +46,8 @@ export default async function DistrictDonorsPage({ params }: PageProps<"/donors/
 
   const stats = await getDonorStats();
   const { total, groups } = districtStats(stats, district);
+  const en = districtEnglish(slug);
+  const enShort = districtEnglishShort(slug);
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -42,6 +58,29 @@ export default async function DistrictDonorsPage({ params }: PageProps<"/donors/
       { "@type": "ListItem", position: 3, name: district, item: `${SITE_URL}/donors/${slug}` },
     ],
   };
+
+  const faq = [
+    {
+      question: `${district} জেলায় জরুরি রক্তের ডোনার কীভাবে পাব?`,
+      answer: `উপরের তালিকায় রক্তের গ্রুপ ও থানা বেছে নিন। যাঁরা এখন রক্ত দিতে পারবেন শুধু তাঁরাই তালিকায় দেখান; "কল করুন" চেপে সরাসরি কথা বলুন। কাউকে না পেলে "রোগীর তথ্য দিয়ে খুঁজুন" পাতায় অনুরোধ দিন, যাচাইয়ের পর সেটি সবার জন্য প্রকাশ করা হয়।`,
+    },
+    {
+      question: `How do I find a blood donor in ${enShort}?`,
+      answer: `Pick the blood group and thana above to see donors in ${en} who can donate now, then tap "কল করুন" to call them. Roktodata is free; ${total > 0 ? `${total} donors in this district are ready to donate.` : "donors are added every day."}`,
+    },
+    {
+      question: "রক্তদাতার সাথে যোগাযোগ করতে কি টাকা লাগে?",
+      answer: `না, রক্তদাতা সম্পূর্ণ বিনামূল্যে। কেউ রক্ত দেওয়ার বিনিময়ে টাকা চাইলে "প্রতারক ডোনার" পাতায় নাম্বারটি যাচাই করুন এবং রিপোর্ট করুন।`,
+    },
+    {
+      question: "তালিকায় কোন রক্তদাতাদের দেখানো হয়?",
+      answer: "শুধু অ্যাডমিন যাচাই করা রক্তদাতা, যাঁরা নিজে রক্ত দিতে প্রস্তুত জানিয়েছেন এবং যাঁদের শেষ রক্তদানের পর অন্তত ৯০ দিন পার হয়েছে। রক্ত নেওয়ার আগে হাসপাতাল বা ব্লাড ব্যাংক রক্তদাতার শারীরিক যোগ্যতা পরীক্ষা করে নেয়।",
+    },
+    {
+      question: `${district} থেকে রক্তদাতা হিসেবে কীভাবে যুক্ত হব?`,
+      answer: `"ডোনার রেজিস্ট্রেশন" পাতায় মোবাইল নাম্বার, রক্তের গ্রুপ, জেলা ও থানা দিন। নাম্বারে আসা SMS কোড দিয়ে যাচাই করলেই রেজিস্ট্রেশন হয়ে যাবে, অ্যাডমিন অনুমোদনের পর তালিকায় দেখাবে।`,
+    },
+  ];
 
   return (
     <main className="flex-1 bg-slate-50">
@@ -65,13 +104,18 @@ export default async function DistrictDonorsPage({ params }: PageProps<"/donors/
             {district} জেলা
           </span>
           <h1 className="mt-2 text-2xl font-bold text-slate-900">{district} জেলার রক্তদাতা</h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          <p className="mt-0.5 text-sm font-semibold text-slate-500">Blood donors in {en}</p>
+          <p className="mt-3 text-sm leading-relaxed text-slate-600">
             {!stats.available ? (
-              <>নিচে রক্তের গ্রুপ ও থানা বেছে নিয়ে {district} জেলার রক্তদাতা খুঁজুন এবং সরাসরি ফোন করুন।</>
+              <>
+                {district} জেলায় রক্তের ডোনার (ব্লাড ডোনার) খুঁজছেন? নিচে রক্তের গ্রুপ ও থানা বেছে নিয়ে খুঁজুন এবং সরাসরি ফোন
+                করুন।
+              </>
             ) : total > 0 ? (
               <>
-                {district} জেলায় এখন <strong className="text-slate-900">{toBanglaNumber(total)} জন</strong> রক্তদাতা রক্ত দিতে
-                প্রস্তুত। নিচে রক্তের গ্রুপ ও থানা বেছে নিয়ে খুঁজুন এবং সরাসরি ফোন করুন।
+                {district} জেলায় রক্তের ডোনার (ব্লাড ডোনার) খুঁজছেন? এখন{" "}
+                <strong className="text-slate-900">{toBanglaNumber(total)} জন</strong> রক্তদাতা রক্ত দিতে প্রস্তুত। নিচে
+                রক্তের গ্রুপ ও থানা বেছে নিয়ে খুঁজুন এবং সরাসরি ফোন করুন।
               </>
             ) : (
               <>
@@ -86,7 +130,8 @@ export default async function DistrictDonorsPage({ params }: PageProps<"/donors/
               {BLOOD_GROUPS.map((group) => (
                 <li key={group}>
                   <Link
-                    href={`/find-donor?${new URLSearchParams({ bloodGroup: group, district })}`}
+                    href={`/donors/${slug}/${groupSlug(group)}`}
+                    title={`${district} জেলার ${group} রক্তের ডোনার`}
                     className="flex flex-col items-center rounded-lg border border-slate-200 bg-slate-50 py-2 hover:border-red-300 hover:bg-red-50"
                   >
                     <span className="text-sm font-bold text-red-600">{group}</span>
@@ -130,6 +175,10 @@ export default async function DistrictDonorsPage({ params }: PageProps<"/donors/
             </span>
           </Link>
         </section>
+
+        <div className="mt-6">
+          <Faq title={`${district} জেলার রক্তের ডোনার: সাধারণ প্রশ্ন`} items={faq} />
+        </div>
 
         <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="flex items-center gap-2 font-bold text-slate-900">

@@ -4,7 +4,7 @@ import DonorSearch from "@/components/DonorSearch";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "ডোনার খুঁজুন | রক্তদাতা",
+  title: "রক্তের ডোনার খুঁজুন | Find Blood Donor | রক্তদাতা",
   description:
     "A+, B+, O+, AB+ সহ সব রক্তের গ্রুপের রক্তদাতা খুঁজুন জেলা ও থানা অনুযায়ী। যাঁরা এখন রক্ত দিতে পারবেন, শুধু তাঁদেরই দেখানো হয়।",
   path: "/find-donor",
