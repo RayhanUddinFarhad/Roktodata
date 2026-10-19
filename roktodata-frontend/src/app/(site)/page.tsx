@@ -47,7 +47,7 @@ export default async function Home() {
         <form
           id="search"
           action="/find-donor"
-          className="mx-auto mt-5 grid max-w-lg scroll-mt-4 gap-3 rounded-lg bg-white p-4 text-left shadow-xl sm:grid-cols-3 sm:items-end"
+          className="mx-auto mt-5 grid max-w-lg scroll-mt-20 gap-3 rounded-lg bg-white p-4 text-left shadow-xl sm:grid-cols-3 sm:items-end"
         >
           <label className="block">
             <span className="mb-1 block text-[11px] text-slate-600">রক্তের গ্রুপ</span>

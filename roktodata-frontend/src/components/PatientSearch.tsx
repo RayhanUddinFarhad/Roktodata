@@ -230,7 +230,7 @@ export default function PatientSearch() {
         </button>
       </form>
 
-      <div ref={resultRef} className="scroll-mt-4">
+      <div ref={resultRef} className="scroll-mt-20">
         {result?.kind === "duplicate" && <DuplicateNotice result={result} />}
         {result?.kind === "found" && <FoundDonors result={result} />}
       </div>

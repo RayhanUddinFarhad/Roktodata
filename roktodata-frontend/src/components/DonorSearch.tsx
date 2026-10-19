@@ -161,7 +161,7 @@ export default function DonorSearch({
         </div>
       </section>
 
-      <div ref={resultsRef} className="mt-8 flex scroll-mt-4 flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+      <div ref={resultsRef} className="mt-8 flex scroll-mt-20 flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 className="flex items-center gap-2 font-bold text-slate-900">
           উপলব্ধ রক্তদাতাগণ ({result ? toBanglaNumber(total) : "..."})
           {loading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import ApiWarmup from "@/components/ApiWarmup";
-import BecomeDonorButton from "@/components/BecomeDonorButton";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -12,7 +11,6 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
       <Navbar />
       {children}
       <Footer />
-      <BecomeDonorButton />
     </>
   );
 }
