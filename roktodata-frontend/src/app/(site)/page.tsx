@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Crosshair, Heart, MapPin, Search, UserCheck, Zap, type LucideIcon } from "lucide-react";
+import { ArrowRight, Heart, MapPin, Megaphone, Search } from "lucide-react";
 import DonationBenefits from "@/components/home/DonationBenefits";
 import FacebookPage from "@/components/home/FacebookPage";
 import HowItWorks from "@/components/home/HowItWorks";
@@ -8,27 +8,6 @@ import ShareDonorList from "@/components/home/ShareDonorList";
 import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber } from "@/lib/data";
 import { districtSlug, pageMetadata } from "@/lib/seo";
 import { getDonorStats } from "@/lib/stats";
-
-const FEATURES: { icon: LucideIcon; iconClass: string; title: string; text: string }[] = [
-  {
-    icon: UserCheck,
-    iconClass: "bg-red-100 text-red-600",
-    title: "সহজ রেজিস্ট্রেশন ও আপডেট",
-    text: "মোবাইল নাম্বার দিয়ে সহজেই রেজিস্ট্রেশন করুন। নাম্বার আগে থেকে থাকলে শুধু শেষ রক্তদানের তারিখ আপডেট করে নিন।",
-  },
-  {
-    icon: Crosshair,
-    iconClass: "bg-blue-100 text-indigo-900",
-    title: "থানা ও জেলা ভিত্তিক ফিল্টার",
-    text: "আপনার নির্দিষ্ট এলাকা বা থানার কাছাকাছি রক্তদাতাদের খুব দ্রুত খুঁজে পেতে আমাদের স্মার্ট ফিল্টারিং সিস্টেম রয়েছে।",
-  },
-  {
-    icon: Zap,
-    iconClass: "bg-emerald-100 text-emerald-600",
-    title: "লগইন ছাড়াই জরুরী সেবা",
-    text: "রোগীর আত্মীয়-স্বজন কোনো প্রকার ঝামেলা বা লগইন ছাড়াই রোগীর তথ্য ও ঠিকানা দিয়ে তাৎক্ষণিকভাবে ডোনারদের তালিকা দেখতে পারবেন।",
-  },
-];
 
 const selectClass =
   "h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-red-500 focus:outline-none";
@@ -50,25 +29,25 @@ export default async function Home() {
 
   return (
     <main className="flex-1 bg-slate-50">
-      <section className="bg-linear-to-r from-[#1e2a5e] via-[#15172b] to-[#7f1d1d] px-4 py-14 text-center text-white">
+      <section className="bg-linear-to-r from-[#1e2a5e] via-[#15172b] to-[#7f1d1d] px-4 pb-10 pt-8 text-center text-white sm:py-14">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/70 bg-red-950/40 px-3 py-1 text-xs text-red-100">
           <Heart className="h-3 w-3 text-pink-400" fill="currentColor" />
           এক ফোঁটা রক্ত, বাঁচাতে পারে একটি প্রাণ
         </span>
-        <h1 className="mx-auto mt-4 max-w-2xl text-3xl font-bold leading-tight sm:text-[34px]">
+        <h1 className="mx-auto mt-3 max-w-2xl text-[26px] font-bold leading-tight sm:mt-4 sm:text-[34px]">
           সারাদেশের রক্তদাতাদের নির্ভরযোগ্য ডিজিটাল নেটওয়ার্ক
         </h1>
         <p className="mt-2 text-xs font-semibold tracking-wide text-red-200">
           রক্তের ডোনার · ব্লাড ডোনার · Blood Donor Bangladesh
         </p>
-        <p className="mx-auto mt-4 max-w-md text-sm text-slate-200">
+        <p className="mx-auto mt-3 hidden max-w-md text-sm text-slate-200 sm:block">
           জরুরী মুহূর্তে সঠিক রক্তদাতা খুঁজুন অথবা নিজেই রক্তদাতা হিসেবে যুক্ত হয়ে মানবতার সেবায় অংশ নিন।
         </p>
 
         <form
           id="search"
           action="/find-donor"
-          className="mx-auto mt-6 grid max-w-lg scroll-mt-4 gap-3 rounded-lg bg-white p-4 text-left shadow-xl sm:grid-cols-3 sm:items-end"
+          className="mx-auto mt-5 grid max-w-lg scroll-mt-4 gap-3 rounded-lg bg-white p-4 text-left shadow-xl sm:grid-cols-3 sm:items-end"
         >
           <label className="block">
             <span className="mb-1 block text-[11px] text-slate-600">রক্তের গ্রুপ</span>
@@ -100,27 +79,26 @@ export default async function Home() {
             ডোনার খুঁজুন
           </button>
         </form>
-      </section>
 
-      <section className="bg-slate-50 px-4 py-12">
-        <div className="mx-auto grid max-w-[808px] gap-6 md:grid-cols-3">
-          {FEATURES.map(({ icon: Icon, iconClass, title, text }) => (
-            <div
-              key={title}
-              className="rounded-lg border border-slate-100 bg-white p-6 text-center shadow-sm"
-            >
-              <span className={`mx-auto flex h-11 w-11 items-center justify-center rounded-lg ${iconClass}`}>
-                <Icon className="h-5 w-5" fill={Icon === Zap ? "currentColor" : "none"} />
-              </span>
-              <h3 className="mt-3 text-base font-bold text-slate-900">{title}</h3>
-              <p className="mt-3 text-xs leading-relaxed text-slate-500">{text}</p>
-            </div>
-          ))}
-        </div>
+        {stats.available && stats.total > 0 && (
+          <p className="mt-4 text-xs font-semibold text-slate-200">
+            <span className="text-white">{toBanglaNumber(Math.floor(stats.total / 100) * 100)}+ রক্তদাতা</span>
+            <span className="mx-2 text-slate-500">·</span>৬৪ জেলা
+            <span className="mx-2 text-slate-500">·</span>সম্পূর্ণ বিনামূল্যে
+          </p>
+        )}
+        <Link
+          href="/patient-search"
+          className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-red-200 underline-offset-4 hover:text-white hover:underline"
+        >
+          <Megaphone className="h-3.5 w-3.5" />
+          ডোনার পাননি? রোগীর তথ্য দিয়ে অনুরোধ করুন
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
       </section>
 
       {popular.length > 0 && (
-        <section className="px-4 pb-12">
+        <section className="px-4 py-12">
           <div className="mx-auto max-w-[808px] rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
@@ -152,11 +130,10 @@ export default async function Home() {
         </section>
       )}
 
-      <FacebookPage />
-
       <HowItWorks />
       <DonationBenefits />
       <ShareDonorList />
+      <FacebookPage />
     </main>
   );
 }
