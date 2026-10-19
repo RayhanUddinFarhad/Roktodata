@@ -18,7 +18,7 @@ export default function ComplaintButton({ donor }: { donor: Pick<Donor, "id" | "
         type="button"
         onClick={() => setOpen(true)}
         title="এই ডোনারের বিরুদ্ধে অভিযোগ করুন"
-        className="flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 hover:bg-red-50"
+        className="flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
       >
         <Flag className="h-3 w-3" />
         অভিযোগ

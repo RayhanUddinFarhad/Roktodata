@@ -19,7 +19,7 @@ export default async function DistrictsPage() {
     <main className="flex-1 bg-slate-50">
       <div className="mx-auto max-w-[840px] px-4 py-8">
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-0.5 text-[11px] font-semibold text-red-600">
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-0.5 text-[11px] font-semibold text-red-700">
             <MapPin className="h-3 w-3" />
             ৬৪ জেলা
           </span>

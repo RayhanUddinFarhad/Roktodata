@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ChevronRight, Droplet, MapPin } from "lucide-react";
 import DonorSearch from "@/components/DonorSearch";
+import DonorSearchSkeleton from "@/components/DonorSearchSkeleton";
 import Faq from "@/components/Faq";
 import JsonLd from "@/components/JsonLd";
 import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber } from "@/lib/data";
@@ -115,7 +116,7 @@ export default async function DistrictGroupPage({ params }: PageProps<"/donors/[
         </nav>
 
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-0.5 text-[11px] font-semibold text-red-600">
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-0.5 text-[11px] font-semibold text-red-700">
             <MapPin className="h-3 w-3" />
             {district} জেলা
           </span>
@@ -156,7 +157,7 @@ export default async function DistrictGroupPage({ params }: PageProps<"/donors/[
                     }`}
                   >
                     <span className={`text-sm font-bold ${active ? "text-white" : "text-red-600"}`}>{g}</span>
-                    <span className={`font-mono text-[11px] ${active ? "text-red-100" : "text-slate-500"}`}>
+                    <span className={`font-mono text-[11px] ${active ? "text-white" : "text-slate-500"}`}>
                       {toBanglaNumber(groups[g] ?? 0)} জন
                     </span>
                   </Link>
@@ -167,7 +168,7 @@ export default async function DistrictGroupPage({ params }: PageProps<"/donors/[
         </section>
 
         <div className="mt-6">
-          <Suspense>
+          <Suspense fallback={<DonorSearchSkeleton />}>
             <DonorSearch defaultDistrict={district} defaultBloodGroup={group} headingLevel="h2" />
           </Suspense>
         </div>
@@ -186,7 +187,7 @@ export default async function DistrictGroupPage({ params }: PageProps<"/donors/[
                     className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:border-red-300 hover:text-red-600"
                   >
                     {d.district}
-                    <span className="font-mono text-[10px] text-slate-400">{toBanglaNumber(d.count)}</span>
+                    <span className="font-mono text-[11px] text-slate-500">{toBanglaNumber(d.count)}</span>
                   </Link>
                 </li>
               ))}

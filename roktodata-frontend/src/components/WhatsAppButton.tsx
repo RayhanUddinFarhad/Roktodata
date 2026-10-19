@@ -21,8 +21,8 @@ export default function WhatsAppButton({
       rel="noopener noreferrer"
       title="এই নাম্বারে WhatsApp থাকলে মেসেজ পাঠান"
       aria-label={`${phone} নাম্বারে WhatsApp মেসেজ পাঠান`}
-      className={`flex items-center gap-1 rounded-md border border-[#25D366] bg-white font-semibold text-[#128C7E] hover:bg-[#25D366] hover:text-white ${
-        size === "md" ? "rounded-lg px-4 py-2 text-xs" : "px-3 py-1.5 text-[11px]"
+      className={`flex items-center gap-1 rounded-md border border-[#25D366] bg-white font-semibold text-[#0a6b60] hover:bg-[#25D366] hover:text-white ${
+        size === "md" ? "rounded-lg px-4 py-2 text-xs" : "px-3 py-1.5 text-xs"
       }`}
     >
       <WhatsAppIcon className={size === "md" ? "h-4 w-4" : "h-3.5 w-3.5"} />

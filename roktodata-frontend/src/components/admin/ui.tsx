@@ -81,7 +81,7 @@ export function askBlockReason(name: string, suggestion = ""): string | null {
 }
 
 const BUTTON_TONES = {
-  green: "bg-emerald-600 text-white hover:bg-emerald-700",
+  green: "bg-emerald-700 text-white hover:bg-emerald-800",
   red: "bg-red-600 text-white hover:bg-red-700",
   outlineRed: "border border-red-200 text-red-600 hover:bg-red-50",
   gray: "bg-slate-100 text-slate-700 hover:bg-slate-200",

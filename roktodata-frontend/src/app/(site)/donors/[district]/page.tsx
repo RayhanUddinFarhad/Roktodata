@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { ChevronRight, HeartPulse, MapPin, Siren, UserPlus } from "lucide-react";
 import DistrictLinks from "@/components/DistrictLinks";
 import DonorSearch from "@/components/DonorSearch";
+import DonorSearchSkeleton from "@/components/DonorSearchSkeleton";
 import Faq from "@/components/Faq";
 import JsonLd from "@/components/JsonLd";
 import { BLOOD_GROUPS, toBanglaNumber } from "@/lib/data";
@@ -99,7 +100,7 @@ export default async function DistrictDonorsPage({ params }: PageProps<"/donors/
         </nav>
 
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-0.5 text-[11px] font-semibold text-red-600">
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-0.5 text-[11px] font-semibold text-red-700">
             <MapPin className="h-3 w-3" />
             {district} জেলা
           </span>
@@ -144,7 +145,7 @@ export default async function DistrictDonorsPage({ params }: PageProps<"/donors/
         </section>
 
         <div className="mt-6">
-          <Suspense>
+          <Suspense fallback={<DonorSearchSkeleton />}>
             <DonorSearch defaultDistrict={district} headingLevel="h2" />
           </Suspense>
         </div>

@@ -34,7 +34,7 @@ export default async function Footer() {
         </div>
 
         <div>
-          <h4 className="font-semibold text-white">দ্রুত লিংক</h4>
+          <h2 className="font-semibold text-white">দ্রুত লিংক</h2>
           <ul className="mt-3 space-y-1.5 text-sm">
             {QUICK_LINKS.map((link) => (
               <li key={link.label}>
@@ -47,7 +47,7 @@ export default async function Footer() {
         </div>
 
         <div>
-          <h4 className="font-semibold text-white">যোগাযোগ</h4>
+          <h2 className="font-semibold text-white">যোগাযোগ</h2>
           <p className="mt-3 text-sm">যেকোনো প্রশ্ন, পরামর্শ বা ডোনার তালিকা পাঠাতে ইমেইল করুন:</p>
           <a
             href={`mailto:${CONTACT_EMAIL}`}
@@ -60,14 +60,14 @@ export default async function Footer() {
             href={FACEBOOK_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#1877F2] px-3 py-2 text-sm font-semibold text-white hover:bg-[#166fe5]"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#1462cc] px-3 py-2 text-sm font-semibold text-white hover:bg-[#0f52ad]"
           >
             <FacebookIcon className="h-4 w-4" />
             ফেসবুক পেজ
           </a>
         </div>
       </div>
-      <div className="border-t border-slate-800 px-4 py-4 text-center text-xs text-slate-500">
+      <div className="border-t border-slate-800 px-4 py-4 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} রক্তদাতা (RoktoData)। সর্বস্বত্ব সংরক্ষিত। ডেভেলপ করেছেন{" "}
         <Link href="/about" className="font-semibold text-slate-300 hover:text-white">
           {DEVELOPER_NAME}

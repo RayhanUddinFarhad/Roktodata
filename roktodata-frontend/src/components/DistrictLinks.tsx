@@ -45,7 +45,7 @@ export default function DistrictLinks({ stats, current }: { stats: DonorStats; c
                     >
                       {district}
                       {total > 0 && (
-                        <span className={`font-mono text-[10px] ${active ? "text-red-100" : "text-slate-400"}`}>
+                        <span className={`font-mono text-[11px] ${active ? "text-white" : "text-slate-400"}`}>
                           {toBanglaNumber(total)}
                         </span>
                       )}

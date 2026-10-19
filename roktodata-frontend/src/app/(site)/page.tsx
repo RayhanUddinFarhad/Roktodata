@@ -119,7 +119,7 @@ export default async function Home() {
                     className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-red-300 hover:bg-red-50 hover:text-red-600"
                   >
                     {district}
-                    <span className="font-mono text-[11px] text-slate-400">{toBanglaNumber(total)} জন</span>
+                    <span className="font-mono text-[11px] text-slate-500">{toBanglaNumber(total)} জন</span>
                   </Link>
                 </li>
               ))}

@@ -367,7 +367,7 @@ function DonorList({
                 <WhatsAppButton phone={donor.phoneNumber} message={donorWhatsAppMessage(donor.bloodGroup)} size="md" />
                 <a
                   href={`tel:${donor.phoneNumber}`}
-                  className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
+                  className="flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
                 >
                   <PhoneCall className="h-3.5 w-3.5" />
                   {donor.phoneNumber} (কল দিন)

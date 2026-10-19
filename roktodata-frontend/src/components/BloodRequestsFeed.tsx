@@ -188,7 +188,7 @@ function RequestPost({
           <h2 className="font-bold text-slate-900">
             {toBanglaNumber(request.bagsNeeded)} ব্যাগ {request.requiredBloodGroup} রক্ত প্রয়োজন
           </h2>
-          <p className="text-xs text-slate-400">পোস্ট: {toBanglaNumber(request.createdAt.slice(0, 10))}</p>
+          <p className="text-xs text-slate-500">পোস্ট: {toBanglaNumber(request.createdAt.slice(0, 10))}</p>
         </div>
         {fulfilled && (
           <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
@@ -248,7 +248,7 @@ function RequestPost({
             <WhatsAppButton phone={request.requesterPhone} message={requestWhatsAppMessage(request.requiredBloodGroup)} />
             <a
               href={`tel:${request.requesterPhone}`}
-              className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+              className="flex items-center gap-1.5 rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
             >
               <PhoneCall className="h-3.5 w-3.5" />
               যোগাযোগ করুন

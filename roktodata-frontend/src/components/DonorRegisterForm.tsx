@@ -166,7 +166,7 @@ export default function DonorRegisterForm() {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="text-center">
-        <span className="inline-block rounded-full bg-red-100 px-3 py-0.5 text-[11px] font-semibold text-red-600">
+        <span className="inline-block rounded-full bg-red-100 px-3 py-0.5 text-[11px] font-semibold text-red-700">
           ডোনার পোর্টাল
         </span>
         <h1 className="mt-2 text-2xl font-bold text-slate-900">ডোনার রেজিস্ট্রেশন বা আপডেট</h1>
@@ -442,7 +442,7 @@ export default function DonorRegisterForm() {
               </button>
             </div>
             <div className="mt-2 flex items-center gap-3">
-              <span className="rounded-md bg-red-50 px-2.5 py-1 text-sm font-bold text-red-600">{bloodGroup}</span>
+              <span className="rounded-md bg-red-50 px-2.5 py-1 text-sm font-bold text-red-700">{bloodGroup}</span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-slate-900">{shownName || name}</p>
                 <p className="flex items-center gap-1 text-[11px] text-slate-500">
