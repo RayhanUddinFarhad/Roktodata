@@ -1,7 +1,8 @@
 import { CalendarDays, MapPin, Phone, PhoneCall } from "lucide-react";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import ComplaintButton from "@/components/ComplaintButton";
-import { type Donor, formatLocation, NOT_MENTIONED } from "@/lib/data";
+import WhatsAppButton from "@/components/WhatsAppButton";
+import { type Donor, donorWhatsAppMessage, formatLocation, NOT_MENTIONED } from "@/lib/data";
 
 export default function DonorCard({ donor }: { donor: Donor }) {
   return (
@@ -29,8 +30,9 @@ export default function DonorCard({ donor }: { donor: Donor }) {
           <Phone className="h-3.5 w-3.5 text-emerald-600" fill="currentColor" />
           {donor.phoneNumber}
         </span>
-        <div className="mt-2.5 flex items-center justify-end gap-2">
+        <div className="mt-2.5 flex flex-wrap items-center justify-end gap-2">
           <ComplaintButton donor={donor} />
+          <WhatsAppButton phone={donor.phoneNumber} message={donorWhatsAppMessage(donor.bloodGroup)} />
           <a
             href={`tel:${donor.phoneNumber}`}
             className="flex items-center gap-1 rounded-md bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-700"

@@ -17,9 +17,10 @@ import {
   User,
 } from "lucide-react";
 import RequestAdminControls from "@/components/admin/RequestAdminControls";
+import WhatsAppButton from "@/components/WhatsAppButton";
 import { useAdminToken } from "@/lib/adminToken";
 import { ApiError, getBloodRequests } from "@/lib/api";
-import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber, type BloodRequest } from "@/lib/data";
+import { BLOOD_GROUPS, DISTRICTS, requestWhatsAppMessage, toBanglaNumber, type BloodRequest } from "@/lib/data";
 
 const fieldClass =
   "h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-red-500 focus:outline-none";
@@ -243,13 +244,16 @@ function RequestPost({
       {!fulfilled && (
         <footer className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
           <span className="font-mono text-xs font-semibold text-slate-700">{request.requesterPhone}</span>
-          <a
-            href={`tel:${request.requesterPhone}`}
-            className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
-          >
-            <PhoneCall className="h-3.5 w-3.5" />
-            যোগাযোগ করুন
-          </a>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <WhatsAppButton phone={request.requesterPhone} message={requestWhatsAppMessage(request.requiredBloodGroup)} />
+            <a
+              href={`tel:${request.requesterPhone}`}
+              className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+            >
+              <PhoneCall className="h-3.5 w-3.5" />
+              যোগাযোগ করুন
+            </a>
+          </div>
         </footer>
       )}
 

@@ -116,4 +116,17 @@ export const NAV_LINKS = [
 
 export const CONTACT_EMAIL = "Roktodatainfo@gmail.com";
 
+export const FACEBOOK_URL = "https://www.facebook.com/share/1Drs6xsScp/";
+
+// Opens a WhatsApp chat with a Bangladeshi number (01XXXXXXXXX), with a message ready to send.
+// WhatsApp itself tells the user if the number isn't on WhatsApp.
+export const whatsappLink = (phone: string, message: string) =>
+  `https://wa.me/88${phone.replace(/\D/g, "").replace(/^88/, "")}?text=${encodeURIComponent(message)}`;
+
+export const donorWhatsAppMessage = (bloodGroup: string) =>
+  `আসসালামু আলাইকুম। রক্তদাতা (roktodata.org) থেকে আপনার নাম্বার পেয়েছি। আমাদের ${bloodGroup} রক্ত প্রয়োজন। আপনি কি রক্ত দিতে পারবেন? সম্ভব হলে জানাবেন, ধন্যবাদ।`;
+
+export const requestWhatsAppMessage = (bloodGroup: string) =>
+  `আসসালামু আলাইকুম। রক্তদাতা (roktodata.org)-তে আপনার ${bloodGroup} রক্তের অনুরোধটি দেখেছি। আমি রক্ত দিতে আগ্রহী।`;
+
 export const DEVELOPER_NAME = "রায়হান উদ্দিন ফরহাদ";

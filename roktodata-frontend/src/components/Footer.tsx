@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { cacheLife } from "next/cache";
 import { Mail } from "lucide-react";
+import { FacebookIcon } from "@/components/BrandIcons";
 import LogoMark from "@/components/Logo";
-import { CONTACT_EMAIL, DEVELOPER_NAME } from "@/lib/data";
+import { CONTACT_EMAIL, DEVELOPER_NAME, FACEBOOK_URL } from "@/lib/data";
 
 const QUICK_LINKS = [
   { href: "/", label: "হোম পেজ" },
@@ -54,6 +55,15 @@ export default async function Footer() {
           >
             <Mail className="h-4 w-4 shrink-0" />
             {CONTACT_EMAIL}
+          </a>
+          <a
+            href={FACEBOOK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#1877F2] px-3 py-2 text-sm font-semibold text-white hover:bg-[#166fe5]"
+          >
+            <FacebookIcon className="h-4 w-4" />
+            ফেসবুক পেজ
           </a>
         </div>
       </div>

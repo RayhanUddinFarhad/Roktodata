@@ -5,9 +5,19 @@ import Link from "next/link";
 import { CircleCheck, Info, Loader2, MapPin, Megaphone, PhoneCall, Search, SearchX } from "lucide-react";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import ComplaintButton from "@/components/ComplaintButton";
+import WhatsAppButton from "@/components/WhatsAppButton";
 import ThanaSelect from "@/components/ThanaSelect";
 import { ApiError, searchForPatient } from "@/lib/api";
-import { BLOOD_GROUPS, type BloodGroup, DISTRICTS, type Donor, formatLocation, NOT_MENTIONED, toBanglaNumber } from "@/lib/data";
+import {
+  BLOOD_GROUPS,
+  type BloodGroup,
+  DISTRICTS,
+  type Donor,
+  donorWhatsAppMessage,
+  formatLocation,
+  NOT_MENTIONED,
+  toBanglaNumber,
+} from "@/lib/data";
 
 const fieldClass =
   "h-12 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-800 focus:bg-white focus:outline-none";
@@ -352,8 +362,9 @@ function DonorList({
                   <span className="font-semibold text-slate-700">{donor.lastDonationDate ?? NOT_MENTIONED}</span>
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <ComplaintButton donor={donor} />
+                <WhatsAppButton phone={donor.phoneNumber} message={donorWhatsAppMessage(donor.bloodGroup)} size="md" />
                 <a
                   href={`tel:${donor.phoneNumber}`}
                   className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700"

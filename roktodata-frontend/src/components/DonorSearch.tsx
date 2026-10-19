@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CircleAlert, Funnel, Loader2, RotateCw, SearchX } from "lucide-react";
+import { WhatsAppIcon } from "@/components/BrandIcons";
 import DonorCard from "@/components/DonorCard";
 import Pagination from "@/components/Pagination";
 import ThanaSelect from "@/components/ThanaSelect";
@@ -172,6 +173,12 @@ export default function DonorSearch({
           </p>
         )}
       </div>
+      {result && total > 0 && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+          <WhatsAppIcon className="h-3.5 w-3.5 shrink-0 text-[#25D366]" />
+          ফোন না ধরলে WhatsApp-এ মেসেজ রেখে দিন, রক্তদাতা সুবিধামতো উত্তর দিতে পারবেন।
+        </p>
+      )}
 
       {slow && loading && (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">

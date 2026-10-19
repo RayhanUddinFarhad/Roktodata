@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Crosshair, Heart, MapPin, Search, UserCheck, Zap, type LucideIcon } from "lucide-react";
 import DonationBenefits from "@/components/home/DonationBenefits";
+import FacebookPage from "@/components/home/FacebookPage";
 import HowItWorks from "@/components/home/HowItWorks";
 import ShareDonorList from "@/components/home/ShareDonorList";
 import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber } from "@/lib/data";
@@ -150,6 +151,8 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      <FacebookPage />
 
       <HowItWorks />
       <DonationBenefits />

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Hind_Siliguri } from "next/font/google";
 import localFont from "next/font/local";
 import JsonLd from "@/components/JsonLd";
-import { CONTACT_EMAIL } from "@/lib/data";
+import { CONTACT_EMAIL, FACEBOOK_URL } from "@/lib/data";
 import { OG_IMAGE, SITE_NAME, SITE_NAME_EN, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
@@ -46,6 +46,7 @@ const SITE_JSON_LD = {
       url: SITE_URL,
       logo: `${SITE_URL}/apple-icon.png`,
       email: CONTACT_EMAIL,
+      sameAs: [FACEBOOK_URL],
       areaServed: "BD",
     },
     {
