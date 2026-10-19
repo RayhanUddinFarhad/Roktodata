@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Heart, MapPin, Search } from "lucide-react";
+import { ArrowRight, Heart, MapPin } from "lucide-react";
 import DonationBenefits from "@/components/home/DonationBenefits";
+import HeroSearch from "@/components/home/HeroSearch";
 import FacebookPage from "@/components/home/FacebookPage";
 import HowItWorks from "@/components/home/HowItWorks";
 import ShareDonorList from "@/components/home/ShareDonorList";
-import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber } from "@/lib/data";
+import { toBanglaNumber } from "@/lib/data";
 import { districtSlug, pageMetadata } from "@/lib/seo";
 import { getDonorStats } from "@/lib/stats";
-
-const selectClass =
-  "h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-red-500 focus:outline-none";
 
 export const metadata: Metadata = pageMetadata({
   title: "রক্তদাতা | রক্তের ডোনার খুঁজুন · Blood Donor Bangladesh",
@@ -38,41 +36,7 @@ export default async function Home() {
           সারাদেশের রক্তদাতাদের নির্ভরযোগ্য ডিজিটাল নেটওয়ার্ক
         </h1>
 
-        <form
-          id="search"
-          action="/find-donor"
-          className="mx-auto mt-6 grid max-w-lg scroll-mt-20 gap-3 rounded-lg bg-white p-4 text-left shadow-xl sm:grid-cols-3 sm:items-end"
-        >
-          <label className="block">
-            <span className="mb-1 block text-[11px] text-slate-600">রক্তের গ্রুপ</span>
-            <select name="bloodGroup" defaultValue="" className={selectClass}>
-              <option value="">সব গ্রুপ</option>
-              {BLOOD_GROUPS.map((group) => (
-                <option key={group} value={group}>
-                  {group}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-[11px] text-slate-600">জেলা</span>
-            <select name="district" defaultValue="" className={selectClass}>
-              <option value="">সকল জেলা</option>
-              {DISTRICTS.map((district) => (
-                <option key={district} value={district}>
-                  {district}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="submit"
-            className="flex h-10 items-center justify-center gap-1.5 rounded-md bg-red-600 text-sm font-semibold text-white shadow-md shadow-red-600/30 hover:bg-red-700"
-          >
-            <Search className="h-4 w-4" />
-            ডোনার খুঁজুন
-          </button>
-        </form>
+        <HeroSearch />
 
         <p className="mt-4 flex flex-col items-center gap-2 text-xs text-slate-300 sm:flex-row sm:justify-center sm:gap-0">
           <span>হাজারো রক্তদাতা · ৬৪ জেলা · বিনামূল্যে</span>
