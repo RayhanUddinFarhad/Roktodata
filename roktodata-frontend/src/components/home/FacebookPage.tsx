@@ -1,12 +1,7 @@
-import { ArrowUpRight, BellRing, HeartHandshake, Megaphone } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { FacebookIcon } from "@/components/BrandIcons";
 import { FACEBOOK_URL } from "@/lib/data";
 
-const POINTS = [
-  { icon: Megaphone, text: "জরুরি রক্তের অনুরোধ সবার আগে" },
-  { icon: BellRing, text: "নতুন ফিচার ও আপডেটের খবর" },
-  { icon: HeartHandshake, text: "রক্তদান নিয়ে সচেতনতা ও গল্প" },
-];
 
 // Invites visitors to follow the Facebook page.
 export default function FacebookPage() {
@@ -18,15 +13,7 @@ export default function FacebookPage() {
         </span>
         <div className="flex-1">
           <h2 className="text-xl font-bold text-slate-900">ফেসবুকে রক্তদাতার সাথে থাকুন</h2>
-          <p className="mt-1 text-sm text-slate-600">পেজে যুক্ত হলে আপনার নিউজফিডেই পাবেন:</p>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {POINTS.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
-                <Icon className="h-3.5 w-3.5 text-[#1877F2]" />
-                {text}
-              </li>
-            ))}
-          </ul>
+          <p className="mt-1 text-sm text-slate-600">জরুরি রক্তের অনুরোধ আর নতুন খবর সবার আগে পেতে পেজে যুক্ত হোন।</p>
         </div>
         <a
           href={FACEBOOK_URL}

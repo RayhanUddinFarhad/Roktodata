@@ -1,10 +1,9 @@
-import { FileSpreadsheet, Mail, ShieldCheck, Users } from "lucide-react";
+import { Mail, ShieldCheck, Users } from "lucide-react";
 import CopyEmailButton from "@/components/home/CopyEmailButton";
 import { CONTACT_EMAIL } from "@/lib/data";
 
 const MAIL_SUBJECT = "ডোনার তালিকা পাঠাচ্ছি";
 
-const NEEDED_FIELDS = ["নাম", "মোবাইল নাম্বার", "রক্তের গ্রুপ", "জেলা ও থানা", "শেষ রক্তদানের তারিখ (জানা থাকলে)"];
 
 export default function ShareDonorList() {
   return (
@@ -22,17 +21,9 @@ export default function ShareDonorList() {
               করব, যাতে জরুরি মুহূর্তে আরও বেশি মানুষ রক্ত পান।
             </p>
 
-            <ul className="mt-4 flex flex-wrap gap-2">
-              {NEEDED_FIELDS.map((field) => (
-                <li key={field} className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-100">
-                  {field}
-                </li>
-              ))}
-            </ul>
-
-            <p className="mt-4 flex items-start gap-2 text-xs text-slate-300">
+            <p className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-slate-300">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
-              অনুগ্রহ করে ডোনারদের সম্মতি নিয়েই তাঁদের তথ্য পাঠাবেন।
+              নাম, মোবাইল, রক্তের গ্রুপ আর জেলা-থানা থাকলেই চলবে (Excel, Word বা PDF)। ডোনারদের সম্মতি নিয়ে পাঠাবেন।
             </p>
           </div>
 
@@ -50,10 +41,6 @@ export default function ShareDonorList() {
               ইমেইল পাঠান
             </a>
             <CopyEmailButton email={CONTACT_EMAIL} />
-            <p className="mt-3 flex items-center justify-center gap-1 text-[11px] text-slate-500">
-              <FileSpreadsheet className="h-3.5 w-3.5" />
-              Excel, Word বা PDF ফাইল চলবে
-            </p>
           </div>
         </div>
       </div>

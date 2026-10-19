@@ -1,13 +1,5 @@
 import Link from "next/link";
-import { BadgeCheck, Crosshair, Megaphone, PhoneCall, Search, ShieldCheck, Zap, type LucideIcon } from "lucide-react";
-
-// What makes it easy, shown under the steps.
-const PERKS: { icon: LucideIcon; text: string }[] = [
-  { icon: Zap, text: "লগইন ছাড়াই, সাথে সাথে" },
-  { icon: Crosshair, text: "জেলা ও থানা পর্যন্ত ফিল্টার" },
-  { icon: BadgeCheck, text: "শুধু রক্ত দিতে প্রস্তুত ডোনার" },
-  { icon: ShieldCheck, text: "সম্পূর্ণ বিনামূল্যে" },
-];
+import { Megaphone, PhoneCall, Search, type LucideIcon } from "lucide-react";
 
 const STEPS: { icon: LucideIcon; title: string; text: string; href: string; cta: string }[] = [
   {
@@ -55,14 +47,6 @@ export default function HowItWorks() {
             </li>
           ))}
         </ol>
-        <ul className="mt-6 flex flex-wrap justify-center gap-2">
-          {PERKS.map(({ icon: Icon, text }) => (
-            <li key={text} className="flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700">
-              <Icon className="h-3.5 w-3.5" />
-              {text}
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );

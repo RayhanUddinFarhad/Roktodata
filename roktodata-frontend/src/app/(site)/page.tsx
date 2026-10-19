@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Heart, MapPin, Megaphone, Search } from "lucide-react";
+import { ArrowRight, Heart, MapPin, Search } from "lucide-react";
 import DonationBenefits from "@/components/home/DonationBenefits";
 import FacebookPage from "@/components/home/FacebookPage";
 import HowItWorks from "@/components/home/HowItWorks";
@@ -34,20 +34,14 @@ export default async function Home() {
           <Heart className="h-3 w-3 text-pink-400" fill="currentColor" />
           এক ফোঁটা রক্ত, বাঁচাতে পারে একটি প্রাণ
         </span>
-        <h1 className="mx-auto mt-3 max-w-2xl text-[26px] font-bold leading-tight sm:mt-4 sm:text-[34px]">
+        <h1 className="mx-auto mt-3 max-w-3xl text-[26px] font-bold leading-tight sm:mt-4 sm:text-[34px]">
           সারাদেশের রক্তদাতাদের নির্ভরযোগ্য ডিজিটাল নেটওয়ার্ক
         </h1>
-        <p className="mt-2 text-xs font-semibold tracking-wide text-red-200">
-          রক্তের ডোনার · ব্লাড ডোনার · Blood Donor Bangladesh
-        </p>
-        <p className="mx-auto mt-3 hidden max-w-md text-sm text-slate-200 sm:block">
-          জরুরী মুহূর্তে সঠিক রক্তদাতা খুঁজুন অথবা নিজেই রক্তদাতা হিসেবে যুক্ত হয়ে মানবতার সেবায় অংশ নিন।
-        </p>
 
         <form
           id="search"
           action="/find-donor"
-          className="mx-auto mt-5 grid max-w-lg scroll-mt-20 gap-3 rounded-lg bg-white p-4 text-left shadow-xl sm:grid-cols-3 sm:items-end"
+          className="mx-auto mt-6 grid max-w-lg scroll-mt-20 gap-3 rounded-lg bg-white p-4 text-left shadow-xl sm:grid-cols-3 sm:items-end"
         >
           <label className="block">
             <span className="mb-1 block text-[11px] text-slate-600">রক্তের গ্রুপ</span>
@@ -80,19 +74,13 @@ export default async function Home() {
           </button>
         </form>
 
-        <p className="mt-4 text-xs font-semibold text-slate-200">
-          <span className="text-white">হাজারো রক্তদাতা</span>
-          <span className="mx-2 text-slate-500">·</span>৬৪ জেলা
-          <span className="mx-2 text-slate-500">·</span>সম্পূর্ণ বিনামূল্যে
+        <p className="mt-4 flex flex-col items-center gap-2 text-xs text-slate-300 sm:flex-row sm:justify-center sm:gap-0">
+          <span>হাজারো রক্তদাতা · ৬৪ জেলা · বিনামূল্যে</span>
+          <span className="mx-2 hidden text-slate-500 sm:inline">|</span>
+          <Link href="/patient-search" className="font-semibold text-red-200 underline-offset-4 hover:text-white hover:underline">
+            ডোনার পাননি? অনুরোধ করুন →
+          </Link>
         </p>
-        <Link
-          href="/patient-search"
-          className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-red-200 underline-offset-4 hover:text-white hover:underline"
-        >
-          <Megaphone className="h-3.5 w-3.5" />
-          ডোনার পাননি? রোগীর তথ্য দিয়ে অনুরোধ করুন
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
       </section>
 
       {popular.length > 0 && (
@@ -104,7 +92,6 @@ export default async function Home() {
                   <MapPin className="h-5 w-5 text-red-600" />
                   জেলা অনুযায়ী রক্তের ডোনার খুঁজুন
                 </h2>
-                <p className="mt-0.5 text-xs text-slate-500">Find blood donors by district</p>
               </div>
               <Link href="/donors" className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:text-red-700">
                 ৬৪ জেলা দেখুন
