@@ -80,13 +80,11 @@ export default async function Home() {
           </button>
         </form>
 
-        {stats.available && stats.total > 0 && (
-          <p className="mt-4 text-xs font-semibold text-slate-200">
-            <span className="text-white">{toBanglaNumber(Math.floor(stats.total / 100) * 100)}+ রক্তদাতা</span>
-            <span className="mx-2 text-slate-500">·</span>৬৪ জেলা
-            <span className="mx-2 text-slate-500">·</span>সম্পূর্ণ বিনামূল্যে
-          </p>
-        )}
+        <p className="mt-4 text-xs font-semibold text-slate-200">
+          <span className="text-white">হাজারো রক্তদাতা</span>
+          <span className="mx-2 text-slate-500">·</span>৬৪ জেলা
+          <span className="mx-2 text-slate-500">·</span>সম্পূর্ণ বিনামূল্যে
+        </p>
         <Link
           href="/patient-search"
           className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-red-200 underline-offset-4 hover:text-white hover:underline"
