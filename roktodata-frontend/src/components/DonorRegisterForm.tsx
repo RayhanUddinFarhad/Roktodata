@@ -261,8 +261,8 @@ export default function DonorRegisterForm() {
         <p className="mt-4 flex gap-2.5 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2.5 text-xs leading-relaxed text-slate-700">
           <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-indigo-700" />
           <span>
-            <strong className="font-semibold text-slate-900">তালিকা থেকে সাময়িকভাবে সরাতে:</strong> আপনার তথ্য ভরে দেওয়া আছে আর
-            &quot;এখন প্রস্তুত নই&quot; বাছাই করা আছে। নিচে কবে থেকে আবার প্রস্তুত তা বেছে নিন, তারপর নাম্বার যাচাই করুন।
+            <strong className="font-semibold text-slate-900">তালিকা থেকে সাময়িকভাবে সরাতে:</strong> আপনার তথ্য স্বয়ংক্রিয়ভাবে যুক্ত
+            হয়েছে এবং &quot;এখন প্রস্তুত নই&quot; নির্বাচিত। কবে থেকে আবার প্রস্তুত থাকবেন তা বেছে নিয়ে নাম্বার যাচাই করুন।
           </span>
         </p>
       )}
