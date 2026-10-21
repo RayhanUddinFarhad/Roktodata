@@ -26,6 +26,9 @@ const envSchema = z.object({
   SMS_SENDER_ID: z.string().trim().default(""),
   // Site-wide cap on verification SMS in 24 hours, so abuse can't drain the SMS balance.
   OTP_DAILY_LIMIT: z.coerce.number().int().positive().default(300),
+  // Shared secret for scheduled jobs (the daily "you can donate again" SMS, run by GitHub Actions).
+  // While empty, the job endpoints are switched off.
+  JOBS_SECRET: z.string().trim().refine((v) => v === "" || v.length >= 32, "JOBS_SECRET must be at least 32 characters").default(""),
 });
 
 const parsed = envSchema.safeParse(process.env);

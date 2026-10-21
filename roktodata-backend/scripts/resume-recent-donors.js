@@ -3,6 +3,8 @@
 // Donors without a last donation date are left alone, since their reason is unknown.
 // Usage: node --env-file=.env scripts/resume-recent-donors.js          (counts only, changes nothing)
 //        node --env-file=.env scripts/resume-recent-donors.js --apply  (writes the return dates)
+// --saved-before=2026-10-21T17:47:00Z leaves out donors saved after that time (e.g. after the form
+// started asking for a return date, so a deliberate "don't know" is not overridden).
 import mongoose from "mongoose";
 import { connectDB, disconnectDB } from "../config/db.js";
 import { ELIGIBILITY_DAYS } from "../config/constants.js";
@@ -10,6 +12,7 @@ import { Donor } from "../models/Donor.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const apply = process.argv.includes("--apply");
+const savedBefore = process.argv.find((a) => a.startsWith("--saved-before="))?.split("=")[1];
 
 await connectDB();
 const cutoff = new Date(Date.now() - ELIGIBILITY_DAYS * DAY_MS);
@@ -17,6 +20,7 @@ const filter = {
   isReadyToDonate: false,
   readyAgainAt: null,
   lastDonationDate: mongoose.trusted({ $gt: cutoff }),
+  ...(savedBefore && { updatedAt: mongoose.trusted({ $lt: new Date(savedBefore) }) }),
 };
 
 const donors = await Donor.find(filter, { lastDonationDate: 1, status: 1 }).lean();
