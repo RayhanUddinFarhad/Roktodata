@@ -690,16 +690,17 @@ function drawNakshi(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Re
       ctx.moveTo(nx, ny); ctx.lineTo(nx + 30, ny - 30); ctx.stroke();
     }
   }
-  if (s.count > 30) { ctx.fillStyle = p.b; setFont(ctx, 700, 26, fonts.body); ctx.fillText(`+${toBanglaNumber(s.count - 30)}`, 540, 990); }
+  // "+N" after the second row, so it stays clear of the name
+  if (s.count > 30) { ctx.fillStyle = p.b; setFont(ctx, 700, 30, fonts.body); ctx.textAlign = "left"; ctx.fillText(`+${toBanglaNumber(s.count - 30)}`, 540 + 7 * 44 + 30, 918); ctx.textAlign = "center"; }
   ctx.fillStyle = s.name.trim() ? "#1f2937" : "#a8a29e";
-  fitText(ctx, nameOrHint(ctx, s.name, o.preview), 540, 1066, 720, s.name.trim() ? 80 : 48, 400, fonts.deco, 36);
+  fitText(ctx, nameOrHint(ctx, s.name, o.preview), 540, 1040, 720, s.name.trim() ? 72 : 46, 400, fonts.deco, 36);
   const pillText = [s.group || (o.preview ? "গ্রুপ?" : ""), s.district].filter(Boolean).join(" · ");
   setFont(ctx, 700, 30, fonts.body); const pw = Math.max(200, ctx.measureText(pillText).width + 70);
-  dashed(p.c, 4, [8, 6], () => ctx.roundRect(540 - pw / 2, 1092, pw, 56, 28));
-  ctx.fillStyle = p.b; ctx.fillText(pillText, 540, 1130);
-  const regions: Regions = { name: { x: 200, y: 996, w: 680, h: 90 }, group: { x: 540 - pw / 2, y: 1088, w: pw, h: 64 }, counter: { x: 360, y: 420, w: 360, h: 420 }, photo: { cx: 540, cy: 340, r: 74 } };
+  dashed(p.c, 4, [8, 6], () => ctx.roundRect(540 - pw / 2, 1068, pw, 54, 27));
+  ctx.fillStyle = p.b; ctx.fillText(pillText, 540, 1105);
+  const regions: Regions = { name: { x: 200, y: 976, w: 680, h: 84 }, group: { x: 540 - pw / 2, y: 1064, w: pw, h: 62 }, counter: { x: 360, y: 420, w: 360, h: 420 }, photo: { cx: 540, cy: 340, r: 74 } };
   if (o.preview && !s.name.trim()) hint(ctx, regions.name, p.a, anim.t);
-  footer(ctx, s, fonts, 1206, "#6b5b3e", p.a);
+  footer(ctx, s, fonts, 1216, "#6b5b3e", p.a); // the phone line sits at 1170, clear of the pill
   return regions;
 }
 
