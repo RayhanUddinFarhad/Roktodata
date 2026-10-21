@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CircleAlert, EyeOff, Funnel, Loader2, RotateCw, SearchX } from "lucide-react";
+import { ChevronDown, CircleAlert, EyeOff, Funnel, Loader2, RotateCw, SearchX } from "lucide-react";
 import { WhatsAppIcon } from "@/components/BrandIcons";
 import DonorCard from "@/components/DonorCard";
 import { DonorCardSkeletons } from "@/components/DonorSearchSkeleton";
@@ -206,19 +206,22 @@ export default function DonorSearch({
       ) : donors.length > 0 ? (
         <>
           {/* for donors who find themselves here but can't donate for now */}
-          <p className="mt-4 flex gap-2.5 rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2.5 text-xs leading-relaxed text-slate-700">
-            <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-indigo-700" />
-            <span>
-              <strong className="font-semibold text-slate-900">
-                তালিকায় আপনার নাম্বার আছে, কিন্তু এখন রক্ত দিতে পারবেন না বা গত ৩ মাসে রক্ত দিয়েছেন?
-              </strong>{" "}
+          <details className="group mt-4 rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2 text-xs leading-relaxed text-slate-700">
+            <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold text-slate-900">
+              <EyeOff className="h-4 w-4 shrink-0 text-indigo-700" />
+              <span className="flex-1">তালিকায় আপনার নাম্বার? সাময়িকভাবে লুকাতে চান</span>
+              <ChevronDown className="h-4 w-4 shrink-0 text-indigo-700 transition-transform group-open:rotate-180" />
+            </summary>
+            <p className="mt-2 pl-6">
+              এখন রক্ত দিতে না পারলে বা গত ৩ মাসে রক্ত দিয়ে থাকলে{" "}
               <Link href="/register" className="font-semibold text-indigo-800 underline underline-offset-2 hover:text-red-600">
                 আপডেট পেজে
               </Link>{" "}
               গিয়ে শেষ রক্তদানের তারিখ দিন অথবা &quot;এখন প্রস্তুত নই&quot; বাছুন, তারপর নাম্বার যাচাই করুন। আপনার নাম্বার তালিকা থেকে সরে
-              যাবে। কবে থেকে আবার রক্ত দিতে পারবেন, সেটাও বেছে নিতে পারবেন, তখন আপনার তথ্য আবার তালিকায় চলে আসবে।
-            </span>
-          </p>
+              যাবে। কবে থেকে আবার রক্ত দিতে পারবেন, সেটাও বেছে নিতে পারবেন, তখন আপনার তথ্য আবার তালিকায় চলে আসবে। সহজ উপায়:
+              আপনার কার্ডের নিচে &quot;এটা আপনার নাম্বার?&quot; লিংকে চাপুন, তথ্য আগে থেকেই ভরা থাকবে।
+            </p>
+          </details>
           <div className={`mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${loading ? "opacity-60" : ""}`}>
             {donors.map((donor) => (
               <DonorCard key={donor.id} donor={donor} />

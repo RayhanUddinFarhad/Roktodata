@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { CircleCheck, Loader2, MapPin, MessageSquareText, Pencil, Phone, RotateCw, ShieldCheck, UserCheck } from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { CircleCheck, EyeOff, Loader2, MapPin, MessageSquareText, Pencil, Phone, RotateCw, ShieldCheck, UserCheck } from "lucide-react";
 import OtpInput from "@/components/OtpInput";
 import ThanaSelect from "@/components/ThanaSelect";
 import { ApiError, previewName, registerOrUpdateDonor, sendOtp, verifyOtp, type ReadyAgain } from "@/lib/api";
 import { BLOOD_GROUPS, DISTRICTS, formatLocation, toBanglaNumber, type BloodGroup } from "@/lib/data";
+import { thanasOf } from "@/lib/locations";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-red-500 focus:bg-white focus:outline-none";
@@ -56,6 +57,29 @@ const clock = (seconds: number) =>
 
 type Step = "form" | "otp" | "done";
 
+// The page's query string (empty while prerendering), read without useSearchParams so the form
+// still renders on the server.
+const noSubscribe = () => () => {};
+const useQueryString = () => useSyncExternalStore(noSubscribe, () => window.location.search, () => "");
+
+// Details passed by a donor card's "এটা আপনার নাম্বার?" link (only values the form accepts).
+function prefillFrom(query: string) {
+  const q = new URLSearchParams(query);
+  const phone = q.get("phone") ?? "";
+  const group = q.get("group") ?? "";
+  const district = q.get("district") ?? "";
+  const thana = q.get("thana") ?? "";
+  const okDistrict = (DISTRICTS as readonly string[]).includes(district);
+  return {
+    phone: PHONE_PATTERN.test(phone) ? phone : "",
+    name: (q.get("name") ?? "").slice(0, 100),
+    group: (BLOOD_GROUPS as readonly string[]).includes(group) ? group : "",
+    district: okDistrict ? district : "",
+    thana: okDistrict && thanasOf(district).includes(thana) ? thana : "",
+    hide: q.get("hide") === "1",
+  };
+}
+
 export default function DonorRegisterForm() {
   const [step, setStep] = useState<Step>("form");
   const [phone, setPhone] = useState("");
@@ -68,6 +92,25 @@ export default function DonorRegisterForm() {
   // With "not ready": when the profile returns to search by itself (null = until changed). Until the
   // donor picks, it is "90 days after the last donation" when that is still to come, else 3 months.
   const [readyAgainChoice, setReadyAgainChoice] = useState<ReadyAgain | null | "auto">("auto");
+
+  // Fill in what a donor card's link passed, once (adjusting state while rendering, as React suggests
+  // for state that follows an outside value).
+  const query = useQueryString();
+  const [prefilledFrom, setPrefilledFrom] = useState("");
+  const [hiding, setHiding] = useState(false);
+  if (query && query !== prefilledFrom) {
+    setPrefilledFrom(query);
+    const p = prefillFrom(query);
+    if (p.phone) setPhone(p.phone);
+    if (p.name) setName(p.name);
+    if (p.group) setBloodGroup(p.group);
+    if (p.district) setDistrict(p.district);
+    if (p.thana) setThana(p.thana);
+    if (p.hide) {
+      setIsReadyToDonate(false);
+      setHiding(true);
+    }
+  }
   const eligibleOn = eligibleLater(lastDonated);
   const readyAgain: ReadyAgain | null =
     readyAgainChoice === "auto" || (readyAgainChoice === "eligible" && !eligibleOn)
@@ -214,6 +257,15 @@ export default function DonorRegisterForm() {
           আপনার মোবাইল নাম্বার দিন। নাম্বার আগে থেকে রেজিস্টার্ড থাকলে তথ্য আপডেট হবে, না হলে নতুন ডোনার হিসেবে যুক্ত হবেন।
         </p>
       </div>
+      {hiding && step === "form" && (
+        <p className="mt-4 flex gap-2.5 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2.5 text-xs leading-relaxed text-slate-700">
+          <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-indigo-700" />
+          <span>
+            <strong className="font-semibold text-slate-900">তালিকা থেকে সাময়িকভাবে সরাতে:</strong> আপনার তথ্য ভরে দেওয়া আছে আর
+            &quot;এখন প্রস্তুত নই&quot; বাছাই করা আছে। নিচে কবে থেকে আবার প্রস্তুত তা বেছে নিন, তারপর নাম্বার যাচাই করুন।
+          </span>
+        </p>
+      )}
 
       <ol className="mt-5 flex items-center" aria-label="ধাপ">
         {STEPS.map((label, index) => (

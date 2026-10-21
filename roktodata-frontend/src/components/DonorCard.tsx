@@ -1,8 +1,18 @@
+import Link from "next/link";
 import { CalendarDays, MapPin, Phone, PhoneCall } from "lucide-react";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import ComplaintButton from "@/components/ComplaintButton";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { type Donor, donorWhatsAppMessage, formatLocation, NOT_MENTIONED } from "@/lib/data";
+
+// The update page with this donor's public details filled in and "not ready" chosen, for a donor
+// who finds themselves in the list but can't donate now (they still verify the number by SMS).
+function hideLink(donor: Donor) {
+  const params = new URLSearchParams({ phone: donor.phoneNumber, group: donor.bloodGroup, district: donor.district, hide: "1" });
+  if (donor.fullName !== "নাম উল্লেখ নেই") params.set("name", donor.fullName);
+  if (donor.upazila) params.set("thana", donor.upazila);
+  return `/register?${params}`;
+}
 
 export default function DonorCard({ donor }: { donor: Donor }) {
   return (
@@ -41,6 +51,9 @@ export default function DonorCard({ donor }: { donor: Donor }) {
             কল করুন
           </a>
         </div>
+        <Link href={hideLink(donor)} prefetch={false} className="mt-2.5 block text-right text-[11px] text-slate-500 hover:text-indigo-700 hover:underline">
+          এটা আপনার নাম্বার? সাময়িকভাবে লুকান →
+        </Link>
       </div>
     </div>
   );
