@@ -8,7 +8,7 @@ export const CARD_W = 1080;
 export const CARD_H = 1350;
 export const STORY_H = 1920;
 
-export type DesignId = "bag" | "idcard" | "certificate" | "nakshi" | "medal";
+export type DesignId = "bag" | "idcard" | "countdown" | "certificate" | "nakshi" | "medal";
 export type CardSize = "post" | "story";
 
 export interface CardState {
@@ -50,6 +50,7 @@ export interface Regions {
   group: Rect;
   counter: Rect;
   photo: { cx: number; cy: number; r: number; ry?: number };
+  date?: Rect; // the last-donation date, where a design shows it
 }
 
 interface Options {
@@ -80,6 +81,8 @@ export const DESIGNS: { id: DesignId; label: string; hint: string; palettes: { n
   { id: "bag", label: "রক্তের ব্যাগ", hint: "ব্যাগে ট্যাপ করলে এক ফোঁটা রক্ত যোগ হয়", palettes: [
     { name: "ক্লাসিক", swatch: ["#fbf1e6", "#c81e1e"] }, { name: "গোলাপি", swatch: ["#fde8ec", "#be123c"] },
     { name: "রাত", swatch: ["#0f172a", "#f43f5e"] }, { name: "পুদিনা", swatch: ["#e7f6f0", "#dc2626"] }] },
+  { id: "countdown", label: "রক্তদান কাউন্টডাউন", hint: "তারিখে ট্যাপ করে শেষ রক্তদানের দিন দিন", palettes: [
+    { name: "লাল", swatch: ["#fff5f5", "#dc2626"] }, { name: "ফিরোজা", swatch: ["#ecfeff", "#0891b2"] }, { name: "রাত", swatch: ["#1e1b4b", "#f43f5e"] }] },
   { id: "certificate", label: "সম্মাননা সনদ", hint: "ডটেড লাইনে ট্যাপ করে নাম লিখুন", palettes: [
     { name: "মেরুন-সোনালি", swatch: ["#fdf6e3", "#7f1d1d"] }, { name: "সবুজ-সোনালি", swatch: ["#f3f8ef", "#14532d"] }, { name: "নীল-রুপালি", swatch: ["#f4f6fa", "#1e3a8a"] }] },
   { id: "nakshi", label: "নকশিকাঁথা", hint: "প্রতিবার একটা করে ফোঁটা সেলাই হয়", palettes: [
@@ -447,7 +450,140 @@ function drawIdCard(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Re
   return regions;
 }
 
-// ---- 3. certificate -----------------------------------------------------------------------------
+// ---- 3. donation countdown ----------------------------------------------------------------------
+// Days between donations; the site hides donors from search until this many days have passed
+// (ELIGIBILITY_DAYS in the backend).
+export const DONATION_GAP_DAYS = 90;
+const COUNTDOWN = [
+  { bg: ["#fff5f5", "#ffe4e6"], ring: "#dc2626", track: "#fecdd3", ink: "#1f2937", muted: "#6b7280", chip: "#ffffff", ready: "#16a34a" },
+  { bg: ["#ecfeff", "#cffafe"], ring: "#0891b2", track: "#a5f3fc", ink: "#164e63", muted: "#4b7a88", chip: "#ffffff", ready: "#059669" },
+  { bg: ["#1e1b4b", "#0f172a"], ring: "#f43f5e", track: "#334155", ink: "#f8fafc", muted: "#cbd5e1", chip: "#1e293b", ready: "#4ade80" },
+];
+const DAY_MS = 86400000;
+const dhakaTodayYmd = () => new Date(Date.now() + 6 * 3600e3).toISOString().slice(0, 10);
+const ymdToUtc = (ymd: string) => Date.UTC(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1, +ymd.slice(8, 10));
+// Where a donor stands: days since the last donation, days left, the next date (null without a date).
+export function countdownOf(lastDate: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(lastDate)) return null;
+  const since = Math.max(0, Math.round((ymdToUtc(dhakaTodayYmd()) - ymdToUtc(lastDate)) / DAY_MS));
+  const next = new Date(ymdToUtc(lastDate) + DONATION_GAP_DAYS * DAY_MS).toISOString().slice(0, 10);
+  return { since, left: Math.max(0, DONATION_GAP_DAYS - since), next, ready: since >= DONATION_GAP_DAYS };
+}
+function drawCountdown(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regions {
+  const p = COUNTDOWN[s.palette] ?? COUNTDOWN[0];
+  const { fonts, anim } = o;
+  const bg = ctx.createLinearGradient(0, 0, 0, CARD_H);
+  bg.addColorStop(0, p.bg[0]);
+  bg.addColorStop(1, p.bg[1]);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, CARD_W, CARD_H);
+  const cd = countdownOf(s.lastDate);
+  const ready = !cd || cd.ready; // without a date, the card says "ready"
+  const main = ready ? p.ready : p.ring;
+
+  // header
+  ctx.fillStyle = p.ring; ctx.beginPath(); ctx.arc(96, 92, 28, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#fff"; dropPath(ctx, 96, 76, 18, 26); ctx.fill();
+  ctx.fillStyle = p.ink; ctx.textAlign = "left"; setFont(ctx, 700, 34, fonts.body); ctx.fillText("রক্তদাতা", 138, 104);
+  ctx.textAlign = "right"; ctx.fillStyle = p.muted; setFont(ctx, 600, 26, fonts.body); ctx.fillText("রক্তদান কাউন্টডাউন", 1000, 102);
+
+  // the message
+  ctx.textAlign = "center";
+  if (ready) {
+    ctx.fillStyle = p.ink; setFont(ctx, 700, 58, fonts.body); ctx.fillText("আমি আবার রক্তদানের", 540, 210);
+    ctx.fillStyle = main; setFont(ctx, 700, 72, fonts.body); ctx.fillText("জন্য প্রস্তুত!", 540, 296);
+  } else {
+    ctx.fillStyle = p.ink; setFont(ctx, 700, 54, fonts.body); ctx.fillText("আবার রক্ত দিতে পারব", 540, 220);
+    ctx.fillStyle = p.muted; setFont(ctx, 600, 36, fonts.body); ctx.fillText(`${bnDate(cd!.next)} থেকে`, 540, 284);
+  }
+
+  // the ring: how much of the 90 days has passed
+  const cx = 540, cy = 600, r = 230;
+  const frac = cd ? Math.min(1, cd.since / DONATION_GAP_DAYS) : 1;
+  const sweep = anim.pulse < 1 ? frac * Easing(anim.pulse) : frac;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = p.track; ctx.lineWidth = 40; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = main; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + sweep * Math.PI * 2); ctx.stroke();
+  ctx.lineCap = "butt";
+  // tick marks for the three months
+  ctx.strokeStyle = p.chip; ctx.lineWidth = 6;
+  for (const k of [1, 2]) { const a = -Math.PI / 2 + (k / 3) * Math.PI * 2; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * (r - 22), cy + Math.sin(a) * (r - 22)); ctx.lineTo(cx + Math.cos(a) * (r + 22), cy + Math.sin(a) * (r + 22)); ctx.stroke(); }
+  // a drop riding at the end of the arc
+  const ea = -Math.PI / 2 + sweep * Math.PI * 2;
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(cx + Math.cos(ea) * r, cy + Math.sin(ea) * r, 28, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = main; dropPath(ctx, cx + Math.cos(ea) * r, cy + Math.sin(ea) * r - 18, 24, 34); ctx.fill();
+  // inside the ring
+  if (ready) {
+    const pop = 1 + 0.06 * Math.sin(anim.t * 3);
+    ctx.save(); ctx.translate(cx, cy - 40); ctx.scale(pop, pop);
+    ctx.fillStyle = main; ctx.beginPath(); ctx.arc(0, 0, 92, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 18; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath(); ctx.moveTo(-40, 2); ctx.lineTo(-10, 32); ctx.lineTo(44, -26); ctx.stroke(); ctx.lineCap = "butt";
+    ctx.restore();
+    ctx.fillStyle = main; setFont(ctx, 700, 52, fonts.body); ctx.fillText("প্রস্তুত!", cx, cy + 112);
+    // sparkles
+    ctx.fillStyle = "#facc15";
+    for (let i = 0; i < 6; i++) { const a = anim.t * 0.8 + (i * Math.PI) / 3, rr = r - 70 + 10 * Math.sin(anim.t * 3 + i); ctx.beginPath(); ctx.arc(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, 7, 0, Math.PI * 2); ctx.fill(); }
+  } else {
+    ctx.fillStyle = p.ink; setFont(ctx, 700, 170, fonts.body); ctx.fillText(toBanglaNumber(cd!.left), cx, cy + 40);
+    ctx.fillStyle = p.muted; setFont(ctx, 700, 40, fonts.body); ctx.fillText("দিন বাকি", cx, cy + 104);
+  }
+
+  // dates (tap to set the last donation date)
+  const chipY = 880;
+  const chipText = cd ? `শেষ রক্তদান: ${bnDate(s.lastDate)}` : o.preview ? "শেষ রক্তদানের তারিখ দিন" : "";
+  setFont(ctx, 600, 30, fonts.body);
+  const chipW = Math.max(360, ctx.measureText(chipText).width + 110);
+  if (chipText) {
+    ctx.fillStyle = p.chip; ctx.beginPath(); ctx.roundRect(540 - chipW / 2, chipY, chipW, 66, 33); ctx.fill();
+    // a small calendar icon
+    const ix = 540 - chipW / 2 + 40, iy = chipY + 18;
+    ctx.strokeStyle = main; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(ix - 14, iy, 28, 30, 5); ctx.stroke();
+    ctx.fillStyle = main; ctx.fillRect(ix - 14, iy, 28, 9);
+    ctx.fillStyle = cd ? p.ink : p.muted; ctx.textAlign = "left"; ctx.fillText(chipText, ix + 30, chipY + 44); ctx.textAlign = "center";
+  }
+
+  // who: photo, name, group, donations so far
+  const rowY = 1010;
+  photoOrPlaceholder(ctx, o.photo, 200, rowY + 40, 62, 62, p.track, p.chip, o.preview);
+  ctx.strokeStyle = main; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(200, rowY + 40, 62, 0, Math.PI * 2); ctx.stroke();
+  ctx.textAlign = "left";
+  ctx.fillStyle = s.name.trim() ? p.ink : p.muted;
+  fitText(ctx, nameOrHint(ctx, s.name, o.preview), 290, rowY + 30, 600, s.name.trim() ? 48 : 32, 700, fonts.body, 26);
+  const groupText = s.group || (o.preview ? "গ্রুপ?" : "");
+  setFont(ctx, 700, 28, s.group ? LATIN : fonts.body);
+  const gw = ctx.measureText(groupText).width + 36;
+  if (groupText) {
+    ctx.fillStyle = main; ctx.beginPath(); ctx.roundRect(290, rowY + 50, gw, 46, 23); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.fillText(groupText, 308, rowY + 83);
+  }
+  const bump = 1 + 0.15 * Math.sin(Math.min(1, anim.pulse) * Math.PI);
+  ctx.save(); ctx.translate(290 + gw + 22, rowY + 83); ctx.scale(bump, bump);
+  ctx.fillStyle = p.muted; setFont(ctx, 600, 28, fonts.body); ctx.fillText(`এ পর্যন্ত ${toBanglaNumber(s.count)} বার রক্তদান`, 0, 0);
+  ctx.restore();
+  setFont(ctx, 600, 28, fonts.body);
+  const cw = ctx.measureText(`এ পর্যন্ত ${toBanglaNumber(s.count)} বার রক্তদান`).width;
+
+  const regions: Regions = {
+    name: { x: 280, y: rowY - 20, w: 640, h: 64 },
+    group: { x: 286, y: rowY + 46, w: gw + 8, h: 54 },
+    counter: { x: 290 + gw + 12, y: rowY + 46, w: cw + 20, h: 54 },
+    photo: { cx: 200, cy: rowY + 40, r: 66 },
+    date: { x: 540 - chipW / 2, y: chipY - 4, w: chipW, h: 74 },
+  };
+  if (o.preview && !s.name.trim()) hint(ctx, regions.name, main, anim.t);
+  if (o.preview && !cd) hint(ctx, regions.date!, main, anim.t);
+  ctx.textAlign = "center"; ctx.fillStyle = p.muted; setFont(ctx, 600, 26, fonts.body);
+  ctx.fillText(ready ? "যার রক্ত লাগবে, আমাকে খুঁজে নিন রক্তদাতায়" : "তিন মাস পরপর রক্ত দেওয়া যায়", 540, 1200);
+  footer(ctx, s, fonts, 1286, p.muted, p.ring);
+  return regions;
+}
+// ease-out for the ring sweep after a tap
+function Easing(t: number) {
+  return 1 - (1 - t) ** 3;
+}
+
+// ---- 4. certificate -----------------------------------------------------------------------------
 function drawCertificate(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regions {
   const p = CERT[s.palette] ?? CERT[0];
   const { fonts, anim } = o;
@@ -503,7 +639,7 @@ function drawCertificate(ctx: CanvasRenderingContext2D, s: CardState, o: Options
   return regions;
 }
 
-// ---- 4. nakshi kantha ---------------------------------------------------------------------------
+// ---- 5. nakshi kantha ---------------------------------------------------------------------------
 function stitchedDrop(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, filled: boolean, progress = 1) {
   dropPath(ctx, x, y, 24, 34);
   if (filled && progress >= 1) { ctx.fillStyle = color; ctx.fill(); }
@@ -567,7 +703,7 @@ function drawNakshi(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Re
   return regions;
 }
 
-// ---- 5. medal -----------------------------------------------------------------------------------
+// ---- 6. medal -----------------------------------------------------------------------------------
 function drawMedal(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regions {
   const p = MEDAL[s.palette] ?? MEDAL[0];
   const { fonts, anim } = o;
@@ -624,13 +760,14 @@ function drawMedal(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Reg
 }
 
 const DRAW: Record<DesignId, (ctx: CanvasRenderingContext2D, s: CardState, o: Options) => Regions> = {
-  bag: drawBag, idcard: drawIdCard, certificate: drawCertificate, nakshi: drawNakshi, medal: drawMedal,
+  bag: drawBag, idcard: drawIdCard, countdown: drawCountdown, certificate: drawCertificate, nakshi: drawNakshi, medal: drawMedal,
 };
 
 // The background colour that fills the extra space of the story size.
 const STORY_BG: Record<DesignId, (palette: number) => string> = {
   bag: (i) => (BAG[i] ?? BAG[0]).bg,
   idcard: (i) => (IDCARD[i] ?? IDCARD[0]).bg[1],
+  countdown: (i) => (COUNTDOWN[i] ?? COUNTDOWN[0]).bg[1],
   certificate: (i) => (CERT[i] ?? CERT[0]).bg,
   nakshi: (i) => (NAKSHI[i] ?? NAKSHI[0]).bg,
   medal: (i) => (MEDAL[i] ?? MEDAL[0]).bg[1],
@@ -657,7 +794,7 @@ export function drawCard(ctx: CanvasRenderingContext2D, s: CardState, o: Options
     ctx.drawImage(ctx.canvas, 0, dy + CARD_H - 2, CARD_W, 2, 0, dy + CARD_H, CARD_W, dy);
   }
   const shift = (rect: Rect): Rect => ({ ...rect, y: rect.y + dy });
-  return { name: shift(r.name), group: shift(r.group), counter: shift(r.counter), photo: { ...r.photo, cy: r.photo.cy + dy } };
+  return { name: shift(r.name), group: shift(r.group), counter: shift(r.counter), photo: { ...r.photo, cy: r.photo.cy + dy }, date: r.date && shift(r.date) };
 }
 
 export const cardHeight = (size: CardSize) => (size === "story" ? STORY_H : CARD_H);

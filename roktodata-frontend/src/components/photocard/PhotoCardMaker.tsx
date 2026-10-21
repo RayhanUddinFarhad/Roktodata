@@ -49,7 +49,7 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
   const [s, setS] = useState<CardState>(DEFAULT);
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [fonts, setFonts] = useState<Fonts | null>(null);
-  const [editing, setEditing] = useState<"name" | "group" | null>(null);
+  const [editing, setEditing] = useState<"name" | "group" | "date" | null>(null);
   const [done, setDone] = useState(0); // confetti key, set after a download/share
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -161,6 +161,7 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
     const p = pointToCard(e);
     const r = regions.current;
     if (inPhoto(p)) fileInput.current?.click();
+    else if (r.date && inRect(p, r.date)) setEditing("date");
     else if (inRect(p, r.name)) setEditing("name");
     else if (inRect(p, r.group)) setEditing("group");
     else if (inRect(p, r.counter)) increase();
@@ -260,6 +261,20 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
               style={{ left: r.name.x * scale, top: r.name.y * scale, width: r.name.w * scale, height: Math.max(40, r.name.h * scale), fontSize: Math.max(16, r.name.h * scale * 0.45) }}
             />
           )}
+          {editing === "date" && r?.date && (
+            <input
+              type="date"
+              autoFocus
+              value={s.lastDate}
+              max={new Date(Date.now() + 6 * 3600e3).toISOString().slice(0, 10)}
+              onChange={(e) => update({ lastDate: e.target.value })}
+              onFocus={(e) => { try { e.currentTarget.showPicker(); } catch { /* picker opens on tap instead */ } }}
+              onBlur={() => setEditing(null)}
+              aria-label="শেষ রক্তদানের তারিখ"
+              className="absolute rounded-full border-2 border-dashed border-red-500 bg-white/95 px-3 text-center font-semibold text-slate-900 shadow-lg outline-none"
+              style={{ left: r.date.x * scale, top: r.date.y * scale, width: r.date.w * scale, height: Math.max(40, r.date.h * scale), fontSize: Math.max(14, r.date.h * scale * 0.38) }}
+            />
+          )}
           {editing === "group" && r && (
             <div
               className="absolute z-10 grid grid-cols-4 gap-1.5 rounded-xl border border-slate-200 bg-white p-2 shadow-xl"
@@ -283,7 +298,7 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
       <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:order-1">
         <section>
           <h2 className="text-sm font-bold text-slate-900">ডিজাইন</h2>
-          <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
+          <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
             {DESIGNS.map((d) => (
               <button key={d.id} type="button" onClick={() => update({ design: d.id, palette: 0 })}
                 className={`overflow-hidden rounded-xl border-2 text-center transition ${s.design === d.id ? "border-red-600 shadow-md" : "border-transparent hover:border-slate-300"}`}>
