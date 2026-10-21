@@ -42,7 +42,8 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
 export async function drawPoster(request: BloodRequest): Promise<HTMLCanvasElement> {
   // The page's font stack (Hind Siliguri, with Noto Sans Bengali for digits); wait until it is loaded.
   const fonts = getComputedStyle(document.body).fontFamily;
-  await Promise.all(["500", "600", "700"].map((w) => document.fonts.load(`${w} 40px ${fonts}`, "রক্তদাতা প্রয়োজন ০১২৩")));
+  await Promise.all(["500", "600", "700"].map((w) => document.fonts.load(`${w} 40px ${fonts}`, "রক্তদাতা প্রয়োজন ০১২৩৪৫৬৭৮৯")));
+  await document.fonts.ready;
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -144,7 +145,8 @@ export async function drawPoster(request: BloodRequest): Promise<HTMLCanvasEleme
   font(600, 25);
   ctx.fillText("রক্ত দিতে পারলে যোগাযোগ করুন", left + 40, boxY + 50);
   ctx.fillStyle = "#111827";
-  font(700, 58);
+  // the number in Arial, like the blood group: clear on every phone, with no web font to wait for
+  font(700, 60, "Arial, Helvetica, sans-serif");
   ctx.fillText(formatPhone(request.requesterPhone), left + 40, boxY + 116);
   ctx.fillStyle = "#6b7280";
   font(600, 24);
