@@ -234,9 +234,16 @@ export function checkFraudNumber(phone: string) {
 
 // ---- Photo cards ----
 
-// A new serial number for a photo card (the running count of cards made).
-export function getPhotoCardSerial() {
-  return request<{ serial: number }>("/api/photocards/serial", { method: "POST" }, { retries: 1 });
+// Reserves a serial number for a photo card being made; with the current reservation, renews it if
+// it is still ours (otherwise a new one comes back).
+export function reserveCardSerial(current: { serial?: number; token?: string } = {}) {
+  return request<{ serial: number; token: string }>("/api/photocards/serial/reserve", jsonRequest("POST", current), { retries: 1 });
+}
+
+// Marks a reserved serial as used (the card was downloaded or shared). Fails with status 409 when
+// the reservation expired and the number went to another card.
+export function confirmCardSerial(serial: number, token: string) {
+  return request<{ serial: number }>("/api/photocards/serial/confirm", jsonRequest("POST", { serial, token }), { retries: 1 });
 }
 
 // ---- Admin ----
@@ -248,7 +255,7 @@ export interface AdminStats {
   openComplaints: number;
   pendingRequests: number;
   pendingFraudReports: number;
-  photoCards: number; // photo cards made so far (the latest serial number)
+  photoCards: number; // photo cards made so far (downloaded or shared)
 }
 
 export interface AdminDonor extends Donor {

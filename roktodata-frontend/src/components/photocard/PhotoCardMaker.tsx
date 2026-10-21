@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import Link from "next/link";
 import { Check, Copy, Download, ImagePlus, Minus, Plus, Share2, ShieldCheck, Trash2, UserPlus, X } from "lucide-react";
-import { getPhotoCardSerial } from "@/lib/api";
+import { ApiError, confirmCardSerial, reserveCardSerial } from "@/lib/api";
 import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber, type BloodGroup } from "@/lib/data";
 import {
-  CARD_W, captionFor, cardHeight, DESIGNS, drawCard, hasSerial, serialKey, tierOf,
+  CARD_W, captionFor, cardHeight, DESIGNS, drawCard, serialKey, tierOf,
   type CardState, type Fonts, type Photo, type Regions,
 } from "@/lib/photocard";
 
@@ -83,6 +83,24 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
     if (!restored.current) return;
     try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch { /* storage unavailable */ }
   }, [s]);
+
+  // The card's serial number: reserved shortly after a name is typed, so it shows on the card right
+  // away; a reservation saved from an earlier visit is renewed once. A number the card was saved with
+  // stays with that name and group; editing them afterwards reserves a new one.
+  const needsSerial = !!s.name.trim() && (!s.serial || (!!s.serialUsed && s.serialFor !== serialKey(s)));
+  const renewed = useRef(false);
+  useEffect(() => {
+    if (!fonts) return;
+    const renew = !needsSerial && !!s.serial && !s.serialUsed && !renewed.current;
+    if (!needsSerial && !renew) return;
+    const id = setTimeout(() => {
+      renewed.current = true;
+      reserveCardSerial(renew ? { serial: s.serial, token: s.serialToken } : {})
+        .then(({ serial, token }) => update({ serial, serialToken: token, serialUsed: false, serialFor: undefined }))
+        .catch(() => { /* offline: the card shows dots until saved */ });
+    }, needsSerial ? 800 : 0);
+    return () => clearTimeout(id);
+  }, [fonts, needsSerial, s.serial, s.serialToken, s.serialUsed, update]);
 
   // The small animations start with the visitor's first tap or key press (until then the card is
   // drawn once), and pause while the card is scrolled out of view.
@@ -214,17 +232,27 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
     }
   }
 
-  // The card with its serial number: a saved one for the same name and group is reused, otherwise
-  // the server gives the next one. Without a connection the card is still made, just without it.
+  // The card with its serial confirmed as used: the number this same card was saved with, or its
+  // reservation (a new one if that expired). Without a connection the card is still made, just
+  // without a number, so an unconfirmed number never ends up on two cards.
   async function withSerial(): Promise<CardState> {
-    if (hasSerial(s)) return s;
+    const key = serialKey(s);
+    if (s.serial && s.serialUsed && s.serialFor === key) return s;
     try {
-      const { serial } = await getPhotoCardSerial();
-      const card = { ...s, serial, serialFor: serialKey(s) };
-      update({ serial: card.serial, serialFor: card.serialFor });
-      return card;
+      let { serial, serialToken: token } = s;
+      if (!serial || !token || s.serialUsed) ({ serial, token } = await reserveCardSerial());
+      try {
+        await confirmCardSerial(serial, token);
+      } catch (err) {
+        if (!(err instanceof ApiError && err.status === 409)) throw err;
+        ({ serial, token } = await reserveCardSerial());
+        await confirmCardSerial(serial, token);
+      }
+      const patch = { serial, serialToken: token, serialUsed: true, serialFor: key };
+      update(patch);
+      return { ...s, ...patch };
     } catch {
-      return s;
+      return { ...s, serial: undefined };
     }
   }
   async function render(card: CardState): Promise<Blob | null> {

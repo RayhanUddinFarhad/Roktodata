@@ -202,6 +202,12 @@ export const fraudListSchema = z.object({ page });
 
 export const namePreviewSchema = z.object({ name: text("নাম", 100) });
 
+// Photo card serials: a reservation is the number plus the token the browser got with it.
+const serialNumber = z.number().int().positive();
+const serialToken = z.string().regex(/^[a-f0-9]{32}$/, "সঠিক টোকেন দিন।");
+export const serialReserveSchema = z.object({ serial: serialNumber.optional(), token: serialToken.optional() });
+export const serialConfirmSchema = z.object({ serial: serialNumber, token: serialToken });
+
 export const otpSendSchema = z.object({ phoneNumber: phone("মোবাইল নাম্বার") });
 
 export const otpVerifySchema = z.object({

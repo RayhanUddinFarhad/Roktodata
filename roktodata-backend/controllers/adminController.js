@@ -6,9 +6,8 @@ import { COMPLAINT_REASONS, FRAUD_REASONS } from "../config/constants.js";
 import { Complaint } from "../models/Complaint.js";
 import { Donor } from "../models/Donor.js";
 import { FraudReport } from "../models/FraudReport.js";
-import { currentSequence } from "../models/Counter.js";
 import { PatientRequest } from "../models/PatientRequest.js";
-import { PHOTOCARD_COUNTER } from "./photocardController.js";
+import { photoCardsMade } from "./photocardController.js";
 import { AppError } from "../utils/AppError.js";
 import { escapeRegex } from "../utils/findDonors.js";
 import { toPublicRequest } from "./patientController.js";
@@ -44,7 +43,7 @@ export async function getStats(_req, res) {
     Complaint.countDocuments({ status: "Open" }),
     PatientRequest.countDocuments({ status: "Pending" }),
     FraudReport.countDocuments({ status: "Pending" }),
-    currentSequence(PHOTOCARD_COUNTER),
+    photoCardsMade(),
   ]);
   const count = (status) => byStatus.find((row) => row._id === status)?.count ?? 0;
 

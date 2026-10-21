@@ -22,21 +22,25 @@ export interface CardState {
   phone: string; // shown only when showPhone
   showPhone: boolean;
   size: CardSize;
-  // The card's serial number from the server (one per name + blood group), given when it is first
-  // saved or shared; `serialFor` is the name + group it was given for.
+  // The card's serial number from the server. It is reserved (with `serialToken`) as soon as a name
+  // is typed and becomes used when the card is downloaded or shared; `serialFor` is the name + group
+  // it was used for, so editing those afterwards makes a new card with a new number.
   serial?: number;
+  serialToken?: string;
+  serialUsed?: boolean;
   serialFor?: string;
 }
 
 // What a serial number belongs to: editing the name or group makes it a new card.
 export const serialKey = (s: CardState) => `${s.name.trim()}|${s.group}`;
-export const hasSerial = (s: CardState) => !!s.serial && s.serialFor === serialKey(s);
+// Whether the card's serial is shown: a reservation, or the number this same card was saved with.
+export const showsSerial = (s: CardState) => !!s.serial && (!s.serialUsed || s.serialFor === serialKey(s));
 
 // "RD-26-ABN-00042": year, blood group and the card's serial (dots until it has one).
 export function cardId(s: CardState) {
   const yy = new Date(Date.now() + 6 * 3600e3).toISOString().slice(2, 4);
   const group = (s.group || "XX").replace("+", "P").replace("-", "N");
-  return `RD-${yy}-${group}-${hasSerial(s) ? String(s.serial).padStart(5, "0") : "•••••"}`;
+  return `RD-${yy}-${group}-${showsSerial(s) ? String(s.serial).padStart(5, "0") : "•••••"}`;
 }
 
 export interface Photo {
