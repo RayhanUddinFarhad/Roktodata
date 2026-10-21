@@ -354,6 +354,7 @@ export default function DonorRegisterForm() {
                     onChange={() => setIsReadyToDonate(option.value)}
                     className="sr-only"
                   />
+                  {isReadyToDonate === option.value && <CircleCheck className="h-4 w-4 shrink-0" />}
                   {option.label}
                 </label>
               ))}
@@ -365,12 +366,12 @@ export default function DonorRegisterForm() {
                   {readyAgainOptions.map((option) => (
                     <label
                       key={option.label}
-                      className={`flex min-h-9 cursor-pointer items-center justify-center rounded-lg border px-2 py-1.5 text-center text-xs font-semibold transition-colors ${
+                      className={`flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-center text-xs font-semibold transition-colors ${
                         option.value === "eligible" ? "col-span-2 sm:col-span-4" : ""
                       } ${
                         readyAgain === option.value
-                          ? "border-amber-500 bg-white text-amber-800 shadow-sm"
-                          : "border-amber-200 bg-amber-50 text-slate-600 hover:bg-white"
+                          ? "border-amber-600 bg-amber-500 text-white shadow-sm"
+                          : "border-amber-200 bg-white text-slate-600 hover:border-amber-400"
                       }`}
                     >
                       <input
@@ -380,6 +381,7 @@ export default function DonorRegisterForm() {
                         onChange={() => setReadyAgainChoice(option.value)}
                         className="sr-only"
                       />
+                      {readyAgain === option.value && <CircleCheck className="h-4 w-4 shrink-0" />}
                       {option.label}
                     </label>
                   ))}

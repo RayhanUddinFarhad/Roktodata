@@ -213,7 +213,7 @@ export default function DonorSearch({
               <Link href="/register" className="font-semibold text-indigo-800 underline underline-offset-2 hover:text-red-600">
                 রেজিস্ট্রেশন পেজে
               </Link>{" "}
-              গিয়ে নাম্বার যাচাই করে &quot;এখন প্রস্তুত নই&quot; দিন। আপনার নাম ও নাম্বার তালিকা থেকে সরে যাবে, আর কবে আবার দেখাবে তাও ঠিক করে দিতে পারবেন।
+              গিয়ে &quot;এখন প্রস্তুত নই&quot; দিয়ে নাম্বার যাচাই করে নিন। আপনার নাম ও নাম্বার তালিকা থেকে সরে যাবে, আর কবে আবার দেখাবে তাও ঠিক করে দিতে পারবেন।
             </span>
           </p>
           <div className={`mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${loading ? "opacity-60" : ""}`}>
