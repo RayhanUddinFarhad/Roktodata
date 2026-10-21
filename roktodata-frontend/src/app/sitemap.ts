@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { ARTICLES } from "@/lib/articles";
 import { BLOOD_GROUPS } from "@/lib/data";
 import { districtFromSlug, districtSlugs, groupSlug, SITE_URL } from "@/lib/seo";
 import { getDonorStats } from "@/lib/stats";
@@ -23,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ["/register", 0.8, "monthly"],
     ["/fraud-donors", 0.6, "weekly"],
     ["/celebrate", 0.7, "monthly"],
+    ["/learn", 0.8, "weekly"],
     ["/about", 0.5, "monthly"],
   ];
   const entries: MetadataRoute.Sitemap = pages.map(([path, priority, changeFrequency]) => ({
@@ -30,6 +32,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority,
     changeFrequency,
   }));
+
+  for (const a of ARTICLES) {
+    entries.push({ url: `${SITE_URL}/learn/${a.slug}`, lastModified: a.updated, priority: 0.7, changeFrequency: "monthly" });
+  }
 
   for (const slug of districtSlugs()) {
     const district = districtFromSlug(slug)!;

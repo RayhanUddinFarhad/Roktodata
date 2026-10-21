@@ -113,6 +113,7 @@ export const NAV_LINKS = [
   { href: "/blood-requests", label: "রক্তের অনুরোধ" },
   { href: "/fraud-donors", label: "প্রতারক ডোনার" },
   { href: "/celebrate", label: "রক্তদান ফটোকার্ড" },
+  { href: "/learn", label: "জানুন" },
   { href: "/about", label: "আমাদের সম্পর্কে" },
 ];
 

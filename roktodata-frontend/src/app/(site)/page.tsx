@@ -5,6 +5,7 @@ import DonationBenefits from "@/components/home/DonationBenefits";
 import HeroSearch from "@/components/home/HeroSearch";
 import FacebookPage from "@/components/home/FacebookPage";
 import HowItWorks from "@/components/home/HowItWorks";
+import LearnTeaser from "@/components/home/LearnTeaser";
 import PhotoCardBanner from "@/components/home/PhotoCardBanner";
 import RequestPosterBanner from "@/components/home/RequestPosterBanner";
 import ShareDonorList from "@/components/home/ShareDonorList";
@@ -86,6 +87,7 @@ export default async function Home() {
 
       <HowItWorks />
       <DonationBenefits />
+      <LearnTeaser />
       <ShareDonorList />
       <FacebookPage />
     </main>
