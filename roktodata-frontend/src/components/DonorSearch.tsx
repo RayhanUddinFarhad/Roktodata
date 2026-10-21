@@ -211,7 +211,7 @@ export default function DonorSearch({
             <span>
               <strong className="font-semibold text-slate-900">তালিকায় আপনার নাম্বার আছে, কিন্তু এখন রক্ত দিতে পারবেন না?</strong>{" "}
               <Link href="/register" className="font-semibold text-indigo-800 underline underline-offset-2 hover:text-red-600">
-                রেজিস্ট্রেশন পেজে
+                আপডেট পেজে
               </Link>{" "}
               গিয়ে &quot;এখন প্রস্তুত নই&quot; দিয়ে নাম্বার যাচাই করে নিন। আপনার নাম ও নাম্বার তালিকা থেকে সরে যাবে, আর কবে আবার দেখাবে তাও ঠিক করে দিতে পারবেন।
             </span>
