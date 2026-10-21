@@ -19,6 +19,9 @@ const donorSchema = new mongoose.Schema(
     lastDonationDate: { type: Date, default: null },
     // Set by the donor: whether they are currently willing to donate.
     isReadyToDonate: { type: Boolean, default: true },
+    // While not ready: when the donor becomes ready again on their own (chosen as "1/3/6 months");
+    // null means not until they change it themselves.
+    readyAgainAt: { type: Date, default: null },
     status: { type: String, enum: DONOR_STATUS, default: "Pending" },
     // Set while Blocked: a blocked donor is listed publicly as fraudulent with this reason.
     blockReason: { type: String, trim: true, maxlength: 300, default: "" },

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CircleCheck, Loader2, MapPin, MessageSquareText, Pencil, Phone, RotateCw, ShieldCheck, UserCheck } from "lucide-react";
 import OtpInput from "@/components/OtpInput";
 import ThanaSelect from "@/components/ThanaSelect";
-import { ApiError, previewName, registerOrUpdateDonor, sendOtp, verifyOtp } from "@/lib/api";
+import { ApiError, previewName, registerOrUpdateDonor, sendOtp, verifyOtp, type ReadyAgainMonths } from "@/lib/api";
 import { BLOOD_GROUPS, DISTRICTS, formatLocation, toBanglaNumber, type BloodGroup } from "@/lib/data";
 
 const fieldClass =
@@ -13,6 +13,20 @@ const fieldClass =
 const labelClass = "mb-1.5 block text-xs font-semibold text-slate-700";
 
 const PHONE_PATTERN = /^01[3-9]\d{8}$/;
+
+const READY_AGAIN_OPTIONS: { months: ReadyAgainMonths | null; label: string }[] = [
+  { months: 1, label: "১ মাস পর" },
+  { months: 3, label: "৩ মাস পর" },
+  { months: 6, label: "৬ মাস পর" },
+  { months: null, label: "জানি না" },
+];
+const MONTHS = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+// "৩ মাস পর" -> "২১ জানুয়ারি ২০২৭" (the same date the server works out on saving)
+function readyAgainLabel(months: ReadyAgainMonths) {
+  const date = new Date();
+  date.setMonth(date.getMonth() + months);
+  return `${toBanglaNumber(date.getDate())} ${MONTHS[date.getMonth()]} ${toBanglaNumber(date.getFullYear())}`;
+}
 
 const STEPS = ["তথ্য দিন", "নাম্বার যাচাই", "সম্পন্ন"] as const;
 
@@ -39,6 +53,8 @@ export default function DonorRegisterForm() {
   const [district, setDistrict] = useState("");
   const [thana, setThana] = useState("");
   const [isReadyToDonate, setIsReadyToDonate] = useState(true);
+  // With "not ready": back in search by itself after this many months (null = until changed).
+  const [readyAgainMonths, setReadyAgainMonths] = useState<ReadyAgainMonths | null>(3);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -78,6 +94,7 @@ export default function DonorRegisterForm() {
         upazila: thana,
         lastDonationDate: lastDonated || undefined,
         isReadyToDonate,
+        readyAgainMonths: isReadyToDonate ? null : readyAgainMonths,
       },
       verificationToken,
     );
@@ -318,8 +335,39 @@ export default function DonorRegisterForm() {
                 </label>
               ))}
             </div>
+            {!isReadyToDonate && (
+              <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <p className="text-xs font-semibold text-amber-900">কবে থেকে আবার প্রস্তুত?</p>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {READY_AGAIN_OPTIONS.map((option) => (
+                    <label
+                      key={option.label}
+                      className={`flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold transition-colors ${
+                        readyAgainMonths === option.months
+                          ? "border-amber-500 bg-white text-amber-800 shadow-sm"
+                          : "border-amber-200 bg-amber-50 text-slate-600 hover:bg-white"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="readyAgainMonths"
+                        checked={readyAgainMonths === option.months}
+                        onChange={() => setReadyAgainMonths(option.months)}
+                        className="sr-only"
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-2 text-[11px] leading-relaxed text-amber-900">
+                  {readyAgainMonths
+                    ? `${readyAgainLabel(readyAgainMonths)} থেকে আপনার প্রোফাইল নিজে থেকেই আবার সার্চে দেখাবে।`
+                    : "আপনি নিজে আবার \"রক্ত দিতে প্রস্তুত\" না করা পর্যন্ত প্রোফাইল সার্চে দেখাবে না।"}
+                </p>
+              </div>
+            )}
             <span className="mt-1 block text-[10px] text-slate-500">
-              &quot;এখন প্রস্তুত নই&quot; দিলে অথবা শেষ রক্তদানের পর ৩ মাস না হলে আপনার প্রোফাইল সার্চে দেখাবে না।
+              শেষ রক্তদানের পর ৩ মাস না হলে &quot;প্রস্তুত&quot; দিলেও আপনার প্রোফাইল ৩ মাস পূর্ণ হওয়ার আগে সার্চে দেখাবে না।
             </span>
           </fieldset>
 
@@ -450,7 +498,7 @@ export default function DonorRegisterForm() {
                   {formatLocation(district, thana)}
                   <span className="text-slate-300">•</span>
                   <span className={isReadyToDonate ? "text-emerald-600" : "text-amber-600"}>
-                    {isReadyToDonate ? "রক্ত দিতে প্রস্তুত" : "এখন প্রস্তুত নই"}
+                    {isReadyToDonate ? "রক্ত দিতে প্রস্তুত" : readyAgainMonths ? `প্রস্তুত: ${readyAgainLabel(readyAgainMonths)} থেকে` : "এখন প্রস্তুত নই"}
                   </span>
                 </p>
               </div>

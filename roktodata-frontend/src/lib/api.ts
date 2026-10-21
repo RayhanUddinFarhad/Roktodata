@@ -122,7 +122,11 @@ export interface DonorPayload {
   upazila: string;
   lastDonationDate?: string;
   isReadyToDonate: boolean;
+  // With "not ready": back in search by itself after this many months (null = until changed).
+  readyAgainMonths?: ReadyAgainMonths | null;
 }
+
+export type ReadyAgainMonths = 1 | 3 | 6;
 
 // Creates the donor (pending admin approval), or updates them if the phone number already exists.
 // When phone verification is on, the Firebase ID token proves the user owns the phone number.
@@ -248,6 +252,8 @@ export interface AdminStats {
 
 export interface AdminDonor extends Donor {
   isReadyToDonate: boolean;
+  // While not ready: the date they become ready again by themselves (YYYY-MM-DD), or null.
+  readyAgainAt: string | null;
   status: DonorStatus;
   // Why the admin blocked them (shown in the public fraud list); "" unless Blocked.
   blockReason: string;

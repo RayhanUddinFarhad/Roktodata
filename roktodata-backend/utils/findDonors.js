@@ -8,15 +8,19 @@ export function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// Donors that can be shown publicly: approved by an admin, marked ready to donate, and either
-// never donated or donated at least ELIGIBILITY_DAYS ago. The date operator is built here, so it
-// is marked trusted to stop sanitizeFilter from neutralising it.
+// Donors that can be shown publicly: approved by an admin, ready to donate (marked ready, or "not
+// ready" with a return date that has passed), and either never donated or donated at least
+// ELIGIBILITY_DAYS ago. The date operators are built here, so they are marked trusted to stop
+// sanitizeFilter from neutralising them.
 export function visibleDonorFilter() {
-  const cutoff = new Date(Date.now() - ELIGIBILITY_DAYS * DAY_MS);
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - ELIGIBILITY_DAYS * DAY_MS);
   return {
     status: "Active",
-    isReadyToDonate: true,
-    $or: [{ lastDonationDate: null }, { lastDonationDate: mongoose.trusted({ $lte: cutoff }) }],
+    $and: [
+      { $or: [{ isReadyToDonate: true }, { readyAgainAt: mongoose.trusted({ $lte: now }) }] },
+      { $or: [{ lastDonationDate: null }, { lastDonationDate: mongoose.trusted({ $lte: cutoff }) }] },
+    ],
   };
 }
 

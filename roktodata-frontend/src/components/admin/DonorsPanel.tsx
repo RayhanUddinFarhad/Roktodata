@@ -30,6 +30,8 @@ const FIXED_TEXT: Partial<Record<DonorStatus, { intro: string; empty: string }>>
 };
 export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; fixedStatus?: DonorStatus }) {
   const { token, refreshKey, runAction, onError } = ctx;
+  // Today in Bangladesh (YYYY-MM-DD), to tell whether a "not ready" donor's return date has come.
+  const [today] = useState(() => new Date(Date.now() + 6 * 3600e3).toISOString().slice(0, 10));
   const [status, setStatus] = useState<DonorStatus | "">(fixedStatus ?? "");
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -136,13 +138,26 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
                     <span className="rounded bg-red-600 px-2 py-0.5 text-xs font-bold text-white">{donor.bloodGroup}</span>
                     <span className="font-bold text-slate-900">{donor.fullName}</span>
                     <DonorStatusBadge status={donor.status} />
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                        donor.isReadyToDonate ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
-                      }`}
-                    >
-                      {donor.isReadyToDonate ? "রক্ত দিতে প্রস্তুত" : "প্রস্তুত নন"}
-                    </span>
+                    {(() => {
+                      // "Not ready" with a return date that has passed counts as ready again.
+                      const back = !donor.isReadyToDonate && !!donor.readyAgainAt && donor.readyAgainAt <= today;
+                      const ready = donor.isReadyToDonate || back;
+                      return (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                            ready ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                          }`}
+                        >
+                          {donor.isReadyToDonate
+                            ? "রক্ত দিতে প্রস্তুত"
+                            : back
+                              ? `আবার প্রস্তুত (${donor.readyAgainAt} থেকে)`
+                              : donor.readyAgainAt
+                                ? `প্রস্তুত নন · ফিরবেন ${donor.readyAgainAt}`
+                                : "প্রস্তুত নন"}
+                        </span>
+                      );
+                    })()}
                     {donor.openComplaints > 0 && (
                       <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
                         <MessageSquareWarning className="h-3 w-3" />

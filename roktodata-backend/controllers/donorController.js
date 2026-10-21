@@ -4,11 +4,19 @@ import { toBanglaName } from "../utils/banglaName.js";
 import { SEARCH_PAGE_SIZE } from "../config/constants.js";
 import { findDonors, visibleDonorFilter } from "../utils/findDonors.js";
 
+// "Not ready for 3 months" -> the date three months from now; null when ready or with no end chosen.
+function readyAgainDate(isReady, months) {
+  if (isReady || !months) return null;
+  const date = new Date();
+  date.setMonth(date.getMonth() + months);
+  return date;
+}
+
 // POST /api/donors/register-or-update
 export async function registerOrUpdateDonor(req, res) {
-  const { phoneNumber, lastDonationDate, ...rest } = req.validated;
+  const { phoneNumber, lastDonationDate, readyAgainMonths, ...rest } = req.validated;
   // Names are shown in Bangla on the site; English input is converted.
-  const details = { ...rest, fullName: toBanglaName(rest.fullName) };
+  const details = { ...rest, fullName: toBanglaName(rest.fullName), readyAgainAt: readyAgainDate(rest.isReadyToDonate, readyAgainMonths) };
 
   // With phone verification on, the number confirmed by SMS code must match the profile being written.
   if (req.verifiedPhone && req.verifiedPhone !== phoneNumber) {

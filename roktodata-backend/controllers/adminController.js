@@ -104,6 +104,7 @@ export async function listDonors(req, res) {
       upazila: donor.upazila,
       lastDonationDate: toDate(donor.lastDonationDate),
       isReadyToDonate: donor.isReadyToDonate,
+      readyAgainAt: toDate(donor.readyAgainAt),
       status: donor.status,
       blockReason: donor.blockReason ?? "",
       // Blocked donors are listed publicly as fraudulent unless the admin hid them.
