@@ -82,6 +82,7 @@ export const patientSearchSchema = z.object({
   district,
   upazila: optionalThana,
   hospitalAddress: optionalText("হাসপাতালের ঠিকানা", 200),
+  reason: optionalText("রোগ বা কারণ", 80),
   requesterPhone: phone("যোগাযোগের মোবাইল নাম্বার"),
   bagsNeeded: z.preprocess(
     emptyToUndefined,

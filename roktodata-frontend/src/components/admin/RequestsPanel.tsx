@@ -7,6 +7,7 @@ import {
   Check,
   CircleCheck,
   Hospital,
+  ImageDown,
   MapPin,
   MessageSquareText,
   PencilLine,
@@ -25,6 +26,7 @@ import {
   formatDate,
 } from "@/components/admin/ui";
 import { DEFAULT_FULFILLED_NOTE, RequestNoteEditor, type NoteMode } from "@/components/admin/RequestNoteEditor";
+import { RequestPosterDialog } from "@/components/admin/RequestPoster";
 import { deleteRequest, getAdminRequests, setRequestNote, setRequestStatus } from "@/lib/api";
 import { toBanglaNumber, type BloodRequest, type RequestStatus } from "@/lib/data";
 
@@ -70,8 +72,13 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
     return ok;
   }
 
-  const changeStatus = (request: BloodRequest, next: RequestStatus) =>
-    act(request, () => setRequestStatus(token, request.id, next));
+  // The request whose Facebook poster is open (it opens by itself right after an approval).
+  const [poster, setPoster] = useState<BloodRequest | null>(null);
+
+  async function changeStatus(request: BloodRequest, next: RequestStatus) {
+    const ok = await act(request, () => setRequestStatus(token, request.id, next));
+    if (ok && next === "Approved") setPoster({ ...request, status: "Approved" });
+  }
 
   const openEditor = (request: BloodRequest, mode: NoteMode) =>
     setEditor({ id: request.id, mode, draft: request.adminNote || (mode === "fulfill" ? DEFAULT_FULFILLED_NOTE : "") });
@@ -162,6 +169,7 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
                         প্রয়োজন: {request.neededDate}
                       </span>
                     )}
+                    {request.reason && <span>কারণ: {request.reason}</span>}
                     <span>অনুরোধ: {formatDate(request.createdAt)}</span>
                   </div>
                   {request.adminNote && !editing && (
@@ -185,6 +193,9 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
                   )}
                   {request.status === "Approved" && (
                     <>
+                      <ActionButton tone="gray" disabled={busy} onClick={() => setPoster(request)}>
+                        <ImageDown className="h-3.5 w-3.5" /> পোস্টার
+                      </ActionButton>
                       <ActionButton tone="green" disabled={busy} onClick={() => openEditor(request, "fulfill")}>
                         <CircleCheck className="h-3.5 w-3.5" /> রক্ত ম্যানেজ হয়েছে
                       </ActionButton>
@@ -235,6 +246,7 @@ export default function RequestsPanel({ ctx }: { ctx: AdminContext }) {
       </ul>
 
       <Pagination page={page} pages={data?.pages ?? 1} onPage={setPage} />
+      {poster && <RequestPosterDialog request={poster} onClose={() => setPoster(null)} />}
     </section>
   );
 }

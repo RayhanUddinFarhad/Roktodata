@@ -26,6 +26,8 @@ export interface BloodRequest {
   district: string;
   upazila: string;
   hospitalAddress: string;
+  // Optional illness or reason, e.g. "রক্তশূন্যতা" ("" when not given).
+  reason: string;
   requesterPhone: string;
   bagsNeeded: number;
   neededDate: string | null;

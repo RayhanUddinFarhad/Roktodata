@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CircleCheck, PencilLine, ShieldCheck, Trash2 } from "lucide-react";
+import { CircleCheck, ImageDown, PencilLine, ShieldCheck, Trash2 } from "lucide-react";
+import { RequestPosterDialog } from "@/components/admin/RequestPoster";
 import { DEFAULT_FULFILLED_NOTE, RequestNoteEditor, type NoteMode } from "@/components/admin/RequestNoteEditor";
 import { ActionButton } from "@/components/admin/ui";
 import { ApiError, deleteRequest, setRequestNote, setRequestStatus } from "@/lib/api";
@@ -22,6 +23,7 @@ export default function RequestAdminControls({
   const [editor, setEditor] = useState<{ mode: NoteMode; draft: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [poster, setPoster] = useState(false);
 
   async function run(action: () => Promise<{ message: string }>, next: BloodRequest | null) {
     setBusy(true);
@@ -70,6 +72,11 @@ export default function RequestAdminControls({
           <ShieldCheck className="h-3.5 w-3.5" /> অ্যাডমিন
         </span>
         {request.status === "Approved" && (
+          <ActionButton tone="gray" disabled={busy} onClick={() => setPoster(true)}>
+            <ImageDown className="h-3.5 w-3.5" /> পোস্টার
+          </ActionButton>
+        )}
+        {request.status === "Approved" && (
           <ActionButton tone="green" disabled={busy} onClick={() => openEditor("fulfill")}>
             <CircleCheck className="h-3.5 w-3.5" /> রক্ত ম্যানেজ হয়েছে
           </ActionButton>
@@ -92,6 +99,7 @@ export default function RequestAdminControls({
         />
       )}
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {poster && <RequestPosterDialog request={request} onClose={() => setPoster(false)} />}
     </div>
   );
 }

@@ -163,6 +163,7 @@ export interface PatientRequestPayload {
   district: string;
   upazila?: string;
   hospitalAddress?: string;
+  reason?: string;
   requesterPhone: string;
   bagsNeeded: number;
   neededDate?: string;

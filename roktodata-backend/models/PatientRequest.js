@@ -8,6 +8,8 @@ const patientRequestSchema = new mongoose.Schema(
     district: { type: String, required: true, enum: DISTRICTS },
     upazila: { type: String, trim: true, maxlength: 60, default: "" },
     hospitalAddress: { type: String, trim: true, maxlength: 200, default: "" },
+    // Optional: the illness or reason, e.g. "রক্তশূন্যতা", "সিজারিয়ান অপারেশন".
+    reason: { type: String, trim: true, maxlength: 80, default: "" },
     requesterPhone: { type: String, required: true, trim: true, match: BD_PHONE_REGEX },
     bagsNeeded: { type: Number, min: 1, max: 10, default: 1 },
     neededDate: { type: Date, default: null },

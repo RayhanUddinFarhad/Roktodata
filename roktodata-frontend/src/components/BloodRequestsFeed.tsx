@@ -202,7 +202,10 @@ function RequestPost({
         <div className="flex items-start gap-2">
           <User className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
           <dt className="sr-only">রোগী</dt>
-          <dd>রোগী: {request.patientName}</dd>
+          <dd>
+            রোগী: {request.patientName}
+            {request.reason && <span className="text-slate-500"> · {request.reason}</span>}
+          </dd>
         </div>
         {request.hospitalAddress && (
           <div className="flex items-start gap-2">

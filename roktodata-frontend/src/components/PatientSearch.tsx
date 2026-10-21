@@ -44,6 +44,7 @@ export default function PatientSearch() {
   const [upazila, setUpazila] = useState("");
   const [requesterPhone, setRequesterPhone] = useState("");
   const [hospitalAddress, setHospitalAddress] = useState("");
+  const [reason, setReason] = useState("");
   const [bagsNeeded, setBagsNeeded] = useState(1);
   const [neededDate, setNeededDate] = useState("");
   const [result, setResult] = useState<Result | null>(null);
@@ -67,6 +68,7 @@ export default function PatientSearch() {
         district,
         upazila: upazila.trim() || undefined,
         hospitalAddress: hospitalAddress.trim() || undefined,
+        reason: reason.trim() || undefined,
         requesterPhone,
         bagsNeeded,
         neededDate: neededDate || undefined,
@@ -207,6 +209,19 @@ export default function PatientSearch() {
             value={hospitalAddress}
             onChange={(e) => setHospitalAddress(e.target.value)}
             placeholder="যেমন: চট্টগ্রাম মেডিকেল কলেজ হাসপাতাল"
+            className={fieldClass}
+          />
+        </label>
+        <label className="block sm:col-span-2">
+          <span className={labelClass}>
+            রোগ বা কারণ <span className="font-normal text-slate-400">(ঐচ্ছিক)</span>
+          </span>
+          <input
+            type="text"
+            maxLength={80}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="যেমন: রক্তশূন্যতা, সিজারিয়ান অপারেশন, থ্যালাসেমিয়া"
             className={fieldClass}
           />
         </label>

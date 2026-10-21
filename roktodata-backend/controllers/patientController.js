@@ -58,6 +58,7 @@ const toPublicRequest = (request) => ({
   district: request.district,
   upazila: request.upazila,
   hospitalAddress: request.hospitalAddress,
+  reason: request.reason ?? "",
   requesterPhone: request.requesterPhone,
   bagsNeeded: request.bagsNeeded ?? 1,
   neededDate: request.neededDate ? request.neededDate.toISOString().slice(0, 10) : null,
