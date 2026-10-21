@@ -24,7 +24,8 @@ export function visibleDonorFilter() {
   };
 }
 
-// Finds visible donors (see visibleDonorFilter). Donors with a name come first, then whoever donated longest ago.
+// Finds visible donors (see visibleDonorFilter). Self-registered donors come first, then those with a
+// name, then whoever donated longest ago.
 // `upazila` keeps donors in that thana/upazila; `excludeUpazila` drops them instead.
 // Returns one page of donors plus the total number of matches.
 export async function findDonors({ bloodGroup, district, upazila, excludeUpazila, page = 1, limit = SEARCH_PAGE_SIZE }) {
@@ -38,8 +39,14 @@ export async function findDonors({ bloodGroup, district, upazila, excludeUpazila
 
   const [result] = await Donor.aggregate([
     { $match: filter },
-    { $addFields: { hasName: { $ne: ["$fullName", NO_NAME] } } },
-    { $sort: { hasName: -1, lastDonationDate: 1, _id: 1 } },
+    {
+      $addFields: {
+        // Donors who registered themselves (not from an imported list) come first.
+        registered: { $ne: [{ $substrCP: [{ $ifNull: ["$source", "website"] }, 0, 7] }, "import:"] },
+        hasName: { $ne: ["$fullName", NO_NAME] },
+      },
+    },
+    { $sort: { registered: -1, hasName: -1, lastDonationDate: 1, _id: 1 } },
     {
       $facet: {
         donors: [

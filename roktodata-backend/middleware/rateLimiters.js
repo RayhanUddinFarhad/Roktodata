@@ -18,6 +18,8 @@ export const apiLimiter = limiter(15, 300);
 export const registerLimiter = limiter(60, 20);
 // Each code costs an SMS; per-number limits live in otpController.
 export const otpSendLimiter = limiter(60, 10);
+// ...and at most this many a day from one IP, so nobody can keep texting listed numbers all day.
+export const otpSendDailyLimiter = limiter(24 * 60, 15);
 export const otpVerifyLimiter = limiter(15, 30);
 export const patientSearchLimiter = limiter(15, 30);
 export const complaintLimiter = limiter(60, 10);

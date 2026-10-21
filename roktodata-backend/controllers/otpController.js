@@ -9,7 +9,8 @@ import { sendSms } from "../utils/sms.js";
 
 const CODE_MINUTES = 5;
 const RESEND_SECONDS = 60;
-const MAX_PER_NUMBER_PER_DAY = 5;
+// Kept low so nobody can pester a donor (anyone can type a listed number) or run up the SMS bill.
+const MAX_PER_NUMBER_PER_DAY = 3;
 const MAX_ATTEMPTS = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -19,7 +20,7 @@ const hashCode = (phoneNumber, code) =>
 const sameHash = (a, b) => crypto.timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
 
 // Bangla digits for numbers inside messages.
-const bn = (n) => String(n).replace(/d/g, (d) => "০১২৩৪৫৬৭৮৯"[d]);
+const bn = (n) => String(n).replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[d]);
 
 const since = (ms) => mongoose.trusted({ $gte: new Date(Date.now() - ms) });
 
@@ -54,7 +55,7 @@ export async function sendOtp(req, res) {
   });
 
   try {
-    await sendSms(phoneNumber, `Your Roktodata verification code is ${code}. Valid for ${CODE_MINUTES} minutes. Do not share it with anyone.`);
+    await sendSms(phoneNumber, `Your Roktodata verification code is ${code}. Valid for ${CODE_MINUTES} minutes. Do not share it with anyone. Ignore this if you did not request it.`);
   } catch (err) {
     await OtpCode.deleteOne({ _id: otp._id });
     console.error("Verification SMS failed:", err.message);
