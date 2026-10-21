@@ -10,7 +10,7 @@ import {
 } from "@/lib/photocard";
 
 const STORE_KEY = "roktodata-photocard";
-const DEFAULT: CardState = { design: "bag", palette: 0, name: "", group: "", count: 1, district: "", lastDate: "", phone: "", showPhone: false, size: "post" };
+const DEFAULT: CardState = { design: "idcard", palette: 0, name: "", group: "", count: 1, district: "", lastDate: "", phone: "", showPhone: false, size: "post" };
 const MAX_COUNT = 200;
 const noSubscribe = () => () => {};
 const fileName = (s: CardState) => `roktodata-${s.count}-bar-roktodan.png`;

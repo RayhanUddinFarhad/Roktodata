@@ -74,12 +74,12 @@ export const nextMilestone = (n: number) => MILESTONES.find((m) => m > n) ?? n;
 
 // ---- palettes -----------------------------------------------------------------------------------
 export const DESIGNS: { id: DesignId; label: string; hint: string; palettes: { name: string; swatch: [string, string] }[] }[] = [
-  { id: "bag", label: "রক্তের ব্যাগ", hint: "ব্যাগে ট্যাপ করলে এক ফোঁটা রক্ত যোগ হয়", palettes: [
-    { name: "ক্লাসিক", swatch: ["#fbf1e6", "#c81e1e"] }, { name: "গোলাপি", swatch: ["#fde8ec", "#be123c"] },
-    { name: "রাত", swatch: ["#0f172a", "#f43f5e"] }, { name: "পুদিনা", swatch: ["#e7f6f0", "#dc2626"] }] },
   { id: "idcard", label: "ডোনার আইডি কার্ড", hint: "মোট রক্তদানের ঘরে ট্যাপ করলে সংখ্যা বাড়ে", palettes: [
     { name: "লাল", swatch: ["#fff1f2", "#c81e1e"] }, { name: "নেভি", swatch: ["#eef2ff", "#1e3a8a"] },
     { name: "সবুজ", swatch: ["#ecfdf5", "#047857"] }, { name: "কালো-সোনালি", swatch: ["#1c1917", "#b7791f"] }] },
+  { id: "bag", label: "রক্তের ব্যাগ", hint: "ব্যাগে ট্যাপ করলে এক ফোঁটা রক্ত যোগ হয়", palettes: [
+    { name: "ক্লাসিক", swatch: ["#fbf1e6", "#c81e1e"] }, { name: "গোলাপি", swatch: ["#fde8ec", "#be123c"] },
+    { name: "রাত", swatch: ["#0f172a", "#f43f5e"] }, { name: "পুদিনা", swatch: ["#e7f6f0", "#dc2626"] }] },
   { id: "certificate", label: "সম্মাননা সনদ", hint: "ডটেড লাইনে ট্যাপ করে নাম লিখুন", palettes: [
     { name: "মেরুন-সোনালি", swatch: ["#fdf6e3", "#7f1d1d"] }, { name: "সবুজ-সোনালি", swatch: ["#f3f8ef", "#14532d"] }, { name: "নীল-রুপালি", swatch: ["#f4f6fa", "#1e3a8a"] }] },
   { id: "nakshi", label: "নকশিকাঁথা", hint: "প্রতিবার একটা করে ফোঁটা সেলাই হয়", palettes: [
@@ -304,7 +304,7 @@ function drawBag(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regio
   const regions: Regions = { name: { x: 384, y: 600, w: 312, h: 50 }, group: { x: 384, y: 462, w: 200, h: 130 }, counter: { x: 330, y: 220, w: 420, h: 840 }, photo: { cx: 642, cy: 530, r: 52 } };
   if (o.preview && !s.name.trim()) hint(ctx, regions.name, p.accent, anim.t);
   ctx.fillStyle = p.ink; ctx.textAlign = "center"; setFont(ctx, 600, 30, fonts.body);
-  ctx.fillText("প্রতিবার রক্তদানে বাঁচতে পারে ৩টি প্রাণ", 540, s.showPhone && s.phone ? 1176 : 1212);
+  ctx.fillText("আমার রক্তে বাঁচে কারো প্রিয়জন", 540, s.showPhone && s.phone ? 1176 : 1212);
   footer(ctx, s, fonts, 1290, p.muted, p.accent);
   return regions;
 }
@@ -442,7 +442,7 @@ function drawIdCard(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Re
   if (o.preview && !s.name.trim()) hint(ctx, regions.name, p.accent, anim.t);
   // under the card
   ctx.textAlign = "center"; ctx.fillStyle = p.band === "#1c1917" ? "#e7e5e4" : p.ink; setFont(ctx, 600, 28, fonts.body);
-  ctx.fillText("প্রতিবার রক্তদানে বাঁচতে পারে ৩টি প্রাণ", 540, 1240);
+  ctx.fillText("আমার রক্তে বাঁচে কারো প্রিয়জন", 540, 1240);
   footer(ctx, { ...s, showPhone: false }, fonts, 1294, p.band === "#1c1917" ? "#a8a29e" : "#6b7280", p.band === "#1c1917" ? "#fbbf24" : p.accent);
   return regions;
 }
@@ -616,7 +616,7 @@ function drawMedal(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Reg
   tierDot(ctx, 540 - tw / 2 + 38, 1045, 15, s.count);
   ctx.fillStyle = "#1f2937"; ctx.textAlign = "left"; ctx.fillText(tier, 540 - tw / 2 + 62, 1056); ctx.textAlign = "center";
   ctx.fillStyle = "#e2e8f0"; setFont(ctx, 600, 30, fonts.body);
-  ctx.fillText("প্রতিবার রক্তদানে বাঁচতে পারে ৩টি প্রাণ", 540, s.showPhone && s.phone ? 1150 : 1180);
+  ctx.fillText("আমার রক্তে বাঁচে কারো প্রিয়জন", 540, s.showPhone && s.phone ? 1150 : 1180);
   const regions: Regions = { name: { x: 140, y: 830, w: 800, h: 90 }, group: { x: 540 - lw / 2 - 10, y: 930, w: lw + 20, h: 54 }, counter: { x: 320, y: 340, w: 440, h: 440 }, photo: { cx: 540, cy: 160, r: 74 } };
   if (o.preview && !s.name.trim()) hint(ctx, regions.name, p.accent, anim.t);
   footer(ctx, s, fonts, 1270, "#94a3b8", p.accent);
@@ -665,5 +665,5 @@ export const cardHeight = (size: CardSize) => (size === "story" ? STORY_H : CARD
 // Caption to post with the card.
 export const captionFor = (s: CardState) =>
   `আমি এ পর্যন্ত ${toBanglaNumber(s.count)} বার রক্ত দিয়েছি${s.group ? ` (${s.group})` : ""}। 🩸\n` +
-  `প্রতিবার রক্তদানে বাঁচতে পারে ৩টি প্রাণ। আপনিও রক্তদাতা হোন, যেন বিপদে আপনাকে খুঁজে পাওয়া যায়।\n` +
+  `আমার রক্তে বাঁচে কারো প্রিয়জন। আপনিও রক্তদাতা হোন, যেন বিপদে আপনাকে খুঁজে পাওয়া যায়।\n` +
   `👉 https://www.roktodata.org/register\n#রক্তদাতা #রক্তদান #Roktodata`;
