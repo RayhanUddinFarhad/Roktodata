@@ -298,7 +298,7 @@ function drawBag(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regio
   ctx.fillStyle = s.name.trim() ? "#1f2937" : "#9ca3af";
   fitText(ctx, nameOrHint(ctx, s.name, o.preview), 392, 636, 296, s.name.trim() ? 30 : 24, 700, fonts.body);
   const meta = [s.district, s.lastDate ? `শেষ: ${bnDate(s.lastDate)}` : ""].filter(Boolean).join(" · ");
-  ctx.fillStyle = "#6b7280"; if (meta) fitText(ctx, meta, 392, 672, 296, 22, 500, fonts.body);
+  ctx.fillStyle = "#6b7280"; if (meta) fitText(ctx, meta, 392, 672, 296, 22, 400, fonts.body);
   ctx.fillStyle = "#1f2937";
   [4, 2, 6, 2, 4, 2, 6, 3, 2, 5].reduce((x, w) => { ctx.fillRect(x, 690, w, 26); return x + w + 4; }, 392);
   ctx.fillStyle = "#9ca3af"; ctx.textAlign = "right"; setFont(ctx, 600, 20, fonts.body);
@@ -319,6 +319,21 @@ const IDCARD = [
   { bg: ["#ecfdf5", "#d1fae5"], band: "#047857", band2: "#065f46", strap: "#059669", ink: "#1f2937", soft: "#f0fdf4", accent: "#dc2626" },
   { bg: ["#1c1917", "#0c0a09"], band: "#1c1917", band2: "#b7791f", strap: "#b7791f", ink: "#1f2937", soft: "#fefce8", accent: "#b7791f" },
 ];
+// The white card with its soft shadow. A blur this large is slow to draw, so it is drawn once and
+// reused on every frame.
+let shadowCache: HTMLCanvasElement | null = null;
+function idCardShadow(x0: number, y0: number, w: number, h: number) {
+  if (!shadowCache) {
+    shadowCache = document.createElement("canvas");
+    shadowCache.width = CARD_W;
+    shadowCache.height = CARD_H;
+    const c = shadowCache.getContext("2d")!;
+    c.shadowColor = "rgba(0,0,0,0.25)"; c.shadowBlur = 50; c.shadowOffsetY = 20;
+    c.fillStyle = "#ffffff"; c.beginPath(); c.roundRect(x0, y0, w, h, 36); c.fill();
+  }
+  return shadowCache;
+}
+
 function drawIdCard(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regions {
   const p = IDCARD[s.palette] ?? IDCARD[0];
   const { fonts, anim } = o;
@@ -354,10 +369,7 @@ function drawIdCard(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Re
 
   // the card
   const x0 = 200, y0 = 220, w = 680, h = 960;
-  ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.25)"; ctx.shadowBlur = 50; ctx.shadowOffsetY = 20;
-  ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.roundRect(x0, y0, w, h, 36); ctx.fill();
-  ctx.restore();
+  ctx.drawImage(idCardShadow(x0, y0, w, h), 0, 0);
   ctx.save(); ctx.beginPath(); ctx.roundRect(x0, y0, w, h, 36); ctx.clip();
   // header band
   const band = ctx.createLinearGradient(x0, y0, x0 + w, y0 + 200);
@@ -598,7 +610,7 @@ function drawCertificate(ctx: CanvasRenderingContext2D, s: CardState, o: Options
   ctx.strokeStyle = p.frame; ctx.lineWidth = 8; ctx.beginPath(); ctx.ellipse(540, 230, 92, 110, 0, 0, Math.PI * 2); ctx.stroke();
   ctx.textAlign = "center";
   ctx.fillStyle = p.main; setFont(ctx, 400, 84, fonts.deco); ctx.fillText("রক্তযোদ্ধা সম্মাননা", 540, 430);
-  ctx.fillStyle = p.text; setFont(ctx, 500, 30, fonts.body); ctx.fillText("এই মর্মে সম্মান জানানো যাচ্ছে যে", 540, 500);
+  ctx.fillStyle = p.text; setFont(ctx, 400, 30, fonts.body); ctx.fillText("এই মর্মে সম্মান জানানো যাচ্ছে যে", 540, 500);
   ctx.fillStyle = s.name.trim() ? "#1f2937" : "#a8a29e";
   fitText(ctx, nameOrHint(ctx, s.name, o.preview), 540, 620, 640, s.name.trim() ? 104 : 56, 400, fonts.deco, 40);
   ctx.strokeStyle = p.frame; ctx.lineWidth = 4; ctx.setLineDash([4, 10]); ctx.lineCap = "round";
@@ -607,16 +619,16 @@ function drawCertificate(ctx: CanvasRenderingContext2D, s: CardState, o: Options
   const g = s.group || (o.preview ? "গ্রুপ?" : "");
   const rest = g ? " রক্তের গ্রুপের একজন রক্তদাতা হিসেবে এ পর্যন্ত" : "একজন রক্তদাতা হিসেবে এ পর্যন্ত";
   setFont(ctx, 700, 32, s.group ? LATIN : fonts.body); const gw = g ? ctx.measureText(g).width : 0;
-  setFont(ctx, 500, 32, fonts.body); const rw = ctx.measureText(rest).width;
+  setFont(ctx, 400, 32, fonts.body); const rw = ctx.measureText(rest).width;
   const x0 = 540 - (gw + rw) / 2;
   ctx.textAlign = "left";
   if (g) { ctx.fillStyle = p.main; setFont(ctx, 700, 32, s.group ? LATIN : fonts.body); ctx.fillText(g, x0, 730); }
-  ctx.fillStyle = p.text; setFont(ctx, 500, 32, fonts.body); ctx.fillText(rest, x0 + gw, 730);
+  ctx.fillStyle = p.text; setFont(ctx, 400, 32, fonts.body); ctx.fillText(rest, x0 + gw, 730);
   ctx.textAlign = "center";
   const bump = 1 + 0.1 * Math.sin(Math.min(1, anim.pulse) * Math.PI);
   ctx.save(); ctx.translate(540, 820); ctx.scale(bump, bump);
   ctx.fillStyle = p.main; setFont(ctx, 700, 130, fonts.body); ctx.fillText(`${toBanglaNumber(s.count)} বার`, 0, 40); ctx.restore();
-  ctx.fillStyle = p.text; setFont(ctx, 500, 32, fonts.body); ctx.fillText("রক্ত দিয়ে মানুষের জীবন বাঁচাতে এগিয়ে এসেছেন।", 540, 930);
+  ctx.fillStyle = p.text; setFont(ctx, 400, 32, fonts.body); ctx.fillText("রক্ত দিয়ে মানুষের জীবন বাঁচাতে এগিয়ে এসেছেন।", 540, 930);
   // seal (bounces when the count goes up)
   ctx.save(); ctx.translate(250, 1110); const st = 1 + 0.15 * Math.sin(Math.min(1, anim.pulse) * Math.PI); ctx.scale(st, st);
   ctx.fillStyle = p.main; ctx.beginPath(); ctx.moveTo(-60, 80); ctx.lineTo(-80, 170); ctx.lineTo(-40, 150); ctx.lineTo(-20, 180); ctx.lineTo(0, 90); ctx.fill();
@@ -629,7 +641,7 @@ function drawCertificate(ctx: CanvasRenderingContext2D, s: CardState, o: Options
   ctx.restore();
   ctx.strokeStyle = p.text; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(640, 1150); ctx.lineTo(900, 1150); ctx.stroke();
   ctx.fillStyle = p.main; setFont(ctx, 400, 44, fonts.deco); ctx.fillText("রক্তদাতা পরিবার", 770, 1130);
-  ctx.fillStyle = p.text; setFont(ctx, 500, 24, fonts.body);
+  ctx.fillStyle = p.text; setFont(ctx, 400, 24, fonts.body);
   const today = new Date(Date.now() + 6 * 3600e3).toISOString().slice(0, 10);
   ctx.fillText(bnDate(today), 770, 1190);
   if (s.district) { setFont(ctx, 600, 26, fonts.body); ctx.fillText(s.district, 770, 1226); }

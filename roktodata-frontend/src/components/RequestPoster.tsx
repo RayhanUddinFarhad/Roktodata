@@ -42,7 +42,7 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
 export async function drawPoster(request: BloodRequest): Promise<HTMLCanvasElement> {
   // The page's font stack (Hind Siliguri, with Noto Sans Bengali for digits); wait until it is loaded.
   const fonts = getComputedStyle(document.body).fontFamily;
-  await Promise.all(["500", "600", "700"].map((w) => document.fonts.load(`${w} 40px ${fonts}`, "রক্তদাতা প্রয়োজন ০১২৩৪৫৬৭৮৯")));
+  await Promise.all(["400", "600", "700"].map((w) => document.fonts.load(`${w} 40px ${fonts}`, "রক্তদাতা প্রয়োজন ০১২৩৪৫৬৭৮৯")));
   await document.fonts.ready;
 
   const canvas = document.createElement("canvas");
@@ -98,7 +98,7 @@ export async function drawPoster(request: BloodRequest): Promise<HTMLCanvasEleme
   ctx.fillText(`${toBanglaNumber(request.bagsNeeded)} ব্যাগ রক্ত`, divX + 40, 284);
   ctx.fillText("প্রয়োজন", divX + 40, 356);
   ctx.fillStyle = "#6b7280";
-  font(500, 26);
+  font(400, 26);
   ctx.fillText(`পোস্ট: ${bnDate(dhakaToday())}`, divX + 40, 404);
 
   // details: label on the left, value (wrapped) on the right
@@ -127,7 +127,7 @@ export async function drawPoster(request: BloodRequest): Promise<HTMLCanvasEleme
     let h = 38 + (lines.length - 1) * 48 + 14;
     if (row.sub) {
       ctx.fillStyle = "#6b7280";
-      font(500, 27);
+      font(400, 27);
       ctx.fillText(wrap(ctx, row.sub, valueW)[0], valueX, top + h + 26);
       h += 38;
     }
@@ -160,7 +160,7 @@ export async function drawPoster(request: BloodRequest): Promise<HTMLCanvasEleme
   font(600, 26);
   ctx.fillText("রক্ত দিতে না পারলেও শেয়ার করুন", left, H - 92);
   ctx.fillStyle = "#9ca3af";
-  font(500, 22);
+  font(400, 22);
   ctx.fillText("আপনার একটি শেয়ারে বাঁচতে পারে একটি প্রাণ", left, H - 58);
   ctx.fillStyle = RED;
   font(700, 30, "Arial, sans-serif");

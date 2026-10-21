@@ -119,8 +119,19 @@ export default function BloodRequestsFeed() {
           <p className="mt-2 text-sm">{error}</p>
         </div>
       ) : loading && page === 1 ? (
-        <div className="mt-6 flex justify-center py-14">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        // placeholder cards about the size of real ones, so the page doesn't jump when they arrive
+        <div className="mt-6 grid gap-4 md:grid-cols-2" aria-busy="true" aria-label="লোড হচ্ছে">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-72 animate-pulse rounded-xl border border-slate-200 bg-white p-5">
+              <div className="h-4 w-1/3 rounded bg-slate-200" />
+              <div className="mt-4 h-10 w-20 rounded-lg bg-red-100" />
+              <div className="mt-4 space-y-2">
+                <div className="h-3 w-full rounded bg-slate-100" />
+                <div className="h-3 w-5/6 rounded bg-slate-100" />
+                <div className="h-3 w-2/3 rounded bg-slate-100" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : requests.length === 0 ? (
         <div className="mt-6 flex flex-col items-center rounded-xl border border-dashed border-slate-300 bg-white py-12 text-center text-slate-500">

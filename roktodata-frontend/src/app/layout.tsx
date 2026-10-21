@@ -9,7 +9,7 @@ import "./globals.css";
 const hindSiliguri = Hind_Siliguri({
   variable: "--font-hind-siliguri",
   subsets: ["bengali", "latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600", "700"], // 500 is not used: fewer fonts to load before text shows
 });
 
 // Digits only (0-9 and ০-৯), which are clearer in Noto Sans Bengali; all other text stays Hind Siliguri.

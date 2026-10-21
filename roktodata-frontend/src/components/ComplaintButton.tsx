@@ -116,7 +116,7 @@ function ComplaintDialog({ donor, onClose }: { donor: Pick<Donor, "id" | "fullNa
             </label>
             <label className="block">
               <span className="mb-1.5 block text-xs font-semibold text-slate-700">
-                বিস্তারিত <span className="font-normal text-slate-400">(ঐচ্ছিক)</span>
+                বিস্তারিত <span className="font-normal text-slate-500">(ঐচ্ছিক)</span>
               </span>
               <textarea
                 rows={3}

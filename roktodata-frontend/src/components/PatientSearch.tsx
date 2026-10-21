@@ -178,7 +178,7 @@ export default function PatientSearch() {
         </label>
         <label className="block">
           <span className={labelClass}>
-            থানা / উপজেলা <span className="font-normal text-slate-400">(ঐচ্ছিক)</span>
+            থানা / উপজেলা <span className="font-normal text-slate-500">(ঐচ্ছিক)</span>
           </span>
           <ThanaSelect
             district={district}
@@ -200,7 +200,7 @@ export default function PatientSearch() {
         </label>
         <label className="block">
           <span className={labelClass}>
-            কবে প্রয়োজন <span className="font-normal text-slate-400">(ঐচ্ছিক)</span>
+            কবে প্রয়োজন <span className="font-normal text-slate-500">(ঐচ্ছিক)</span>
           </span>
           <input type="date" value={neededDate} onChange={(e) => setNeededDate(e.target.value)} className={fieldClass} />
         </label>
@@ -221,7 +221,7 @@ export default function PatientSearch() {
         </label>
         <label className="block">
           <span className={labelClass}>
-            হাসপাতালের ঠিকানা <span className="font-normal text-slate-400">(ঐচ্ছিক)</span>
+            হাসপাতালের ঠিকানা <span className="font-normal text-slate-500">(ঐচ্ছিক)</span>
           </span>
           <input
             type="text"
@@ -234,7 +234,7 @@ export default function PatientSearch() {
         </label>
         <label className="block sm:col-span-2">
           <span className={labelClass}>
-            রোগ বা কারণ <span className="font-normal text-slate-400">(ঐচ্ছিক)</span>
+            রোগ বা কারণ <span className="font-normal text-slate-500">(ঐচ্ছিক)</span>
           </span>
           <input
             type="text"

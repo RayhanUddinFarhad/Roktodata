@@ -60,6 +60,8 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
   const drag = useRef<{ x: number; y: number; moved: boolean; onPhoto: boolean; dx: number; dy: number } | null>(null);
   const [scale, setScale] = useState(0.5); // CSS px per card px
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
+  const picker = useRef<HTMLDivElement>(null);
+  const [pickerSeen, setPickerSeen] = useState(false); // previews are drawn once the picker is in view
 
   const update = useCallback((patch: Partial<CardState>) => setS((prev) => ({ ...prev, ...patch })), []);
 
@@ -68,7 +70,7 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
   useEffect(() => {
     const body = getComputedStyle(document.body).fontFamily;
     Promise.all([
-      ...["500", "600", "700"].map((w) => document.fonts.load(`${w} 40px ${body}`, "রক্তদাতা ০১২৩")),
+      ...["400", "600", "700"].map((w) => document.fonts.load(`${w} 40px ${body}`, "রক্তদাতা ০১২৩")),
       document.fonts.load(`400 60px ${decoFont}`, "রক্তযোদ্ধা সম্মাননা"),
     ]).finally(() => {
       if (!restored.current) setS(loadSaved());
@@ -81,23 +83,49 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch { /* storage unavailable */ }
   }, [s]);
 
-  // live preview: redraw ~30 times a second for the small animations
+  // The small animations start with the visitor's first tap or key press (until then the card is
+  // drawn once), and pause while the card is scrolled out of view.
+  const [live, setLive] = useState(false);
+  const visible = useRef(true);
+  useEffect(() => {
+    const start = () => setLive(true);
+    window.addEventListener("pointerdown", start, { once: true, passive: true });
+    window.addEventListener("keydown", start, { once: true });
+    const canvas = canvasRef.current;
+    const io = canvas && new IntersectionObserver(([e]) => (visible.current = e.isIntersecting));
+    if (canvas) io!.observe(canvas);
+    const pio = new IntersectionObserver(([e]) => e.isIntersecting && setPickerSeen(true), { threshold: 0.4 });
+    if (picker.current) pio.observe(picker.current);
+    return () => {
+      window.removeEventListener("pointerdown", start);
+      window.removeEventListener("keydown", start);
+      io?.disconnect();
+      pio.disconnect();
+    };
+  }, []);
+
+  // live preview: up to ~30 frames a second, fewer on slow phones (the drawing may use at most about
+  // a quarter of the time, so taps and typing stay smooth)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !fonts) return;
     const ctx = canvas.getContext("2d")!;
-    let raf = 0, last = 0;
+    let raf = 0, last = 0, gap = 33, drawn = false;
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
-      if (now - last < 33) return;
-      last = now;
       const t = now / 1000;
+      const pulsing = t - pulseAt.current < 0.8;
+      if (drawn && (!visible.current || (!live && !pulsing) || now - last < gap)) return;
+      last = now;
       const pulse = Math.min(1, (t - pulseAt.current) / 0.7);
+      const t0 = performance.now();
       regions.current = drawCard(ctx, s, { fonts, photo, anim: { pulse, t }, preview: true });
+      gap = Math.max(33, (performance.now() - t0) * (pulsing ? 1.5 : 4));
+      drawn = true;
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [s, fonts, photo]);
+  }, [s, fonts, photo, live]);
 
   // keep the overlay maths in sync with the canvas' on-screen size
   useEffect(() => {
@@ -108,23 +136,25 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
     return () => ro.disconnect();
   }, []);
 
-  // small previews of each design with the user's own details
+  // small previews of each design with the user's own details; one design per task, so the page
+  // stays responsive on slow phones
   useEffect(() => {
-    if (!fonts) return;
-    const id = setTimeout(() => {
-      const out: Record<string, string> = {};
-      const c = document.createElement("canvas");
-      c.width = 216; c.height = 270;
-      const ctx = c.getContext("2d")!;
-      for (const d of DESIGNS) {
-        ctx.setTransform(0.2, 0, 0, 0.2, 0, 0);
-        drawCard(ctx, { ...s, design: d.id, palette: d.id === s.design ? s.palette : 0, size: "post" }, { fonts, photo, anim: { pulse: 1, t: 0 }, preview: false });
-        out[d.id] = c.toDataURL("image/png");
-      }
-      setThumbs(out);
+    if (!fonts || !(pickerSeen || live)) return;
+    const out: Record<string, string> = {};
+    const c = document.createElement("canvas");
+    c.width = 216; c.height = 270;
+    const ctx = c.getContext("2d")!;
+    let i = 0;
+    let id = setTimeout(function next() {
+      const d = DESIGNS[i++];
+      ctx.setTransform(0.2, 0, 0, 0.2, 0, 0);
+      drawCard(ctx, { ...s, design: d.id, palette: d.id === s.design ? s.palette : 0, size: "post" }, { fonts, photo, anim: { pulse: 1, t: 0 }, preview: false });
+      out[d.id] = c.toDataURL("image/png");
+      if (i < DESIGNS.length) id = setTimeout(next, 16);
+      else setThumbs(out);
     }, 250);
     return () => clearTimeout(id);
-  }, [s, fonts, photo]);
+  }, [s, fonts, photo, pickerSeen, live]);
 
 
   function pointToCard(e: ReactPointerEvent<HTMLCanvasElement>) {
@@ -289,7 +319,7 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
             </div>
           )}
         </div>
-        <p className="mx-auto mt-3 max-w-[520px] text-center text-xs text-slate-500">
+        <p className="mx-auto mt-3 max-w-[520px] text-center text-xs text-slate-600">
           👆 কার্ডের উপরেই ট্যাপ করুন: নাম, গ্রুপ, ছবি। {design.hint}।
         </p>
       </div>
@@ -298,7 +328,7 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
       <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:order-1">
         <section>
           <h2 className="text-sm font-bold text-slate-900">ডিজাইন</h2>
-          <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+          <div ref={picker} className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
             {DESIGNS.map((d) => (
               <button key={d.id} type="button" onClick={() => update({ design: d.id, palette: 0 })}
                 className={`overflow-hidden rounded-xl border-2 text-center transition ${s.design === d.id ? "border-red-600 shadow-md" : "border-transparent hover:border-slate-300"}`}>
@@ -359,7 +389,7 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
         </section>
 
         <section>
-          <h2 className="text-sm font-bold text-slate-900">ছবি <span className="font-normal text-slate-400">(ঐচ্ছিক)</span></h2>
+          <h2 className="text-sm font-bold text-slate-900">ছবি <span className="font-normal text-slate-500">(ঐচ্ছিক)</span></h2>
           <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <button type="button" onClick={() => fileInput.current?.click()}
@@ -380,7 +410,7 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
         </section>
 
         <details className="group rounded-xl bg-slate-50 p-3">
-          <summary className="cursor-pointer text-sm font-bold text-slate-900">আরও তথ্য <span className="font-normal text-slate-400">(ঐচ্ছিক)</span></summary>
+          <summary className="cursor-pointer text-sm font-bold text-slate-900">আরও তথ্য <span className="font-normal text-slate-500">(ঐচ্ছিক)</span></summary>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="text-xs font-semibold text-slate-700">জেলা</span>
