@@ -209,11 +209,13 @@ export default function DonorSearch({
           <p className="mt-4 flex gap-2.5 rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2.5 text-xs leading-relaxed text-slate-700">
             <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-indigo-700" />
             <span>
-              <strong className="font-semibold text-slate-900">তালিকায় আপনার নাম্বার আছে, কিন্তু এখন রক্ত দিতে পারবেন না?</strong>{" "}
+              <strong className="font-semibold text-slate-900">
+                তালিকায় আপনার নাম্বার আছে, কিন্তু এখন রক্ত দিতে পারবেন না বা গত ৩ মাসে রক্ত দিয়েছেন?
+              </strong>{" "}
               <Link href="/register" className="font-semibold text-indigo-800 underline underline-offset-2 hover:text-red-600">
                 আপডেট পেজে
               </Link>{" "}
-              গিয়ে &quot;এখন প্রস্তুত নই&quot; দিয়ে নাম্বার যাচাই করে নিন। আপনার নাম ও নাম্বার তালিকা থেকে সরে যাবে, আর কবে আবার দেখাবে তাও ঠিক করে দিতে পারবেন।
+              গিয়ে শেষ রক্তদানের তারিখ দিন অথবা &quot;এখন প্রস্তুত নই&quot; বাছুন, তারপর নাম্বার যাচাই করুন। আপনার নাম্বার তালিকা থেকে সরে যাবে।
             </span>
           </p>
           <div className={`mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${loading ? "opacity-60" : ""}`}>
