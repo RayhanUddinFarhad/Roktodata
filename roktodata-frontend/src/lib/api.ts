@@ -122,11 +122,12 @@ export interface DonorPayload {
   upazila: string;
   lastDonationDate?: string;
   isReadyToDonate: boolean;
-  // With "not ready": back in search by itself after this many months (null = until changed).
-  readyAgainMonths?: ReadyAgainMonths | null;
+  // With "not ready": back in search by itself after 1/3/6 months, or "eligible" = once 90 days
+  // have passed since the last donation (null = until changed).
+  readyAgain?: ReadyAgain | null;
 }
 
-export type ReadyAgainMonths = 1 | 3 | 6;
+export type ReadyAgain = 1 | 3 | 6 | "eligible";
 
 // Creates the donor (pending admin approval), or updates them if the phone number already exists.
 // When phone verification is on, the Firebase ID token proves the user owns the phone number.

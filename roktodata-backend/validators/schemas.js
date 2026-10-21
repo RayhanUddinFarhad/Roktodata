@@ -67,8 +67,9 @@ export const registerDonorSchema = z.object({
   upazila: thana,
   lastDonationDate: z.preprocess(emptyToUndefined, pastDate.optional()),
   isReadyToDonate: z.boolean({ error: "রক্ত দিতে প্রস্তুত কিনা নির্বাচন করুন।" }),
-  // With "not ready": ready again by itself after this many months (none = until changed).
-  readyAgainMonths: z.union([z.literal(1), z.literal(3), z.literal(6)]).nullish(),
+  // With "not ready": ready again by itself after 1/3/6 months, or "eligible" = once 90 days have
+  // passed since the last donation (none = until changed).
+  readyAgain: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal("eligible")]).nullish(),
 }).superRefine(thanaInDistrict("district", "upazila"));
 
 export const searchDonorsSchema = z.object({

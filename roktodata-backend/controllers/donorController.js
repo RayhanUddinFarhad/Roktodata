@@ -1,22 +1,26 @@
 import { Donor } from "../models/Donor.js";
 import { AppError } from "../utils/AppError.js";
 import { toBanglaName } from "../utils/banglaName.js";
-import { SEARCH_PAGE_SIZE } from "../config/constants.js";
+import { ELIGIBILITY_DAYS, SEARCH_PAGE_SIZE } from "../config/constants.js";
 import { findDonors, visibleDonorFilter } from "../utils/findDonors.js";
 
-// "Not ready for 3 months" -> the date three months from now; null when ready or with no end chosen.
-function readyAgainDate(isReady, months) {
-  if (isReady || !months) return null;
+// When a "not ready" donor is ready again: 1/3/6 months from now, or "eligible" = ELIGIBILITY_DAYS
+// after their last donation. Null when ready, with no end chosen, or "eligible" without a date.
+function readyAgainDate(isReady, choice, lastDonationDate) {
+  if (isReady || !choice) return null;
+  if (choice === "eligible") {
+    return lastDonationDate ? new Date(lastDonationDate.getTime() + ELIGIBILITY_DAYS * 24 * 60 * 60 * 1000) : null;
+  }
   const date = new Date();
-  date.setMonth(date.getMonth() + months);
+  date.setMonth(date.getMonth() + choice);
   return date;
 }
 
 // POST /api/donors/register-or-update
 export async function registerOrUpdateDonor(req, res) {
-  const { phoneNumber, lastDonationDate, readyAgainMonths, ...rest } = req.validated;
+  const { phoneNumber, lastDonationDate, readyAgain, ...rest } = req.validated;
   // Names are shown in Bangla on the site; English input is converted.
-  const details = { ...rest, fullName: toBanglaName(rest.fullName), readyAgainAt: readyAgainDate(rest.isReadyToDonate, readyAgainMonths) };
+  const details = { ...rest, fullName: toBanglaName(rest.fullName) };
 
   // With phone verification on, the number confirmed by SMS code must match the profile being written.
   if (req.verifiedPhone && req.verifiedPhone !== phoneNumber) {
@@ -31,6 +35,7 @@ export async function registerOrUpdateDonor(req, res) {
     }
     existing.set(details);
     if (lastDonationDate) existing.lastDonationDate = lastDonationDate;
+    existing.readyAgainAt = readyAgainDate(details.isReadyToDonate, readyAgain, existing.lastDonationDate);
     await existing.save();
     return res.json({
       success: true,
@@ -44,7 +49,12 @@ export async function registerOrUpdateDonor(req, res) {
     });
   }
 
-  const donor = await Donor.create({ ...details, phoneNumber, lastDonationDate: lastDonationDate ?? null });
+  const donor = await Donor.create({
+    ...details,
+    phoneNumber,
+    lastDonationDate: lastDonationDate ?? null,
+    readyAgainAt: readyAgainDate(details.isReadyToDonate, readyAgain, lastDonationDate),
+  });
   res.status(201).json({
     success: true,
     isNew: true,
