@@ -215,7 +215,8 @@ export default function DonorSearch({
               <Link href="/register" className="font-semibold text-indigo-800 underline underline-offset-2 hover:text-red-600">
                 আপডেট পেজে
               </Link>{" "}
-              গিয়ে শেষ রক্তদানের তারিখ দিন অথবা &quot;এখন প্রস্তুত নই&quot; বাছুন, তারপর নাম্বার যাচাই করুন। আপনার নাম্বার তালিকা থেকে সরে যাবে।
+              গিয়ে শেষ রক্তদানের তারিখ দিন অথবা &quot;এখন প্রস্তুত নই&quot; বাছুন, তারপর নাম্বার যাচাই করুন। আপনার নাম্বার তালিকা থেকে সরে
+              যাবে। কবে থেকে আবার রক্ত দিতে পারবেন, সেটাও বেছে নিতে পারবেন, তখন আপনার তথ্য আবার তালিকায় চলে আসবে।
             </span>
           </p>
           <div className={`mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${loading ? "opacity-60" : ""}`}>
