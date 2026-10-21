@@ -8,7 +8,7 @@ export const CARD_W = 1080;
 export const CARD_H = 1350;
 export const STORY_H = 1920;
 
-export type DesignId = "bag" | "certificate" | "nakshi" | "medal";
+export type DesignId = "bag" | "idcard" | "certificate" | "nakshi" | "medal";
 export type CardSize = "post" | "story";
 
 export interface CardState {
@@ -77,6 +77,9 @@ export const DESIGNS: { id: DesignId; label: string; hint: string; palettes: { n
   { id: "bag", label: "রক্তের ব্যাগ", hint: "ব্যাগে ট্যাপ করলে এক ফোঁটা রক্ত যোগ হয়", palettes: [
     { name: "ক্লাসিক", swatch: ["#fbf1e6", "#c81e1e"] }, { name: "গোলাপি", swatch: ["#fde8ec", "#be123c"] },
     { name: "রাত", swatch: ["#0f172a", "#f43f5e"] }, { name: "পুদিনা", swatch: ["#e7f6f0", "#dc2626"] }] },
+  { id: "idcard", label: "ডোনার আইডি কার্ড", hint: "মোট রক্তদানের ঘরে ট্যাপ করলে সংখ্যা বাড়ে", palettes: [
+    { name: "লাল", swatch: ["#fff1f2", "#c81e1e"] }, { name: "নেভি", swatch: ["#eef2ff", "#1e3a8a"] },
+    { name: "সবুজ", swatch: ["#ecfdf5", "#047857"] }, { name: "কালো-সোনালি", swatch: ["#1c1917", "#b7791f"] }] },
   { id: "certificate", label: "সম্মাননা সনদ", hint: "ডটেড লাইনে ট্যাপ করে নাম লিখুন", palettes: [
     { name: "মেরুন-সোনালি", swatch: ["#fdf6e3", "#7f1d1d"] }, { name: "সবুজ-সোনালি", swatch: ["#f3f8ef", "#14532d"] }, { name: "নীল-রুপালি", swatch: ["#f4f6fa", "#1e3a8a"] }] },
   { id: "nakshi", label: "নকশিকাঁথা", hint: "প্রতিবার একটা করে ফোঁটা সেলাই হয়", palettes: [
@@ -136,10 +139,11 @@ function dropPath(ctx: CanvasRenderingContext2D, cx: number, top: number, w: num
   ctx.bezierCurveTo(cx + w / 2, top + h * 0.48, cx + w * 0.22, top + h * 0.3, cx, top);
   ctx.closePath();
 }
-function photoOrPlaceholder(ctx: CanvasRenderingContext2D, photo: Photo | null, cx: number, cy: number, rx: number, ry: number, bg: string, fg: string, preview: boolean) {
+function photoOrPlaceholder(ctx: CanvasRenderingContext2D, photo: Photo | null, cx: number, cy: number, rx: number, ry: number, bg: string, fg: string, preview: boolean, square = false) {
   ctx.save();
   ctx.beginPath();
-  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  if (square) ctx.roundRect(cx - rx, cy - ry, rx * 2, ry * 2, 22);
+  else ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
   ctx.clip();
   ctx.fillStyle = bg;
   ctx.fillRect(cx - rx, cy - ry, rx * 2, ry * 2);
@@ -305,7 +309,145 @@ function drawBag(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regio
   return regions;
 }
 
-// ---- 2. certificate -----------------------------------------------------------------------------
+// ---- 2. donor ID card ---------------------------------------------------------------------------
+const IDCARD = [
+  { bg: ["#fff1f2", "#fde2e4"], band: "#c81e1e", band2: "#991b1b", strap: "#dc2626", ink: "#1f2937", soft: "#fef2f2", accent: "#c81e1e" },
+  { bg: ["#eef2ff", "#dbe4ff"], band: "#1e3a8a", band2: "#172554", strap: "#1d4ed8", ink: "#1f2937", soft: "#eff6ff", accent: "#dc2626" },
+  { bg: ["#ecfdf5", "#d1fae5"], band: "#047857", band2: "#065f46", strap: "#059669", ink: "#1f2937", soft: "#f0fdf4", accent: "#dc2626" },
+  { bg: ["#1c1917", "#0c0a09"], band: "#1c1917", band2: "#b7791f", strap: "#b7791f", ink: "#1f2937", soft: "#fefce8", accent: "#b7791f" },
+];
+function drawIdCard(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regions {
+  const p = IDCARD[s.palette] ?? IDCARD[0];
+  const { fonts, anim } = o;
+  const bg = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
+  bg.addColorStop(0, p.bg[0]);
+  bg.addColorStop(1, p.bg[1]);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, CARD_W, CARD_H);
+  // faint plus signs in the background
+  ctx.strokeStyle = p.band;
+  ctx.globalAlpha = 0.07;
+  ctx.lineWidth = 6;
+  for (let y = 40; y < CARD_H; y += 110) for (let x = 40 + ((y / 110) % 2) * 55; x < CARD_W; x += 110) {
+    ctx.beginPath(); ctx.moveTo(x - 14, y); ctx.lineTo(x + 14, y); ctx.moveTo(x, y - 14); ctx.lineTo(x, y + 14); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // lanyard strap with the name printed on it, and the metal clip
+  const sway = Math.sin(anim.t * 1.4) * 0.6;
+  ctx.save();
+  ctx.translate(540, 0);
+  ctx.rotate((sway * Math.PI) / 180);
+  ctx.fillStyle = p.strap;
+  ctx.beginPath(); ctx.moveTo(-150, -10); ctx.lineTo(-38, 150); ctx.lineTo(38, 150); ctx.lineTo(150, -10); ctx.lineTo(80, -10); ctx.lineTo(0, 110); ctx.lineTo(-80, -10); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.textAlign = "center"; setFont(ctx, 700, 18, LATIN);
+  ctx.save(); ctx.translate(-92, 50); ctx.rotate(0.95); ctx.fillText("ROKTODATA", 0, 6); ctx.restore();
+  ctx.save(); ctx.translate(92, 50); ctx.rotate(-0.95); ctx.fillText("ROKTODATA", 0, 6); ctx.restore();
+  const clip = ctx.createLinearGradient(-40, 140, 40, 230);
+  clip.addColorStop(0, "#f8fafc"); clip.addColorStop(0.5, "#94a3b8"); clip.addColorStop(1, "#e2e8f0");
+  ctx.fillStyle = clip; ctx.beginPath(); ctx.roundRect(-40, 140, 80, 92, 14); ctx.fill();
+  ctx.fillStyle = "#64748b"; ctx.beginPath(); ctx.roundRect(-22, 196, 44, 36, 8); ctx.fill();
+  ctx.restore();
+
+  // the card
+  const x0 = 200, y0 = 220, w = 680, h = 960;
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.25)"; ctx.shadowBlur = 50; ctx.shadowOffsetY = 20;
+  ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.roundRect(x0, y0, w, h, 36); ctx.fill();
+  ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.roundRect(x0, y0, w, h, 36); ctx.clip();
+  // header band
+  const band = ctx.createLinearGradient(x0, y0, x0 + w, y0 + 200);
+  band.addColorStop(0, p.band); band.addColorStop(1, p.band2);
+  ctx.fillStyle = band; ctx.fillRect(x0, y0, w, 200);
+  ctx.fillStyle = "rgba(255,255,255,0.08)";
+  ctx.beginPath(); ctx.arc(x0 + w - 40, y0 + 10, 160, 0, Math.PI * 2); ctx.fill();
+  // slot for the clip
+  ctx.fillStyle = p.bg[1]; ctx.beginPath(); ctx.roundRect(490, y0 + 20, 100, 22, 11); ctx.fill();
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x0 + 70, y0 + 108, 30, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = p.band; dropPath(ctx, x0 + 70, y0 + 90, 22, 32); ctx.fill();
+  ctx.fillStyle = "#fff"; ctx.textAlign = "left"; setFont(ctx, 700, 36, fonts.body); ctx.fillText("রক্তদাতা", x0 + 118, y0 + 108);
+  setFont(ctx, 700, 20, LATIN); ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.fillText("BLOOD DONOR ID", x0 + 120, y0 + 140);
+  ctx.textAlign = "right"; setFont(ctx, 600, 22, fonts.body); ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.fillText("রক্তদাতা পরিচয়পত্র", x0 + w - 40, y0 + 108);
+  ctx.restore();
+
+  // photo
+  const px = 540, py = y0 + 320, prx = 112, pry = 130;
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.roundRect(px - prx - 12, py - pry - 12, 2 * prx + 24, 2 * pry + 24, 28); ctx.fill();
+  photoOrPlaceholder(ctx, o.photo, px, py, prx, pry, p.soft, "#d6d3d1", o.preview, true);
+  ctx.strokeStyle = p.band; ctx.lineWidth = 6; ctx.beginPath(); ctx.roundRect(px - prx, py - pry, 2 * prx, 2 * pry, 22); ctx.stroke();
+  // hologram sticker that shimmers
+  const hx = x0 + w - 92, hy = y0 + 300;
+  const holo = ctx.createLinearGradient(hx - 46 + Math.sin(anim.t * 2) * 30, hy - 46, hx + 46, hy + 46);
+  holo.addColorStop(0, "#a5f3fc"); holo.addColorStop(0.35, "#f0abfc"); holo.addColorStop(0.7, "#fde68a"); holo.addColorStop(1, "#86efac");
+  ctx.fillStyle = holo; ctx.beginPath(); ctx.arc(hx, hy, 46, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(hx, hy, 34, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,0.9)"; dropPath(ctx, hx, hy - 20, 22, 34); ctx.fill();
+
+  // name and title
+  ctx.textAlign = "center";
+  ctx.fillStyle = s.name.trim() ? p.ink : "#9ca3af";
+  fitText(ctx, nameOrHint(ctx, s.name, o.preview), 540, y0 + 524, w - 80, s.name.trim() ? 54 : 36, 700, fonts.body, 28);
+  const tier = tierOf(s.count).title;
+  setFont(ctx, 700, 26, fonts.body);
+  const tw = ctx.measureText(tier).width + 74;
+  ctx.fillStyle = p.soft; ctx.beginPath(); ctx.roundRect(540 - tw / 2, y0 + 546, tw, 48, 24); ctx.fill();
+  tierDot(ctx, 540 - tw / 2 + 28, y0 + 570, 12, s.count);
+  ctx.fillStyle = p.band === "#1c1917" ? "#92400e" : p.band; ctx.textAlign = "left"; ctx.fillText(tier, 540 - tw / 2 + 48, y0 + 580);
+
+  // details: blood group | total donations, then district | last donation
+  const gx = x0 + 40, gy = y0 + 616, cw = (w - 100) / 2, ch = 120;
+  const box = (x: number, y: number, label: string, glow = 0) => {
+    ctx.fillStyle = p.soft; ctx.beginPath(); ctx.roundRect(x, y, cw, ch, 20); ctx.fill();
+    if (glow > 0) { ctx.strokeStyle = p.accent; ctx.globalAlpha = glow; ctx.lineWidth = 6; ctx.stroke(); ctx.globalAlpha = 1; }
+    ctx.fillStyle = "#6b7280"; ctx.textAlign = "left"; setFont(ctx, 600, 22, fonts.body); ctx.fillText(label, x + 24, y + 38);
+  };
+  box(gx, gy, "রক্তের গ্রুপ");
+  ctx.fillStyle = p.accent;
+  if (s.group) fitText(ctx, s.group, gx + 24, gy + 100, cw - 48, 60, 700, LATIN);
+  else if (o.preview) { ctx.globalAlpha = 0.5; setFont(ctx, 700, 28, fonts.body); ctx.fillText("ট্যাপ করে বাছুন", gx + 24, gy + 92); ctx.globalAlpha = 1; }
+  const glow = anim.pulse < 1 ? Math.sin(anim.pulse * Math.PI) : 0;
+  box(gx + cw + 20, gy, "মোট রক্তদান", glow);
+  const bump = 1 + 0.12 * glow;
+  ctx.save(); ctx.translate(gx + cw + 44, gy + 100); ctx.scale(bump, bump);
+  ctx.fillStyle = p.ink; setFont(ctx, 700, 60, fonts.body); ctx.fillText(toBanglaNumber(s.count), 0, 0);
+  const nw = ctx.measureText(toBanglaNumber(s.count)).width;
+  setFont(ctx, 700, 30, fonts.body); ctx.fillStyle = "#6b7280"; ctx.fillText(" বার", nw, 0);
+  ctx.restore();
+  if (o.preview) { ctx.fillStyle = p.accent; ctx.globalAlpha = 0.85; ctx.beginPath(); ctx.arc(gx + 2 * cw + 2, gy + 34, 18, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; ctx.fillStyle = "#fff"; ctx.textAlign = "center"; setFont(ctx, 700, 26, LATIN); ctx.fillText("+", gx + 2 * cw + 2, gy + 43); }
+  const row2 = gy + ch + 20;
+  const line = (x: number, label: string, value: string) => {
+    ctx.textAlign = "left"; ctx.fillStyle = "#6b7280"; setFont(ctx, 600, 22, fonts.body); ctx.fillText(label, x, row2 + 26);
+    ctx.fillStyle = p.ink; fitText(ctx, value || "—", x, row2 + 64, cw - 10, 30, 700, fonts.body, 18);
+  };
+  line(gx + 4, "জেলা", s.district);
+  line(gx + cw + 24, "শেষ রক্তদান", s.lastDate ? bnDate(s.lastDate) : "");
+  // barcode, ID and the phone number when shown
+  const by = y0 + h - 52;
+  ctx.fillStyle = "#1f2937";
+  let bx = gx + 4;
+  for (let i = 0; i < 34; i++) { const bw = [2, 4, 2, 6, 3][(i * 7 + s.count) % 5]; ctx.fillRect(bx, by - 30, bw, 44); bx += bw + 3; }
+  const yy = new Date(Date.now() + 6 * 3600e3).toISOString().slice(2, 4);
+  ctx.textAlign = "right"; setFont(ctx, 700, 22, LATIN); ctx.fillStyle = "#6b7280";
+  ctx.fillText(`ID: RD-${yy}-${(s.group || "XX").replace("+", "P").replace("-", "N")}-${String(s.count).padStart(3, "0")}`, x0 + w - 40, by - 8);
+  if (s.showPhone && s.phone) { setFont(ctx, 700, 22, LATIN); ctx.fillStyle = p.ink; ctx.fillText(formatPhone(s.phone), x0 + w - 40, by + 20); }
+  else { ctx.fillStyle = p.accent; ctx.fillText("roktodata.org", x0 + w - 40, by + 20); }
+
+  const regions: Regions = {
+    name: { x: x0 + 30, y: y0 + 474, w: w - 60, h: 66 },
+    group: { x: gx, y: gy, w: cw, h: ch },
+    counter: { x: gx + cw + 20, y: gy, w: cw, h: ch },
+    photo: { cx: px, cy: py, r: prx, ry: pry },
+  };
+  if (o.preview && !s.name.trim()) hint(ctx, regions.name, p.accent, anim.t);
+  // under the card
+  ctx.textAlign = "center"; ctx.fillStyle = p.band === "#1c1917" ? "#e7e5e4" : p.ink; setFont(ctx, 600, 28, fonts.body);
+  ctx.fillText("প্রতিবার রক্তদানে বাঁচতে পারে ৩টি প্রাণ", 540, 1240);
+  footer(ctx, { ...s, showPhone: false }, fonts, 1294, p.band === "#1c1917" ? "#a8a29e" : "#6b7280", p.band === "#1c1917" ? "#fbbf24" : p.accent);
+  return regions;
+}
+
+// ---- 3. certificate -----------------------------------------------------------------------------
 function drawCertificate(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regions {
   const p = CERT[s.palette] ?? CERT[0];
   const { fonts, anim } = o;
@@ -361,7 +503,7 @@ function drawCertificate(ctx: CanvasRenderingContext2D, s: CardState, o: Options
   return regions;
 }
 
-// ---- 3. nakshi kantha ---------------------------------------------------------------------------
+// ---- 4. nakshi kantha ---------------------------------------------------------------------------
 function stitchedDrop(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, filled: boolean, progress = 1) {
   dropPath(ctx, x, y, 24, 34);
   if (filled && progress >= 1) { ctx.fillStyle = color; ctx.fill(); }
@@ -425,7 +567,7 @@ function drawNakshi(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Re
   return regions;
 }
 
-// ---- 4. medal -----------------------------------------------------------------------------------
+// ---- 5. medal -----------------------------------------------------------------------------------
 function drawMedal(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regions {
   const p = MEDAL[s.palette] ?? MEDAL[0];
   const { fonts, anim } = o;
@@ -482,12 +624,13 @@ function drawMedal(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Reg
 }
 
 const DRAW: Record<DesignId, (ctx: CanvasRenderingContext2D, s: CardState, o: Options) => Regions> = {
-  bag: drawBag, certificate: drawCertificate, nakshi: drawNakshi, medal: drawMedal,
+  bag: drawBag, idcard: drawIdCard, certificate: drawCertificate, nakshi: drawNakshi, medal: drawMedal,
 };
 
 // The background colour that fills the extra space of the story size.
 const STORY_BG: Record<DesignId, (palette: number) => string> = {
   bag: (i) => (BAG[i] ?? BAG[0]).bg,
+  idcard: (i) => (IDCARD[i] ?? IDCARD[0]).bg[1],
   certificate: (i) => (CERT[i] ?? CERT[0]).bg,
   nakshi: (i) => (NAKSHI[i] ?? NAKSHI[0]).bg,
   medal: (i) => (MEDAL[i] ?? MEDAL[0]).bg[1],

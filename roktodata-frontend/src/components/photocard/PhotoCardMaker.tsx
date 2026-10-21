@@ -283,7 +283,7 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
       <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:order-1">
         <section>
           <h2 className="text-sm font-bold text-slate-900">ডিজাইন</h2>
-          <div className="mt-2 grid grid-cols-4 gap-2">
+          <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
             {DESIGNS.map((d) => (
               <button key={d.id} type="button" onClick={() => update({ design: d.id, palette: 0 })}
                 className={`overflow-hidden rounded-xl border-2 text-center transition ${s.design === d.id ? "border-red-600 shadow-md" : "border-transparent hover:border-slate-300"}`}>
