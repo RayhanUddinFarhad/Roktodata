@@ -1,11 +1,11 @@
-# Every morning at 10:00 Bangladesh time, asks the API to text donors who can donate again
-# (see roktodata-backend/controllers/jobController.js). Needs the repository secret JOBS_SECRET,
-# the same value as JOBS_SECRET on the Render service. Can also be run by hand from the Actions tab.
+# Asks the API to text donors who can donate again (see roktodata-backend/controllers/jobController.js).
+# Switched off for now: it only runs by hand from the Actions tab. To run it daily, set JOBS_SECRET
+# on Render and as a repository secret, and put back the schedule below.
 name: Eligibility reminders
 
 on:
-  schedule:
-    - cron: "0 4 * * *" # 04:00 UTC = 10:00 in Bangladesh
+  # schedule:
+  #   - cron: "0 4 * * *" # 04:00 UTC = 10:00 in Bangladesh
   workflow_dispatch:
     inputs:
       dry_run:
