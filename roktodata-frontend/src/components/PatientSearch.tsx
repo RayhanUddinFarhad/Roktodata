@@ -5,12 +5,14 @@ import Link from "next/link";
 import { CircleCheck, Info, Loader2, MapPin, Megaphone, PhoneCall, Search, SearchX } from "lucide-react";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import ComplaintButton from "@/components/ComplaintButton";
+import { RequestPosterPanel } from "@/components/RequestPoster";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ThanaSelect from "@/components/ThanaSelect";
 import { ApiError, searchForPatient } from "@/lib/api";
 import {
   BLOOD_GROUPS,
   type BloodGroup,
+  type BloodRequest,
   DISTRICTS,
   type Donor,
   donorWhatsAppMessage,
@@ -34,8 +36,9 @@ type Result =
       bloodGroup: string;
       district: string;
       upazila: string;
+      poster: BloodRequest;
     }
-  | { kind: "duplicate"; message: string; bloodGroup: string; district: string };
+  | { kind: "duplicate"; message: string; bloodGroup: string; district: string; poster: BloodRequest };
 
 export default function PatientSearch() {
   const [patientName, setPatientName] = useState("");
@@ -61,6 +64,22 @@ export default function PatientSearch() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    // What the poster shows: exactly what was just submitted.
+    const poster: BloodRequest = {
+      id: "new",
+      patientName: patientName.trim(),
+      requiredBloodGroup: bloodGroup as BloodGroup,
+      district,
+      upazila: upazila.trim(),
+      hospitalAddress: hospitalAddress.trim(),
+      reason: reason.trim(),
+      requesterPhone,
+      bagsNeeded,
+      neededDate: neededDate || null,
+      status: "Pending",
+      adminNote: "",
+      createdAt: new Date().toISOString(),
+    };
     try {
       const response = await searchForPatient({
         patientName: patientName.trim(),
@@ -82,10 +101,11 @@ export default function PatientSearch() {
         bloodGroup,
         district,
         upazila: upazila.trim(),
+        poster,
       });
     } catch (err) {
       if (err instanceof ApiError && err.code === "DUPLICATE_REQUEST") {
-        setResult({ kind: "duplicate", message: err.message, bloodGroup, district });
+        setResult({ kind: "duplicate", message: err.message, bloodGroup, district, poster });
       } else {
         setError(err instanceof ApiError ? err.message : "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।");
       }
@@ -104,8 +124,8 @@ export default function PatientSearch() {
           রোগীর তথ্য দিয়ে রক্তদাতা খুঁজুন
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          কোনো লগইন ছাড়াই রোগীর তথ্য ও ঠিকানা দিন। সাথে সাথে এলাকার ডোনারদের তালিকা পাবেন, আর আপনার অনুরোধটি পোস্ট
-          করা হবে যাতে আরও ডোনার আপনার সাথে যোগাযোগ করতে পারেন।
+          কোনো লগইন ছাড়াই রোগীর তথ্য ও ঠিকানা দিন। সাথে সাথে এলাকার ডোনারদের তালিকা আর ফেসবুকে দেওয়ার মতো একটা পোস্টার
+          পাবেন, আর আপনার অনুরোধটি পোস্ট করা হবে যাতে আরও ডোনার আপনার সাথে যোগাযোগ করতে পারেন।
         </p>
       </div>
 
@@ -280,6 +300,7 @@ function DuplicateNotice({ result }: { result: Extract<Result, { kind: "duplicat
           রক্তের অনুরোধগুলো দেখুন
         </Link>
       </div>
+      <RequestPosterPanel request={result.poster} />
     </div>
   );
 }
@@ -304,6 +325,8 @@ function FoundDonors({ result }: { result: Extract<Result, { kind: "found" }> })
           {total > 0 && "ততক্ষণ নিচের ডোনারদের সরাসরি কল করে জেনে নিন তাঁরা এখন রক্ত দিতে পারবেন কিনা।"}
         </p>
       </div>
+
+      <RequestPosterPanel request={result.poster} />
 
       {total === 0 ? (
         <div className="mt-6 flex flex-col items-center rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center text-slate-500">

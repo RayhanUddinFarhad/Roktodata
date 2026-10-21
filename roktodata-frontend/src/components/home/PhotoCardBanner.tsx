@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 // Invitation under the hero to make a "আমি যতবার রক্ত দিয়েছি" photo card.
 export default function PhotoCardBanner() {
   return (
-    <section className="relative px-4 pb-4 pt-8">
+    <section className="relative px-4 pb-4 pt-4">
       <Link
         href="/celebrate"
         className="group mx-auto flex max-w-[808px] items-center gap-4 overflow-hidden rounded-2xl border border-red-100 bg-linear-to-r from-[#fff1f2] via-white to-[#fef6e4] p-4 shadow-sm transition hover:shadow-md sm:gap-6 sm:p-5"

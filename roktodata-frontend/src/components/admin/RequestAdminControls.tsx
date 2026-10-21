@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CircleCheck, ImageDown, PencilLine, ShieldCheck, Trash2 } from "lucide-react";
-import { RequestPosterDialog } from "@/components/admin/RequestPoster";
+import { RequestPosterDialog } from "@/components/RequestPoster";
 import { DEFAULT_FULFILLED_NOTE, RequestNoteEditor, type NoteMode } from "@/components/admin/RequestNoteEditor";
 import { ActionButton } from "@/components/admin/ui";
 import { ApiError, deleteRequest, setRequestNote, setRequestStatus } from "@/lib/api";

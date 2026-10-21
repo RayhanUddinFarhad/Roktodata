@@ -6,6 +6,7 @@ import HeroSearch from "@/components/home/HeroSearch";
 import FacebookPage from "@/components/home/FacebookPage";
 import HowItWorks from "@/components/home/HowItWorks";
 import PhotoCardBanner from "@/components/home/PhotoCardBanner";
+import RequestPosterBanner from "@/components/home/RequestPosterBanner";
 import ShareDonorList from "@/components/home/ShareDonorList";
 import { toBanglaNumber } from "@/lib/data";
 import { districtSlug, pageMetadata } from "@/lib/seo";
@@ -48,6 +49,7 @@ export default async function Home() {
         </p>
       </section>
 
+      <RequestPosterBanner />
       <PhotoCardBanner />
 
       {popular.length > 0 && (

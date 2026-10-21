@@ -26,7 +26,7 @@ import {
   formatDate,
 } from "@/components/admin/ui";
 import { DEFAULT_FULFILLED_NOTE, RequestNoteEditor, type NoteMode } from "@/components/admin/RequestNoteEditor";
-import { RequestPosterDialog } from "@/components/admin/RequestPoster";
+import { RequestPosterDialog } from "@/components/RequestPoster";
 import { deleteRequest, getAdminRequests, setRequestNote, setRequestStatus } from "@/lib/api";
 import { toBanglaNumber, type BloodRequest, type RequestStatus } from "@/lib/data";
 
