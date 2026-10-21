@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import Link from "next/link";
 import { Check, Copy, Download, ImagePlus, Minus, Plus, Share2, ShieldCheck, Trash2, UserPlus, X } from "lucide-react";
+import { getPhotoCardSerial } from "@/lib/api";
 import { BLOOD_GROUPS, DISTRICTS, toBanglaNumber, type BloodGroup } from "@/lib/data";
 import {
-  CARD_W, captionFor, cardHeight, DESIGNS, drawCard, tierOf,
+  CARD_W, captionFor, cardHeight, DESIGNS, drawCard, hasSerial, serialKey, tierOf,
   type CardState, type Fonts, type Photo, type Regions,
 } from "@/lib/photocard";
 
@@ -213,43 +214,61 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
     }
   }
 
-  async function render(): Promise<Blob | null> {
+  // The card with its serial number: a saved one for the same name and group is reused, otherwise
+  // the server gives the next one. Without a connection the card is still made, just without it.
+  async function withSerial(): Promise<CardState> {
+    if (hasSerial(s)) return s;
+    try {
+      const { serial } = await getPhotoCardSerial();
+      const card = { ...s, serial, serialFor: serialKey(s) };
+      update({ serial: card.serial, serialFor: card.serialFor });
+      return card;
+    } catch {
+      return s;
+    }
+  }
+  async function render(card: CardState): Promise<Blob | null> {
     if (!fonts) return null;
     const c = document.createElement("canvas");
     c.width = CARD_W;
-    c.height = cardHeight(s.size);
-    drawCard(c.getContext("2d")!, s, { fonts, photo, anim: { pulse: 1, t: 0 }, preview: false });
+    c.height = cardHeight(card.size);
+    drawCard(c.getContext("2d")!, card, { fonts, photo, anim: { pulse: 1, t: 0 }, preview: false });
     return new Promise((resolve) => c.toBlob(resolve, "image/png"));
   }
   const ready = s.name.trim().length > 0 && !!s.group;
   const missing = !s.name.trim() ? "কার্ডে আপনার নাম লিখুন" : !s.group ? "রক্তের গ্রুপ বাছুন" : "";
+  // Set when sharing needed a new serial and the phone then refused to share without a fresh tap.
+  const [tapAgain, setTapAgain] = useState(false);
 
-  async function download() {
-    if (!ready) return setEditing(!s.name.trim() ? "name" : "group");
-    setBusy(true);
-    const blob = await render();
-    setBusy(false);
-    if (!blob) return;
+  function save(blob: Blob) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url; a.download = fileName(s); a.click();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
     setDone(Date.now());
   }
-  async function share() {
+  async function download() {
     if (!ready) return setEditing(!s.name.trim() ? "name" : "group");
     setBusy(true);
-    const blob = await render();
+    const blob = await render(await withSerial());
+    setBusy(false);
+    if (blob) save(blob);
+  }
+  async function share() {
+    if (!ready) return setEditing(!s.name.trim() ? "name" : "group");
+    setTapAgain(false);
+    setBusy(true);
+    const blob = await render(await withSerial());
     setBusy(false);
     if (!blob) return;
     const file = new File([blob], fileName(s), { type: "image/png" });
-    if (navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], text: captionFor(s) });
-        setDone(Date.now());
-      } catch { /* cancelled */ }
-    } else {
-      download();
+    if (!navigator.canShare?.({ files: [file] })) return save(blob);
+    try {
+      await navigator.share({ files: [file], text: captionFor(s) });
+      setDone(Date.now());
+    } catch (err) {
+      // Waiting for the serial can outlast the tap that allows sharing; the next tap is instant.
+      if (err instanceof DOMException && err.name === "NotAllowedError") setTapAgain(true);
     }
   }
   // Only known in the browser; the server renders without the share button.
@@ -467,6 +486,8 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
               </button>
             )}
           </div>
+          {busy && <p className="mt-2 text-center text-xs text-slate-600">কার্ড নাম্বার তৈরি হচ্ছে…</p>}
+          {tapAgain && !busy && <p className="mt-2 text-center text-xs font-semibold text-emerald-700">কার্ড তৈরি! শেয়ার করতে আরেকবার &quot;শেয়ার&quot; চাপুন।</p>}
         </div>
       </div>
 

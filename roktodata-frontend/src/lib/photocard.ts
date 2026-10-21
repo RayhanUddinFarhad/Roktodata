@@ -22,6 +22,21 @@ export interface CardState {
   phone: string; // shown only when showPhone
   showPhone: boolean;
   size: CardSize;
+  // The card's serial number from the server (one per name + blood group), given when it is first
+  // saved or shared; `serialFor` is the name + group it was given for.
+  serial?: number;
+  serialFor?: string;
+}
+
+// What a serial number belongs to: editing the name or group makes it a new card.
+export const serialKey = (s: CardState) => `${s.name.trim()}|${s.group}`;
+export const hasSerial = (s: CardState) => !!s.serial && s.serialFor === serialKey(s);
+
+// "RD-26-ABN-00042": year, blood group and the card's serial (dots until it has one).
+export function cardId(s: CardState) {
+  const yy = new Date(Date.now() + 6 * 3600e3).toISOString().slice(2, 4);
+  const group = (s.group || "XX").replace("+", "P").replace("-", "N");
+  return `RD-${yy}-${group}-${hasSerial(s) ? String(s.serial).padStart(5, "0") : "•••••"}`;
 }
 
 export interface Photo {
@@ -442,9 +457,8 @@ function drawIdCard(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Re
   ctx.fillStyle = "#1f2937";
   let bx = gx + 4;
   for (let i = 0; i < 34; i++) { const bw = [2, 4, 2, 6, 3][(i * 7 + s.count) % 5]; ctx.fillRect(bx, by - 30, bw, 44); bx += bw + 3; }
-  const yy = new Date(Date.now() + 6 * 3600e3).toISOString().slice(2, 4);
   ctx.textAlign = "right"; setFont(ctx, 700, 22, LATIN); ctx.fillStyle = "#6b7280";
-  ctx.fillText(`ID: RD-${yy}-${(s.group || "XX").replace("+", "P").replace("-", "N")}-${String(s.count).padStart(3, "0")}`, x0 + w - 40, by - 8);
+  ctx.fillText(`ID: ${cardId(s)}`, x0 + w - 40, by - 8);
   if (s.showPhone && s.phone) { setFont(ctx, 700, 22, LATIN); ctx.fillStyle = p.ink; ctx.fillText(formatPhone(s.phone), x0 + w - 40, by + 20); }
   else { ctx.fillStyle = p.accent; ctx.fillText("roktodata.org", x0 + w - 40, by + 20); }
 

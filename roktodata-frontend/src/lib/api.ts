@@ -227,6 +227,13 @@ export function checkFraudNumber(phone: string) {
   );
 }
 
+// ---- Photo cards ----
+
+// A new serial number for a photo card (the running count of cards made).
+export function getPhotoCardSerial() {
+  return request<{ serial: number }>("/api/photocards/serial", { method: "POST" }, { retries: 1 });
+}
+
 // ---- Admin ----
 
 export interface AdminStats {
@@ -236,6 +243,7 @@ export interface AdminStats {
   openComplaints: number;
   pendingRequests: number;
   pendingFraudReports: number;
+  photoCards: number; // photo cards made so far (the latest serial number)
 }
 
 export interface AdminDonor extends Donor {

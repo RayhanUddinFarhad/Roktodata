@@ -13,6 +13,7 @@ import donorRoutes from "./routes/donorRoutes.js";
 import fraudRoutes from "./routes/fraudRoutes.js";
 import otpRoutes from "./routes/otpRoutes.js";
 import patientRoutes from "./routes/patientRoutes.js";
+import photocardRoutes from "./routes/photocardRoutes.js";
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use("/api/donors", donorRoutes);
 app.use("/api/patient", patientRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/fraud-reports", fraudRoutes);
+app.use("/api/photocards", photocardRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.use(notFound);

@@ -7,6 +7,7 @@ import {
   CircleX,
   Clock,
   ClipboardList,
+  IdCard,
   LogOut,
   MessageSquareWarning,
   ShieldAlert,
@@ -89,6 +90,7 @@ export default function AdminDashboard({
     { label: "খোলা অভিযোগ", value: stats?.openComplaints, icon: MessageSquareWarning, tone: "bg-red-100 text-red-600" },
     { label: "অপেক্ষমাণ রক্তের অনুরোধ", value: stats?.pendingRequests, icon: ClipboardList, tone: "bg-blue-100 text-indigo-900" },
     { label: "অপেক্ষমাণ প্রতারণার রিপোর্ট", value: stats?.pendingFraudReports, icon: ShieldAlert, tone: "bg-rose-100 text-rose-700" },
+    { label: "তৈরি হওয়া ফটোকার্ড", value: stats?.photoCards, icon: IdCard, tone: "bg-fuchsia-100 text-fuchsia-700" },
   ];
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
@@ -122,7 +124,7 @@ export default function AdminDashboard({
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
           {statCards.map(({ label, value, icon: Icon, tone }) => (
             <div key={label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${tone}`}>

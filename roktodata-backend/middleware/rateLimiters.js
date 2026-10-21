@@ -21,6 +21,8 @@ export const otpSendLimiter = limiter(60, 10);
 export const otpVerifyLimiter = limiter(15, 30);
 export const patientSearchLimiter = limiter(15, 30);
 export const complaintLimiter = limiter(60, 10);
+// A serial number per photo card; generous for people making cards for friends, but stops counter spam.
+export const photocardLimiter = limiter(60, 30);
 // Only reports that were actually saved count, so typos and validation errors don't lock people out.
 export const fraudReportLimiter = limiter(60, 5, { skipFailedRequests: true });
 

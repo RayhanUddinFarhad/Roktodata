@@ -6,7 +6,9 @@ import { COMPLAINT_REASONS, FRAUD_REASONS } from "../config/constants.js";
 import { Complaint } from "../models/Complaint.js";
 import { Donor } from "../models/Donor.js";
 import { FraudReport } from "../models/FraudReport.js";
+import { currentSequence } from "../models/Counter.js";
 import { PatientRequest } from "../models/PatientRequest.js";
+import { PHOTOCARD_COUNTER } from "./photocardController.js";
 import { AppError } from "../utils/AppError.js";
 import { escapeRegex } from "../utils/findDonors.js";
 import { toPublicRequest } from "./patientController.js";
@@ -37,11 +39,12 @@ export async function login(req, res) {
 
 // GET /api/admin/stats
 export async function getStats(_req, res) {
-  const [byStatus, openComplaints, pendingRequests, pendingFraudReports] = await Promise.all([
+  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards] = await Promise.all([
     Donor.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
     Complaint.countDocuments({ status: "Open" }),
     PatientRequest.countDocuments({ status: "Pending" }),
     FraudReport.countDocuments({ status: "Pending" }),
+    currentSequence(PHOTOCARD_COUNTER),
   ]);
   const count = (status) => byStatus.find((row) => row._id === status)?.count ?? 0;
 
@@ -54,6 +57,7 @@ export async function getStats(_req, res) {
       openComplaints,
       pendingRequests,
       pendingFraudReports,
+      photoCards,
     },
   });
 }
