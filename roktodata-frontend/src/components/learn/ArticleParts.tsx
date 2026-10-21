@@ -141,6 +141,7 @@ export function ArticleBlock({ block }: { block: Block }) {
 // A card with a coloured header: the article's big number, its icon and its category.
 export function ArticleCard({ article, featured = false }: { article: Article; featured?: boolean }) {
   const Icon = ICONS[article.icon];
+  const Heading = featured ? "h2" : "h3"; // the featured card sits right under the page title
   return (
     <Link
       href={`/learn/${article.slug}`}
@@ -158,9 +159,9 @@ export function ArticleCard({ article, featured = false }: { article: Article; f
         <p className="relative mt-2 max-w-[16rem] text-xs leading-5 text-white/90">{article.hook.label}</p>
       </div>
       <div className={`flex flex-1 flex-col p-5 ${featured ? "md:justify-center md:p-8" : ""}`}>
-        <h3 className={`font-bold leading-snug text-slate-900 transition-colors group-hover:text-red-600 ${featured ? "text-xl md:text-2xl" : "text-base"}`}>
+        <Heading className={`font-bold leading-snug text-slate-900 transition-colors group-hover:text-red-600 ${featured ? "text-xl md:text-2xl" : "text-base"}`}>
           {article.title}
-        </h3>
+        </Heading>
         <p className={`mt-2 text-sm leading-6 text-slate-600 ${featured ? "" : "line-clamp-2"}`}>{article.description}</p>
         <div className="mt-auto flex items-center justify-between pt-4 text-xs">
           <span className="inline-flex items-center gap-1 text-slate-500">
