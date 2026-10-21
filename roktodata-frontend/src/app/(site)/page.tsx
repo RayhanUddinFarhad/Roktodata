@@ -5,6 +5,7 @@ import DonationBenefits from "@/components/home/DonationBenefits";
 import HeroSearch from "@/components/home/HeroSearch";
 import FacebookPage from "@/components/home/FacebookPage";
 import HowItWorks from "@/components/home/HowItWorks";
+import PhotoCardBanner from "@/components/home/PhotoCardBanner";
 import ShareDonorList from "@/components/home/ShareDonorList";
 import { toBanglaNumber } from "@/lib/data";
 import { districtSlug, pageMetadata } from "@/lib/seo";
@@ -47,8 +48,10 @@ export default async function Home() {
         </p>
       </section>
 
+      <PhotoCardBanner />
+
       {popular.length > 0 && (
-        <section className="px-4 py-12">
+        <section className="px-4 pb-12 pt-8">
           <div className="mx-auto max-w-[808px] rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
