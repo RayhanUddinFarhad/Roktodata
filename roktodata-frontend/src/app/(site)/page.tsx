@@ -6,6 +6,7 @@ import HeroSearch from "@/components/home/HeroSearch";
 import FacebookPage from "@/components/home/FacebookPage";
 import HowItWorks from "@/components/home/HowItWorks";
 import LearnTeaser from "@/components/home/LearnTeaser";
+import AppBanner from "@/components/home/AppBanner";
 import PhotoCardBanner from "@/components/home/PhotoCardBanner";
 import RequestPosterBanner from "@/components/home/RequestPosterBanner";
 import ShareDonorList from "@/components/home/ShareDonorList";
@@ -52,6 +53,7 @@ export default async function Home() {
 
       <RequestPosterBanner />
       <PhotoCardBanner />
+      <AppBanner />
 
       {popular.length > 0 && (
         <section className="px-4 pb-12 pt-8">

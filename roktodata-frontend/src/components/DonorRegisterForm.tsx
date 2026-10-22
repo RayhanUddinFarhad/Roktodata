@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } fro
 import { CircleCheck, EyeOff, Loader2, MapPin, MessageSquareText, Pencil, Phone, RotateCw, ShieldCheck, UserCheck } from "lucide-react";
 import OtpInput from "@/components/OtpInput";
 import ThanaSelect from "@/components/ThanaSelect";
-import { ApiError, previewName, registerOrUpdateDonor, sendOtp, verifyOtp, type ReadyAgain } from "@/lib/api";
+import PushOfferCard from "@/components/PushOfferCard";
+import { ApiError, linkPushDevice, previewName, registerOrUpdateDonor, sendOtp, verifyOtp, type ReadyAgain } from "@/lib/api";
 import { BLOOD_GROUPS, DISTRICTS, formatLocation, toBanglaNumber, type BloodGroup } from "@/lib/data";
 import { thanasOf } from "@/lib/locations";
 
@@ -606,6 +607,14 @@ export default function DonorRegisterForm() {
             <ShieldCheck className="h-3.5 w-3.5" />
             যাচাইকৃত নাম্বার: {prettyPhone(phone)}
           </span>
+          {isReadyToDonate && verification && (
+            <PushOfferCard
+              className="mt-5 w-full max-w-md"
+              title="আবার রক্ত দেওয়ার সময় হলে মনে করিয়ে দিই?"
+              text="শেষ রক্তদানের ৯০ দিন পূর্ণ হলে আর আপনার এলাকায় জরুরি রক্ত লাগলে নোটিফিকেশন পাবেন।"
+              onEnabled={(endpoint) => linkPushDevice(endpoint, verification.token).then(() => {}).catch(() => {})}
+            />
+          )}
         </div>
       )}
     </section>

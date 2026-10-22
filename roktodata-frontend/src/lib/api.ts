@@ -212,6 +212,11 @@ export function savePushSubscription(body: { subscription: PushSubscriptionJSON;
   return request<{ district: string | null; districtChosen: boolean }>("/api/push/subscribe", jsonRequest("POST", body), { retries: 1 });
 }
 
+// Links this device to the donor whose number was just verified (for their "donate again" reminder).
+export function linkPushDevice(endpoint: string, verificationToken: string) {
+  return request<{ success: boolean }>("/api/push/link", jsonRequest("POST", { endpoint }, { Authorization: `Bearer ${verificationToken}` }));
+}
+
 export function deletePushSubscription(endpoint: string) {
   return request<{ success: boolean }>("/api/push/unsubscribe", jsonRequest("POST", { endpoint }));
 }

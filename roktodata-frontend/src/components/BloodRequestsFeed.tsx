@@ -17,6 +17,7 @@ import {
   User,
 } from "lucide-react";
 import RequestAdminControls from "@/components/admin/RequestAdminControls";
+import PushOfferCard from "@/components/PushOfferCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { useAdminToken } from "@/lib/adminToken";
 import { ApiError, getBloodRequests } from "@/lib/api";
@@ -126,6 +127,11 @@ export default function BloodRequestsFeed() {
             </select>
           </label>
         </div>
+        <PushOfferCard
+          className="mt-4"
+          title="নতুন অনুরোধ এলে জানতে চান?"
+          text="আপনার এলাকায় কারো জরুরি রক্ত লাগলে সাথে সাথে নোটিফিকেশন পাবেন। দিনে সর্বোচ্চ ৩টি।"
+        />
       </section>
 
       {error ? (

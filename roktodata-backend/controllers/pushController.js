@@ -1,7 +1,9 @@
 import { env } from "../config/env.js";
 import { DISTRICT_COORDS, nearestDistrict } from "../config/districtCoords.js";
+import { Donor } from "../models/Donor.js";
 import { PushSubscription } from "../models/PushSubscription.js";
 import { AppError } from "../utils/AppError.js";
+import { verifyPhoneToken } from "../utils/phoneToken.js";
 import { pushEnabled } from "../utils/push.js";
 
 // GET /api/push/key: the public key browsers need to subscribe.
@@ -36,5 +38,17 @@ export async function subscribe(req, res) {
 // POST /api/push/unsubscribe
 export async function unsubscribe(req, res) {
   await PushSubscription.deleteOne({ endpoint: req.validated.endpoint });
+  res.json({ success: true });
+}
+
+// POST /api/push/link: a donor who turned notifications on right after registering or updating
+// links this device to their profile, proving the number with the token from the SMS code.
+export async function linkDonor(req, res) {
+  const [scheme, token] = (req.get("authorization") ?? "").split(" ");
+  const phone = scheme === "Bearer" && token ? verifyPhoneToken(token) : null;
+  if (!phone) throw new AppError(401, "মোবাইল নাম্বার যাচাইয়ের মেয়াদ শেষ হয়েছে।", "PHONE_NOT_VERIFIED");
+  const donor = await Donor.findOne({ phoneNumber: phone }, { _id: 1 }).lean();
+  if (!donor) throw new AppError(404, "ডোনার পাওয়া যায়নি।");
+  await PushSubscription.updateOne({ endpoint: req.validated.endpoint }, { $set: { donor: donor._id } });
   res.json({ success: true });
 }

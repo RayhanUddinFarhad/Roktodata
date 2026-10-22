@@ -2,13 +2,50 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BellRing, CircleCheck, Loader2, X } from "lucide-react";
+import { BellRing, CircleCheck, Loader2, Share, Smartphone, X } from "lucide-react";
 import { enablePush } from "@/lib/push";
 
-// The card the installed app shows until notifications are on (or the visitor says "পরে").
-export default function NotifyPrompt({ onClose }: { onClose: () => void }) {
+// The bottom card offering notifications (or, on an iPhone browser, adding the app first, since
+// iPhones only notify home-screen apps). The browser's own permission dialog comes only after a tap.
+export default function NotifyPrompt({ mode = "notify", onClose }: { mode?: "notify" | "ios"; onClose: () => void }) {
   const [state, setState] = useState<"ask" | "busy" | "on" | "error">("ask");
   const [area, setArea] = useState<string | null>(null);
+
+  if (mode === "ios") {
+    return (
+      <div role="dialog" aria-label="অ্যাপ" className="fixed inset-x-0 bottom-0 z-50 p-3 sm:bottom-4 sm:left-auto sm:right-4 sm:max-w-sm">
+        <div className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-900/20">
+          <button type="button" onClick={onClose} aria-label="বন্ধ করুন" className="absolute right-2 top-2 rounded-full p-1.5 text-slate-400 hover:bg-slate-100">
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex gap-3 pr-6">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <Smartphone className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-bold text-slate-900">রক্তদাতা অ্যাপ হোম স্ক্রিনে রাখুন</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
+                এক চাপে ডোনার খুঁজুন, আর আশেপাশে কারো রক্ত লাগলে নোটিফিকেশন পান। আইফোনে নোটিফিকেশনের জন্য অ্যাপটি যোগ করা লাগে।
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-slate-300 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+              পরে
+            </button>
+            <Link
+              href="/app"
+              onClick={onClose}
+              className="flex flex-2 items-center justify-center gap-2 rounded-lg bg-red-600 py-2.5 text-sm font-bold text-white hover:bg-red-700"
+            >
+              <Share className="h-4 w-4" />
+              কীভাবে যোগ করবেন
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   async function enable() {
     setState("busy");
@@ -61,7 +98,7 @@ export default function NotifyPrompt({ onClose }: { onClose: () => void }) {
                 type="button"
                 onClick={enable}
                 disabled={state === "busy"}
-                className="flex flex-[2] items-center justify-center gap-2 rounded-lg bg-red-600 py-2.5 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-60"
+                className="flex flex-2 items-center justify-center gap-2 rounded-lg bg-red-600 py-2.5 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-60"
               >
                 {state === "busy" ? <Loader2 className="h-4 w-4 animate-spin" /> : <BellRing className="h-4 w-4" />}
                 নোটিফিকেশন চালু করুন
