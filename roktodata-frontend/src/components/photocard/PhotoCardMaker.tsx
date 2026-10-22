@@ -58,6 +58,8 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
   const regions = useRef<Regions | null>(null);
   const pulseAt = useRef(-10); // when (performance.now() seconds) the count last went up
   const fileInput = useRef<HTMLInputElement>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
+  const groupPicker = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; y: number; moved: boolean; onPhoto: boolean; dx: number; dy: number } | null>(null);
   const [scale, setScale] = useState(0.5); // CSS px per card px
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
@@ -270,6 +272,14 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
   }
   const ready = s.name.trim().length > 0 && !!s.group;
   const missing = !s.name.trim() ? "কার্ডে আপনার নাম লিখুন" : !s.group ? "রক্তের গ্রুপ বাছুন" : "";
+  // The countdown card counts from the last donation, so it asks for that date.
+  const needsDate = s.design === "countdown" && !s.lastDate;
+  // Tapping the "missing" note takes the visitor to that field.
+  function showMissing() {
+    const target = !s.name.trim() ? nameInput.current : groupPicker.current;
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (target === nameInput.current) nameInput.current?.focus({ preventScroll: true });
+  }
   // Set when sharing needed a new serial and the phone then refused to share without a fresh tap.
   const [tapAgain, setTapAgain] = useState(false);
 
@@ -312,7 +322,7 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
   const r = regions.current;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:items-start">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:items-start">
       {/* ---- the card ---- */}
       <div className="lg:sticky lg:top-24 lg:order-2">
         {/* never taller than the screen (the story size is tall) */}
@@ -378,12 +388,73 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
 
       {/* ---- controls ---- */}
       <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:order-1">
+        {/* what every card needs comes first, so phones see it right under the card */}
+        <section className="grid gap-4 sm:grid-cols-2">
+          <label className="block">
+            <span className="text-sm font-bold text-slate-900">আপনার নাম</span>
+            <input ref={nameInput} value={s.name} maxLength={40} onChange={(e) => update({ name: e.target.value })} placeholder="যেমন: রাফি আহমেদ"
+              className="mt-1.5 h-11 w-full scroll-mt-24 rounded-lg border border-slate-300 px-3 text-sm focus:border-red-500 focus:outline-none" />
+          </label>
+          <div ref={groupPicker} className="scroll-mt-24">
+            <span className="text-sm font-bold text-slate-900">রক্তের গ্রুপ</span>
+            <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+              {BLOOD_GROUPS.map((g) => (
+                <button key={g} type="button" onClick={() => update({ group: g as BloodGroup })}
+                  className={`h-[2.6rem] rounded-md text-sm font-bold ${s.group === g ? "bg-red-600 text-white" : "bg-red-50 text-red-700 hover:bg-red-100"}`}>{g}</button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-sm font-bold text-slate-900">কতবার রক্ত দিয়েছেন</h2>
+          <div className="mt-2 flex items-center gap-3">
+            <button type="button" onClick={() => update({ count: Math.max(1, s.count - 1) })} aria-label="এক কমান"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-300 text-slate-700 hover:bg-slate-50"><Minus className="h-5 w-5" /></button>
+            <div className="min-w-24 text-center">
+              <span className="text-3xl font-bold text-red-600">{toBanglaNumber(s.count)}</span>
+              <span className="ml-1 text-sm font-semibold text-slate-600">বার</span>
+            </div>
+            <button type="button" onClick={increase} aria-label="এক বাড়ান"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-md hover:bg-red-700"><Plus className="h-5 w-5" /></button>
+            <span className="ml-auto rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">{tierOf(s.count).title}</span>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-xs font-semibold text-slate-700">জেলা <span className="font-normal text-slate-500">(ঐচ্ছিক)</span></span>
+            <select value={s.district} onChange={(e) => update({ district: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm">
+              <option value="">দেখাবেন না</option>
+              {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold text-slate-700">শেষ রক্তদান <span className="font-normal text-slate-500">(ঐচ্ছিক)</span></span>
+            <input type="date" value={s.lastDate} onChange={(e) => update({ lastDate: e.target.value })}
+              className={`mt-1 h-10 w-full rounded-lg border bg-white px-2 text-sm ${needsDate ? "border-amber-500 ring-2 ring-amber-200" : "border-slate-300"}`} />
+          </label>
+          {needsDate && <p className="col-span-2 -mt-1 text-[11px] font-semibold text-amber-700">এই ডিজাইনে শেষ রক্তদানের তারিখ দিন, তাহলে পরের রক্তদানের দিন গুনে দেখাবে।</p>}
+          <label className="col-span-2 flex items-center gap-2">
+            <input type="checkbox" checked={s.showPhone} onChange={(e) => update({ showPhone: e.target.checked })} className="h-4 w-4 accent-red-600" />
+            <span className="text-xs font-semibold text-slate-700">কার্ডে মোবাইল নাম্বার দেখান</span>
+          </label>
+          {s.showPhone && (
+            <div className="col-span-2">
+              <input type="tel" inputMode="numeric" maxLength={11} value={s.phone} onChange={(e) => update({ phone: e.target.value.replace(/\D/g, "") })} placeholder="01XXXXXXXXX"
+                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm" />
+              <p className="mt-1 text-[11px] text-amber-700">কার্ডটা অনেকে দেখবে; নাম্বার দিলে অচেনা কল আসতে পারে।</p>
+            </div>
+          )}
+        </section>
+
         <section>
           <h2 className="text-sm font-bold text-slate-900">ডিজাইন</h2>
-          <div ref={picker} className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+          {/* one row to swipe through on phones, all six in a row on wider screens */}
+          <div ref={picker} className="-mx-4 mt-2 flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-6 sm:overflow-visible sm:px-0">
             {DESIGNS.map((d) => (
               <button key={d.id} type="button" onClick={() => update({ design: d.id, palette: 0 })}
-                className={`overflow-hidden rounded-xl border-2 text-center transition ${s.design === d.id ? "border-red-600 shadow-md" : "border-transparent hover:border-slate-300"}`}>
+                className={`w-24 shrink-0 snap-start overflow-hidden rounded-xl border-2 text-center transition sm:w-auto ${s.design === d.id ? "border-red-600 shadow-md" : "border-transparent hover:border-slate-300"}`}>
                 <span className="block aspect-[4/5] bg-slate-100">
                   {thumbs[d.id] && (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -409,38 +480,6 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
         </section>
 
         <section>
-          <h2 className="text-sm font-bold text-slate-900">কতবার রক্ত দিয়েছেন</h2>
-          <div className="mt-2 flex items-center gap-3">
-            <button type="button" onClick={() => update({ count: Math.max(1, s.count - 1) })} aria-label="এক কমান"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-300 text-slate-700 hover:bg-slate-50"><Minus className="h-5 w-5" /></button>
-            <div className="min-w-24 text-center">
-              <span className="text-3xl font-bold text-red-600">{toBanglaNumber(s.count)}</span>
-              <span className="ml-1 text-sm font-semibold text-slate-600">বার</span>
-            </div>
-            <button type="button" onClick={increase} aria-label="এক বাড়ান"
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-md hover:bg-red-700"><Plus className="h-5 w-5" /></button>
-            <span className="ml-auto rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">{tierOf(s.count).title}</span>
-          </div>
-        </section>
-
-        <section className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="text-sm font-bold text-slate-900">আপনার নাম</span>
-            <input value={s.name} maxLength={40} onChange={(e) => update({ name: e.target.value })} placeholder="যেমন: রাফি আহমেদ"
-              className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-red-500 focus:outline-none" />
-          </label>
-          <div>
-            <span className="text-sm font-bold text-slate-900">রক্তের গ্রুপ</span>
-            <div className="mt-1.5 grid grid-cols-4 gap-1.5">
-              {BLOOD_GROUPS.map((g) => (
-                <button key={g} type="button" onClick={() => update({ group: g as BloodGroup })}
-                  className={`h-[2.6rem] rounded-md text-sm font-bold ${s.group === g ? "bg-red-600 text-white" : "bg-red-50 text-red-700 hover:bg-red-100"}`}>{g}</button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section>
           <h2 className="text-sm font-bold text-slate-900">ছবি <span className="font-normal text-slate-500">(ঐচ্ছিক)</span></h2>
           <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
           <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -461,34 +500,6 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
           {photo && <p className="mt-1 text-xs text-slate-500">কার্ডের ছবিটা টেনে সরিয়ে ঠিক জায়গায় বসান।</p>}
         </section>
 
-        <details className="group rounded-xl bg-slate-50 p-3">
-          <summary className="cursor-pointer text-sm font-bold text-slate-900">আরও তথ্য <span className="font-normal text-slate-500">(ঐচ্ছিক)</span></summary>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-700">জেলা</span>
-              <select value={s.district} onChange={(e) => update({ district: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm">
-                <option value="">দেখাবেন না</option>
-                {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </label>
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-700">শেষ রক্তদান</span>
-              <input type="date" value={s.lastDate} onChange={(e) => update({ lastDate: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm" />
-            </label>
-            <label className="flex items-center gap-2 sm:col-span-2">
-              <input type="checkbox" checked={s.showPhone} onChange={(e) => update({ showPhone: e.target.checked })} className="h-4 w-4 accent-red-600" />
-              <span className="text-xs font-semibold text-slate-700">কার্ডে মোবাইল নাম্বার দেখান</span>
-            </label>
-            {s.showPhone && (
-              <div className="sm:col-span-2">
-                <input type="tel" inputMode="numeric" maxLength={11} value={s.phone} onChange={(e) => update({ phone: e.target.value.replace(/\D/g, "") })} placeholder="01XXXXXXXXX"
-                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm" />
-                <p className="mt-1 text-[11px] text-amber-700">কার্ডটা অনেকে দেখবে; নাম্বার দিলে অচেনা কল আসতে পারে।</p>
-              </div>
-            )}
-          </div>
-        </details>
-
         <section>
           <h2 className="text-sm font-bold text-slate-900">মাপ</h2>
           <div className="mt-2 grid grid-cols-2 gap-2">
@@ -506,7 +517,11 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
 
         {/* actions: sticky at the bottom of the screen on phones */}
         <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0">
-          {missing && <p className="mb-2 text-center text-xs font-semibold text-red-600">{missing}</p>}
+          {missing && (
+            <button type="button" onClick={showMissing} className="mb-2 block w-full text-center text-xs font-semibold text-red-600 underline underline-offset-2">
+              {missing} ↑
+            </button>
+          )}
           <div className="flex gap-2">
             <button type="button" onClick={download} disabled={busy}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 py-3.5 font-bold text-white shadow-lg shadow-red-600/30 hover:bg-red-700 disabled:opacity-60">
