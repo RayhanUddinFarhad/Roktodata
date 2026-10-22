@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  createDonor,
   deleteDonor,
   deleteFraudReport,
   deleteRequest,
@@ -21,6 +22,7 @@ import { requireAdmin } from "../middleware/requireAdmin.js";
 import { validate } from "../middleware/validate.js";
 import {
   adminComplaintListSchema,
+  adminCreateDonorSchema,
   adminDonorListSchema,
   adminFraudListSchema,
   adminLoginSchema,
@@ -44,6 +46,7 @@ router.use(requireAdmin);
 router.get("/stats", getStats);
 
 router.get("/donors", validate(adminDonorListSchema, "query"), listDonors);
+router.post("/donors", validate(adminCreateDonorSchema, "body"), createDonor);
 router.patch(
   "/donors/:id/status",
   validate(idParamSchema, "params"),

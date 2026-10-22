@@ -72,6 +72,17 @@ export const registerDonorSchema = z.object({
   readyAgain: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal("eligible")]).nullish(),
 }).superRefine(thanaInDistrict("district", "upazila"));
 
+// A donor the admin adds by hand (approved straight away). Thana is optional for lists that lack it.
+export const adminCreateDonorSchema = z.object({
+  fullName: text("পূর্ণ নাম", 100),
+  phoneNumber: phone("মোবাইল নাম্বার"),
+  bloodGroup,
+  district,
+  upazila: optionalThana,
+  lastDonationDate: z.preprocess(emptyToUndefined, pastDate.optional()),
+  isReadyToDonate: z.boolean().default(true),
+}).superRefine(thanaInDistrict("district", "upazila"));
+
 export const searchDonorsSchema = z.object({
   bloodGroup: z.preprocess(emptyToUndefined, bloodGroup.optional()),
   district: z.preprocess(emptyToUndefined, district.optional()),

@@ -17,13 +17,14 @@ import {
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/BrandIcons";
 import LogoMark from "@/components/Logo";
+import AddDonorPanel from "@/components/admin/AddDonorPanel";
 import ComplaintsPanel from "@/components/admin/ComplaintsPanel";
 import DonorsPanel from "@/components/admin/DonorsPanel";
 import FraudTab from "@/components/admin/FraudTab";
 import RequestsPanel from "@/components/admin/RequestsPanel";
 import { ApiError, getAdminStats, type AdminStats } from "@/lib/api";
 
-type Tab = "pending" | "donors" | "hidden" | "requests" | "fraud" | "complaints";
+type Tab = "pending" | "donors" | "hidden" | "add" | "requests" | "fraud" | "complaints";
 
 export interface AdminContext {
   token: string;
@@ -99,6 +100,7 @@ export default function AdminDashboard({
     { id: "pending", label: "অনুমোদনের অপেক্ষায়", count: stats?.pending },
     { id: "donors", label: "সকল ডোনার" },
     { id: "hidden", label: "লুকানো ডোনার", count: stats?.hiddenDonors },
+    { id: "add", label: "+ ডোনার যোগ করুন" },
     { id: "requests", label: "রক্তের অনুরোধ", count: stats?.pendingRequests },
     { id: "fraud", label: "প্রতারণার রিপোর্ট", count: stats?.pendingFraudReports },
     { id: "complaints", label: "অভিযোগসমূহ", count: stats?.openComplaints },
@@ -192,6 +194,7 @@ export default function AdminDashboard({
           {tab === "pending" && <DonorsPanel key="pending" ctx={ctx} fixedStatus="Pending" />}
           {tab === "donors" && <DonorsPanel key="donors" ctx={ctx} />}
           {tab === "hidden" && <DonorsPanel key="hidden" ctx={ctx} hidden />}
+          {tab === "add" && <AddDonorPanel ctx={ctx} />}
           {tab === "requests" && <RequestsPanel ctx={ctx} />}
           {tab === "fraud" && <FraudTab ctx={ctx} />}
           {tab === "complaints" && <ComplaintsPanel ctx={ctx} />}

@@ -327,6 +327,22 @@ export function getAdminDonors(token: string, params: { status?: DonorStatus; q?
   });
 }
 
+// A donor the admin adds by hand; approved straight away. A number already registered fails with
+// status 409 and that donor's name in the message.
+export interface AdminDonorInput {
+  fullName: string;
+  phoneNumber: string;
+  bloodGroup: BloodGroup;
+  district: string;
+  upazila?: string;
+  lastDonationDate?: string;
+  isReadyToDonate: boolean;
+}
+
+export function createAdminDonor(token: string, donor: AdminDonorInput) {
+  return request<{ message: string; donor: { id: string; fullName: string } }>("/api/admin/donors", jsonRequest("POST", donor, auth(token)));
+}
+
 // Blocking needs a reason, which is shown publicly in the fraud list.
 export function setDonorStatus(token: string, id: string, status: DonorStatus, reason?: string) {
   return request<{ message: string }>(

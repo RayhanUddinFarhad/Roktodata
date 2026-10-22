@@ -10,6 +10,7 @@ import { FraudReport } from "../models/FraudReport.js";
 import { PatientRequest } from "../models/PatientRequest.js";
 import { photoCardsMade } from "./photocardController.js";
 import { AppError } from "../utils/AppError.js";
+import { toBanglaName } from "../utils/banglaName.js";
 import { dhakaDay } from "../utils/dhakaDate.js";
 import { escapeRegex } from "../utils/findDonors.js";
 import { toPublicRequest } from "./patientController.js";
@@ -196,6 +197,28 @@ export async function setDonorFraudListing(req, res) {
       ? "ডোনারকে আবার প্রতারক তালিকায় দেখানো হচ্ছে।"
       : "ডোনারকে প্রতারক তালিকা থেকে সরানো হয়েছে। তিনি ব্লক অবস্থাতেই আছেন।",
   });
+}
+
+// POST /api/admin/donors — the admin adds a donor (e.g. one who sent their details by message).
+// Approved straight away; a number that is already registered is refused with that donor's name.
+export async function createDonor(req, res) {
+  const { phoneNumber, lastDonationDate, isReadyToDonate, upazila, ...rest } = req.validated;
+  const existing = await Donor.findOne({ phoneNumber }, { fullName: 1, status: 1 }).lean();
+  if (existing) {
+    throw new AppError(409, `এই নাম্বারে আগে থেকেই ডোনার আছেন: ${existing.fullName}`, "DUPLICATE_PHONE");
+  }
+  const donor = await Donor.create({
+    ...rest,
+    fullName: toBanglaName(rest.fullName),
+    phoneNumber,
+    upazila: upazila ?? "",
+    lastDonationDate: lastDonationDate ?? null,
+    isReadyToDonate,
+    notReadySince: isReadyToDonate ? null : new Date(),
+    status: "Active",
+    source: "admin:manual",
+  });
+  res.status(201).json({ success: true, message: `${donor.fullName} ডোনার হিসেবে যুক্ত হয়েছেন।`, donor: { id: donor._id.toString(), fullName: donor.fullName } });
 }
 
 // DELETE /api/admin/donors/:id (reject a registration or remove a donor)
