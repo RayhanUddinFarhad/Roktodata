@@ -1,7 +1,11 @@
 import mongoose from "mongoose";
 import { MAX_SEARCH_RESULTS, REQUEST_FEED_DAYS } from "../config/constants.js";
+import { Donor } from "../models/Donor.js";
+import { FraudReport } from "../models/FraudReport.js";
 import { PatientRequest } from "../models/PatientRequest.js";
 import { AppError } from "../utils/AppError.js";
+import { verifyPhoneToken } from "../utils/phoneToken.js";
+import { notifyBloodRequestLater } from "../utils/push.js";
 import { dhakaDay } from "../utils/dhakaDate.js";
 import { findDonors } from "../utils/findDonors.js";
 
@@ -14,9 +18,23 @@ const duplicateRequest = () =>
     "DUPLICATE_REQUEST",
   );
 
+// A request goes live without admin review when the requester proved the phone number by SMS
+// code, named the hospital, and the number is not on the fraud list or a blocked profile.
+async function canPublishDirectly(req, request) {
+  const [scheme, token] = (req.get("authorization") ?? "").split(" ");
+  const verifiedPhone = scheme === "Bearer" && token ? verifyPhoneToken(token) : null;
+  if (verifiedPhone !== request.requesterPhone || (request.hospitalAddress ?? "").length < 3) return false;
+  const [fraud, blocked] = await Promise.all([
+    FraudReport.exists({ phoneNumber: request.requesterPhone, status: "Approved" }),
+    Donor.exists({ phoneNumber: request.requesterPhone, status: "Blocked" }),
+  ]);
+  return !fraud && !blocked;
+}
+
 // POST /api/patient/search-and-log
-// Saves the request for admin review (one per phone number per Bangladesh day) and returns
-// donors in the same upazila, plus other donors in the same district.
+// Saves the request (one per phone number per Bangladesh day) and returns donors in the same
+// upazila, plus other donors in the same district. Verified requests are published and announced
+// to people nearby straight away; the rest wait for admin review.
 export async function searchAndLog(req, res) {
   const { neededDate, ...request } = req.validated;
   const requestDay = dhakaDay();
@@ -24,13 +42,21 @@ export async function searchAndLog(req, res) {
   if (await PatientRequest.exists({ requesterPhone: request.requesterPhone, requestDay })) {
     throw duplicateRequest();
   }
+  const published = await canPublishDirectly(req, request);
+  let saved;
   try {
-    await PatientRequest.create({ ...request, neededDate: neededDate ?? null, requestDay });
+    saved = await PatientRequest.create({
+      ...request,
+      neededDate: neededDate ?? null,
+      requestDay,
+      status: published ? "Approved" : "Pending",
+    });
   } catch (err) {
     // Two simultaneous submissions: the unique index lets only one through.
     if (err.code === 11000) throw duplicateRequest();
     throw err;
   }
+  if (published) notifyBloodRequestLater(saved._id);
 
   // The first MAX_SEARCH_RESULTS of each list; the totals tell the page when there are more.
   const filters = { bloodGroup: request.requiredBloodGroup, district: request.district, limit: MAX_SEARCH_RESULTS };
@@ -43,6 +69,8 @@ export async function searchAndLog(req, res) {
   res.status(201).json({
     success: true,
     message: "আপনার অনুরোধটি আমরা পেয়েছি।",
+    published,
+    id: saved._id.toString(),
     count: local.total,
     total: local.total,
     donors: local.donors,

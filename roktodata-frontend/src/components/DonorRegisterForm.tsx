@@ -151,6 +151,11 @@ export default function DonorRegisterForm() {
   const verified = verification?.phone === phone;
 
   async function saveDonor(verificationToken: string) {
+    // With notifications on, this device gets the donor's "you can donate again" reminder.
+    const pushEndpoint =
+      "Notification" in window && Notification.permission === "granted"
+        ? await import("@/lib/push").then((m) => m.pushEndpoint()).catch(() => undefined)
+        : undefined;
     const result = await registerOrUpdateDonor(
       {
         fullName: name.trim(),
@@ -161,6 +166,7 @@ export default function DonorRegisterForm() {
         lastDonationDate: lastDonated || undefined,
         isReadyToDonate,
         readyAgain: isReadyToDonate ? null : readyAgain,
+        pushEndpoint,
       },
       verificationToken,
     );

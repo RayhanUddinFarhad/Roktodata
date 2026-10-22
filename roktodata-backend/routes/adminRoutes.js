@@ -4,6 +4,7 @@ import {
   deleteDonor,
   deleteFraudReport,
   deleteRequest,
+  sendAdminPush,
   getStats,
   listComplaints,
   listDonors,
@@ -26,6 +27,7 @@ import {
   adminDonorListSchema,
   adminFraudListSchema,
   adminLoginSchema,
+  adminPushSchema,
   adminRequestListSchema,
   complaintStatusSchema,
   donorStatusSchema,
@@ -83,6 +85,8 @@ router.patch(
   updateRequestNote,
 );
 router.delete("/requests/:id", validate(idParamSchema, "params"), deleteRequest);
+
+router.post("/push", validate(adminPushSchema, "body"), sendAdminPush);
 
 router.get("/fraud-reports", validate(adminFraudListSchema, "query"), listFraudReports);
 router.patch(

@@ -26,8 +26,12 @@ const envSchema = z.object({
   SMS_SENDER_ID: z.string().trim().default(""),
   // Site-wide cap on verification SMS in 24 hours, so abuse can't drain the SMS balance.
   OTP_DAILY_LIMIT: z.coerce.number().int().positive().default(300),
-  // Shared secret for scheduled jobs (the daily "you can donate again" SMS, run by GitHub Actions).
+  // Shared secret for scheduled jobs (the daily "you can donate again" notification, run by GitHub Actions).
   // While empty, the job endpoints are switched off.
+  // Web push (browser and app notifications). While the keys are empty, nothing is sent.
+  VAPID_PUBLIC_KEY: z.string().trim().default(""),
+  VAPID_PRIVATE_KEY: z.string().trim().default(""),
+  VAPID_SUBJECT: z.string().trim().default("mailto:Roktodatainfo@gmail.com"),
   JOBS_SECRET: z.string().trim().refine((v) => v === "" || v.length >= 32, "JOBS_SECRET must be at least 32 characters").default(""),
 });
 

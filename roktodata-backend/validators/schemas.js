@@ -70,6 +70,9 @@ export const registerDonorSchema = z.object({
   // With "not ready": ready again by itself after 1/3/6 months, or "eligible" = once 90 days have
   // passed since the last donation (none = until changed).
   readyAgain: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal("eligible")]).nullish(),
+  // This device's notification address, if it allowed notifications: links it to the donor for
+  // the "you can donate again" reminder.
+  pushEndpoint: z.preprocess(emptyToUndefined, z.string().max(1000).optional()),
 }).superRefine(thanaInDistrict("district", "upazila"));
 
 // A donor the admin adds by hand (approved straight away). Thana is optional for lists that lack it.
@@ -246,4 +249,37 @@ export const fraudStatusSchema = z.object({
 // Show (true) or hide (false) a blocked donor in the public fraud list.
 export const fraudListingSchema = z.object({
   listed: z.boolean({ error: "প্রতারক তালিকায় দেখানো হবে কিনা জানান।" }),
+});
+
+// Browser push services only, so the server never posts to an arbitrary address.
+const PUSH_HOSTS = [/^fcm\.googleapis\.com$/, /\.push\.services\.mozilla\.com$/, /\.notify\.windows\.com$/, /(^|\.)push\.apple\.com$/];
+const pushEndpoint = z
+  .string()
+  .max(1000)
+  .url()
+  .refine((value) => {
+    const url = new URL(value);
+    return url.protocol === "https:" && PUSH_HOSTS.some((host) => host.test(url.hostname));
+  }, "Unsupported push service.");
+
+export const pushSubscribeSchema = z.object({
+  subscription: z.object({
+    endpoint: pushEndpoint,
+    keys: z.object({ p256dh: z.string().min(1).max(200), auth: z.string().min(1).max(100) }),
+  }),
+  // Approximate location from the visitor's IP address (sent by the website).
+  lat: z.number().min(-90).max(90).nullish(),
+  lng: z.number().min(-180).max(180).nullish(),
+  // A district the visitor picked; overrides the IP location.
+  district: z.preprocess(emptyToUndefined, district.optional()),
+});
+
+export const pushUnsubscribeSchema = z.object({ endpoint: z.string().max(1000) });
+
+// A notification the admin sends to everyone, or to one district and the area around it.
+export const adminPushSchema = z.object({
+  title: text("শিরোনাম", 60),
+  body: text("বার্তা", 200),
+  url: z.preprocess(emptyToUndefined, z.string().trim().max(200).regex(/^\/(?!\/)/,"লিংক / দিয়ে শুরু হতে হবে, যেমন /learn").optional()),
+  district: z.preprocess(emptyToUndefined, district.optional()),
 });

@@ -1,11 +1,11 @@
-# Asks the API to text donors who can donate again (see roktodata-backend/controllers/jobController.js).
-# Switched off for now: it only runs by hand from the Actions tab. To run it daily, set JOBS_SECRET
-# on Render and as a repository secret, and put back the schedule below.
+# Asks the API to send a "you can donate again" notification to donors whose 90 days have passed
+# (see roktodata-backend/controllers/jobController.js). Notifications only, no SMS. Needs JOBS_SECRET
+# on Render and as a repository secret.
 name: Eligibility reminders
 
 on:
-  # schedule:
-  #   - cron: "0 4 * * *" # 04:00 UTC = 10:00 in Bangladesh
+  schedule:
+    - cron: "0 4 * * *" # 04:00 UTC = 10:00 in Bangladesh
   workflow_dispatch:
     inputs:
       dry_run:

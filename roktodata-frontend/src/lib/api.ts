@@ -137,6 +137,8 @@ export interface DonorPayload {
   // With "not ready": back in search by itself after 1/3/6 months, or "eligible" = once 90 days
   // have passed since the last donation (null = until changed).
   readyAgain?: ReadyAgain | null;
+  // This device's notification address, so the donor's "you can donate again" reminder reaches it.
+  pushEndpoint?: string;
 }
 
 export type ReadyAgain = 1 | 3 | 6 | "eligible";
@@ -186,14 +188,32 @@ export interface PatientRequestPayload {
   neededDate?: string;
 }
 
-// Saves the request for admin review and returns donors in the same upazila (`donors`)
-// and elsewhere in the same district (`nearbyDonors`). One request per phone number per day:
-// a repeat fails with ApiError code "DUPLICATE_REQUEST".
-export function searchForPatient(payload: PatientRequestPayload) {
-  return request<SearchResult & { total: number; nearbyDonors: Donor[]; nearbyTotal: number }>(
+// Saves the request and returns donors in the same upazila (`donors`) and elsewhere in the same
+// district (`nearbyDonors`). With a verificationToken (the requester's number verified by SMS code)
+// and a hospital, the request is published and announced nearby at once (`published`); otherwise it
+// waits for admin review. One request per phone number per day: a repeat fails with ApiError code
+// "DUPLICATE_REQUEST".
+export function searchForPatient(payload: PatientRequestPayload, verificationToken?: string) {
+  return request<SearchResult & { total: number; nearbyDonors: Donor[]; nearbyTotal: number; published: boolean; id: string }>(
     "/api/patient/search-and-log",
-    jsonRequest("POST", payload),
+    jsonRequest("POST", payload, verificationToken ? { Authorization: `Bearer ${verificationToken}` } : {}),
   );
+}
+
+// ---- Notifications ----
+
+export function getPushKey() {
+  return request<{ publicKey: string }>("/api/push/key", undefined, { retries: 1 });
+}
+
+// Saves this device's notification subscription with its approximate location (or a district the
+// visitor picked). Returns the district its blood-request notifications are for.
+export function savePushSubscription(body: { subscription: PushSubscriptionJSON; lat?: number; lng?: number; district?: string }) {
+  return request<{ district: string | null; districtChosen: boolean }>("/api/push/subscribe", jsonRequest("POST", body), { retries: 1 });
+}
+
+export function deletePushSubscription(endpoint: string) {
+  return request<{ success: boolean }>("/api/push/unsubscribe", jsonRequest("POST", { endpoint }));
 }
 
 export interface Paginated {
@@ -271,6 +291,8 @@ export interface AdminStats {
   // Taps on donors' call / WhatsApp buttons, and how many different donors they were for.
   contacts: Record<"today" | "week" | "total", ContactCounts>;
   hiddenDonors: number; // approved donors who chose "not ready" and haven't reached their return date
+  // Devices with notifications on, and how many of them belong to a registered donor.
+  push: { enabled: boolean; devices: number; donors: number };
 }
 
 export interface ContactCounts {
@@ -341,6 +363,11 @@ export interface AdminDonorInput {
 
 export function createAdminDonor(token: string, donor: AdminDonorInput) {
   return request<{ message: string; donor: { id: string; fullName: string } }>("/api/admin/donors", jsonRequest("POST", donor, auth(token)));
+}
+
+// Sends a notification to everyone, or to one district and the area around it.
+export function sendAdminPush(token: string, body: { title: string; body: string; url?: string; district?: string }) {
+  return request<{ message: string; targeted: number }>("/api/admin/push", jsonRequest("POST", body, auth(token)));
 }
 
 // Blocking needs a reason, which is shown publicly in the fraud list.

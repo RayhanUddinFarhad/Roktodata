@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   CalendarClock,
@@ -25,12 +25,27 @@ import { BLOOD_GROUPS, DISTRICTS, requestWhatsAppMessage, toBanglaNumber, type B
 const fieldClass =
   "h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-red-500 focus:outline-none";
 
+const noSubscribe = () => () => {};
+
 export default function BloodRequestsFeed() {
   // When an admin is logged in (in this tab), each post gets admin controls.
   const adminToken = useAdminToken();
   const [bloodGroup, setBloodGroup] = useState("");
   const [district, setDistrict] = useState("");
   const [page, setPage] = useState(1);
+
+  // A notification links here with ?district=&bloodGroup=; those filters are applied once
+  // (adjusting state while rendering, as React suggests for state that follows an outside value).
+  const query = useSyncExternalStore(noSubscribe, () => window.location.search, () => "");
+  const [appliedQuery, setAppliedQuery] = useState("");
+  if (query && query !== appliedQuery) {
+    setAppliedQuery(query);
+    const q = new URLSearchParams(query);
+    const group = q.get("bloodGroup") ?? "";
+    const place = q.get("district") ?? "";
+    if ((BLOOD_GROUPS as readonly string[]).includes(group)) setBloodGroup(group);
+    if ((DISTRICTS as readonly string[]).includes(place)) setDistrict(place);
+  }
   const [requests, setRequests] = useState<BloodRequest[]>([]);
   const [pages, setPages] = useState(1);
   const [error, setError] = useState("");

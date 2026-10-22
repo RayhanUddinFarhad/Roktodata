@@ -2,13 +2,27 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { CircleCheck, Info, Loader2, MapPin, Megaphone, PhoneCall, Search, SearchX } from "lucide-react";
+import {
+  BellRing,
+  CircleCheck,
+  Info,
+  Loader2,
+  MapPin,
+  Megaphone,
+  MessageSquareText,
+  PhoneCall,
+  RotateCw,
+  Search,
+  SearchX,
+  ShieldCheck,
+} from "lucide-react";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
+import OtpInput from "@/components/OtpInput";
 import ComplaintButton from "@/components/ComplaintButton";
 import { RequestPosterPanel } from "@/components/RequestPoster";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ThanaSelect from "@/components/ThanaSelect";
-import { ApiError, searchForPatient, trackDonorContact } from "@/lib/api";
+import { ApiError, searchForPatient, sendOtp, trackDonorContact, verifyOtp } from "@/lib/api";
 import {
   BLOOD_GROUPS,
   type BloodGroup,
@@ -29,6 +43,7 @@ const labelClass = "mb-2 block text-sm font-semibold text-slate-700";
 type Result =
   | {
       kind: "found";
+      published: boolean;
       donors: Donor[];
       total: number;
       nearbyDonors: Donor[];
@@ -53,15 +68,92 @@ export default function PatientSearch() {
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // SMS-code check of the requester's number: a verified request is published straight away.
+  const [codeSentTo, setCodeSentTo] = useState("");
+  const [codeNotice, setCodeNotice] = useState("");
+  const [code, setCode] = useState("");
+  const [resendAt, setResendAt] = useState(0);
+  const [now, setNow] = useState(0);
+  const [verification, setVerification] = useState<{ phone: string; token: string } | null>(null);
+  // The code couldn't be sent (SMS limit or outage): the request can still go in for admin review.
+  const [codeUnavailable, setCodeUnavailable] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+  const otpRef = useRef<HTMLDivElement>(null);
+  const verified = verification?.phone === requesterPhone;
+  const awaitingCode = codeSentTo !== "" && codeSentTo === requesterPhone && !verified;
+  const resendIn = Math.max(0, Math.ceil((resendAt - now) / 1000));
 
   // Bring the answer into view once it arrives.
   useEffect(() => {
     if (result) resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [result]);
 
+  useEffect(() => {
+    if (!awaitingCode) return;
+    otpRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [awaitingCode]);
+
+  async function requestCode() {
+    const sent = await sendOtp(requesterPhone);
+    const at = Date.now();
+    setCodeSentTo(requesterPhone);
+    setResendAt(at + sent.resendInSeconds * 1000);
+    setNow(at);
+    setCode("");
+    setCodeNotice(sent.message);
+  }
+
+  // Step 1, the form: a verified number goes straight to submitting; otherwise a code is sent.
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError("");
+    setCodeUnavailable(false);
+    if (verified) return submitRequest(verification.token);
+    // Enter pressed in the code boxes.
+    if (awaitingCode) return code.length === 6 ? verifyAndSubmit(code) : undefined;
+    setLoading(true);
+    try {
+      await requestCode();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "কোড পাঠানো যায়নি। আবার চেষ্টা করুন।");
+      // Not a problem with the number itself: the request can still go in for admin review.
+      const codeProblem = !(err instanceof ApiError) || ["OTP_UNAVAILABLE", "SMS_FAILED", "OTP_DAILY_LIMIT"].includes(err.code ?? "");
+      if (codeProblem) setCodeUnavailable(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Step 2, the code.
+  async function verifyAndSubmit(entered: string) {
+    if (loading) return;
+    setError("");
+    setLoading(true);
+    let token: string;
+    try {
+      ({ verificationToken: token } = await verifyOtp(requesterPhone, entered));
+    } catch (err) {
+      if (err instanceof ApiError && err.code !== "OTP_INVALID") setCode("");
+      setError(err instanceof ApiError ? err.message : "যাচাই করা যায়নি। আবার চেষ্টা করুন।");
+      setLoading(false);
+      return;
+    }
+    setVerification({ phone: requesterPhone, token });
+    await submitRequest(token);
+  }
+
+  async function resendCode() {
+    setError("");
+    try {
+      await requestCode();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "কোড পাঠানো যায়নি। আবার চেষ্টা করুন।");
+    }
+  }
+
+  async function submitRequest(verificationToken?: string) {
     setError("");
     setLoading(true);
     // What the poster shows: exactly what was just submitted.
@@ -81,19 +173,25 @@ export default function PatientSearch() {
       createdAt: new Date().toISOString(),
     };
     try {
-      const response = await searchForPatient({
-        patientName: patientName.trim(),
-        requiredBloodGroup: bloodGroup as BloodGroup,
-        district,
-        upazila: upazila.trim() || undefined,
-        hospitalAddress: hospitalAddress.trim() || undefined,
-        reason: reason.trim() || undefined,
-        requesterPhone,
-        bagsNeeded,
-        neededDate: neededDate || undefined,
-      });
+      const response = await searchForPatient(
+        {
+          patientName: patientName.trim(),
+          requiredBloodGroup: bloodGroup as BloodGroup,
+          district,
+          upazila: upazila.trim() || undefined,
+          hospitalAddress: hospitalAddress.trim() || undefined,
+          reason: reason.trim() || undefined,
+          requesterPhone,
+          bagsNeeded,
+          neededDate: neededDate || undefined,
+        },
+        verificationToken,
+      );
+      setCodeSentTo("");
+      setCodeUnavailable(false);
       setResult({
         kind: "found",
+        published: response.published,
         donors: response.donors,
         total: response.total,
         nearbyDonors: response.nearbyDonors,
@@ -105,6 +203,7 @@ export default function PatientSearch() {
       });
     } catch (err) {
       if (err instanceof ApiError && err.code === "DUPLICATE_REQUEST") {
+        setCodeSentTo("");
         setResult({ kind: "duplicate", message: err.message, bloodGroup, district, poster });
       } else {
         setError(err instanceof ApiError ? err.message : "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।");
@@ -220,11 +319,11 @@ export default function PatientSearch() {
           />
         </label>
         <label className="block">
-          <span className={labelClass}>
-            হাসপাতালের ঠিকানা <span className="font-normal text-slate-500">(ঐচ্ছিক)</span>
-          </span>
+          <span className={labelClass}>হাসপাতালের নাম ও ঠিকানা</span>
           <input
             type="text"
+            required
+            minLength={3}
             maxLength={200}
             value={hospitalAddress}
             onChange={(e) => setHospitalAddress(e.target.value)}
@@ -248,21 +347,67 @@ export default function PatientSearch() {
 
         <p className="flex gap-2 rounded-lg bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-slate-600 sm:col-span-2">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-indigo-800" />
-          অ্যাডমিন যাচাই করার পর আপনার অনুরোধটি (রোগীর নাম, রক্তের গ্রুপ, এলাকা, হাসপাতাল ও যোগাযোগের নাম্বার)
-          &quot;রক্তের অনুরোধ&quot; পাতায় পোস্ট করা হবে, যাতে ডোনাররা সরাসরি আপনার সাথে যোগাযোগ করতে পারেন। একটি নাম্বার
-          থেকে দিনে একবার অনুরোধ করা যায়।
+          মোবাইল নাম্বারে পাঠানো SMS কোড দিয়ে যাচাই করলে আপনার অনুরোধটি (রোগীর নাম, রক্তের গ্রুপ, এলাকা, হাসপাতাল ও
+          যোগাযোগের নাম্বার) সাথে সাথে &quot;রক্তের অনুরোধ&quot; পাতায় পোস্ট হবে, আর আশেপাশের মানুষ নোটিফিকেশন পাবেন। একটি
+          নাম্বার থেকে দিনে একবার অনুরোধ করা যায়।
         </p>
 
-        {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex h-14 items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] font-semibold text-white shadow-lg shadow-indigo-900/20 hover:bg-[#1e3070] disabled:opacity-60 sm:col-span-2"
-        >
-          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
-          এই ঠিকানার রক্তদাতাদের খুঁজুন
-        </button>
+        {awaitingCode ? (
+          <div ref={otpRef} className="scroll-mt-24 rounded-xl border border-red-100 bg-red-50/40 p-5 sm:col-span-2">
+            <p className="flex items-center justify-center gap-2 text-center font-bold text-slate-900">
+              <MessageSquareText className="h-5 w-5 text-red-600" />
+              মোবাইল নাম্বার যাচাই করুন
+            </p>
+            <p className="mt-1 text-center text-xs text-slate-600">{codeNotice || "SMS-এ পাঠানো ৬ ডিজিটের কোডটি লিখুন"}</p>
+            <div className="mt-4">
+              <OtpInput
+                value={code}
+                disabled={loading}
+                invalid={Boolean(error)}
+                onChange={(next) => {
+                  setCode(next);
+                  setError("");
+                  if (next.length === 6) verifyAndSubmit(next);
+                }}
+              />
+            </div>
+            {error && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-center text-xs text-red-600">{error}</p>}
+            <button
+              type="button"
+              disabled={loading || code.length !== 6}
+              onClick={() => verifyAndSubmit(code)}
+              className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-red-600 font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+            >
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-5 w-5" />}
+              যাচাই করে অনুরোধ পোস্ট করুন
+            </button>
+            <p className="mt-3 flex flex-wrap items-center justify-center gap-x-1 text-xs text-slate-500">
+              কোড পাননি?
+              {resendIn > 0 ? (
+                <span>{toBanglaNumber(resendIn)} সেকেন্ড পর আবার পাঠাতে পারবেন</span>
+              ) : (
+                <button type="button" onClick={resendCode} className="inline-flex items-center gap-1 font-semibold text-red-600 hover:text-red-700">
+                  <RotateCw className="h-3 w-3" />
+                  আবার কোড পাঠান
+                </button>
+              )}
+            </p>
+            <SubmitWithoutCode loading={loading} onClick={() => submitRequest()} />
+          </div>
+        ) : (
+          <>
+            {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
+            {codeUnavailable && <SubmitWithoutCode loading={loading} onClick={() => submitRequest()} />}
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex h-14 items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] font-semibold text-white shadow-lg shadow-indigo-900/20 hover:bg-[#1e3070] disabled:opacity-60 sm:col-span-2"
+            >
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+              {verified ? "এই ঠিকানার রক্তদাতাদের খুঁজুন" : "নাম্বার যাচাই করে রক্তদাতা খুঁজুন"}
+            </button>
+          </>
+        )}
       </form>
 
       <div ref={resultRef} className="scroll-mt-20">
@@ -273,7 +418,24 @@ export default function PatientSearch() {
   );
 }
 
-const findDonorHref = (bloodGroup: string, district?: string) =>
+// For when the SMS code can't be used: the request still goes in, and is posted after admin review.
+function SubmitWithoutCode({ loading, onClick }: { loading: boolean; onClick: () => void }) {
+  return (
+    <p className="mt-3 text-center text-xs text-slate-500 sm:col-span-2">
+      <button
+        type="button"
+        disabled={loading}
+        onClick={onClick}
+        className="font-semibold text-indigo-800 underline underline-offset-2 disabled:opacity-60"
+      >
+        যাচাই ছাড়া জমা দিন
+      </button>{" "}
+      (অ্যাডমিন যাচাই করার পর পোস্ট হবে, নোটিফিকেশন যাবে না)
+    </p>
+  );
+}
+
+const findDonorHref =(bloodGroup: string, district?: string) =>
   `/find-donor?${new URLSearchParams({ bloodGroup, ...(district && { district }) })}`;
 
 function DuplicateNotice({ result }: { result: Extract<Result, { kind: "duplicate" }> }) {
@@ -316,12 +478,21 @@ function FoundDonors({ result }: { result: Extract<Result, { kind: "found" }> })
     <div className="mt-8 border-t border-slate-200 pt-6">
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
         <p className="flex items-center gap-2 font-bold text-emerald-900">
-          <CircleCheck className="h-5 w-5" />
-          আপনার অনুরোধটি আমরা পেয়েছি
+          {result.published ? <BellRing className="h-5 w-5" /> : <CircleCheck className="h-5 w-5" />}
+          {result.published ? "আপনার অনুরোধটি পোস্ট হয়েছে" : "আপনার অনুরোধটি আমরা পেয়েছি"}
         </p>
         <p className="mt-2 text-sm leading-relaxed text-emerald-900/90">
-          আমরা আপনার রোগীর জন্য ডোনার খোঁজার চেষ্টা করছি। অ্যাডমিন যাচাই করার পর অনুরোধটি &quot;রক্তের অনুরোধ&quot; পাতায়
-          পোস্ট করা হবে, যাতে আরও ডোনার আপনার সাথে যোগাযোগ করতে পারেন।{" "}
+          {result.published ? (
+            <>
+              অনুরোধটি &quot;রক্তের অনুরোধ&quot; পাতায় পোস্ট হয়েছে, আর {district} ও আশেপাশে যাঁদের নোটিফিকেশন চালু আছে তাঁদের
+              জানানো হচ্ছে।{" "}
+            </>
+          ) : (
+            <>
+              আমরা আপনার রোগীর জন্য ডোনার খোঁজার চেষ্টা করছি। অ্যাডমিন যাচাই করার পর অনুরোধটি &quot;রক্তের অনুরোধ&quot; পাতায়
+              পোস্ট করা হবে, যাতে আরও ডোনার আপনার সাথে যোগাযোগ করতে পারেন।{" "}
+            </>
+          )}
           {total > 0 && "ততক্ষণ নিচের ডোনারদের সরাসরি কল করে জেনে নিন তাঁরা এখন রক্ত দিতে পারবেন কিনা।"}
         </p>
       </div>

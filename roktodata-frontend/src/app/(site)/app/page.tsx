@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { RefreshCw, ShieldCheck, Smartphone, Zap, type LucideIcon } from "lucide-react";
 import InstallApp from "@/components/InstallApp";
+import NotificationSettings from "@/components/NotificationSettings";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -31,6 +32,9 @@ export default function AppPage() {
       <div className="mx-auto -mt-16 max-w-md px-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/5">
           <InstallApp />
+        </div>
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <NotificationSettings />
         </div>
       </div>
 

@@ -8,11 +8,13 @@ import { Donor } from "../models/Donor.js";
 import { DonorContact } from "../models/DonorContact.js";
 import { FraudReport } from "../models/FraudReport.js";
 import { PatientRequest } from "../models/PatientRequest.js";
+import { PushSubscription } from "../models/PushSubscription.js";
 import { photoCardsMade } from "./photocardController.js";
 import { AppError } from "../utils/AppError.js";
 import { toBanglaName } from "../utils/banglaName.js";
 import { dhakaDay } from "../utils/dhakaDate.js";
 import { escapeRegex } from "../utils/findDonors.js";
+import { nearbySubscriptions, notifyBloodRequestLater, pushEnabled, sendPush } from "../utils/push.js";
 import { toPublicRequest } from "./patientController.js";
 
 const PAGE_SIZE = 20;
@@ -63,7 +65,7 @@ async function contactSummary() {
 
 // GET /api/admin/stats
 export async function getStats(_req, res) {
-  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards, contacts, hiddenDonors] = await Promise.all([
+  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards, contacts, hiddenDonors, pushDevices, pushDonors] = await Promise.all([
     Donor.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
     Complaint.countDocuments({ status: "Open" }),
     PatientRequest.countDocuments({ status: "Pending" }),
@@ -76,6 +78,8 @@ export async function getStats(_req, res) {
       isReadyToDonate: false,
       $or: [{ readyAgainAt: null }, { readyAgainAt: mongoose.trusted({ $gt: new Date() }) }],
     }),
+    PushSubscription.estimatedDocumentCount(),
+    PushSubscription.countDocuments({ donor: mongoose.trusted({ $ne: null }) }),
   ]);
   const count = (status) => byStatus.find((row) => row._id === status)?.count ?? 0;
 
@@ -91,6 +95,7 @@ export async function getStats(_req, res) {
       photoCards,
       contacts,
       hiddenDonors,
+      push: { enabled: pushEnabled, devices: pushDevices, donors: pushDonors },
     },
   });
 }
@@ -315,6 +320,8 @@ export async function updateRequestStatus(req, res) {
   const update = note === undefined ? { status } : { status, adminNote: note };
   const request = await PatientRequest.findByIdAndUpdate(id, update, { returnDocument: "after" });
   if (!request) throw new AppError(404, "অনুরোধ পাওয়া যায়নি।");
+  // A newly approved request is announced to people nearby (only once per request).
+  if (request.status === "Approved") notifyBloodRequestLater(request._id);
 
   const messages = {
     Approved: "অনুরোধটি অনুমোদিত হয়েছে এবং \"রক্তের অনুরোধ\" পাতায় পোস্ট করা হয়েছে।",
@@ -418,4 +425,20 @@ export async function deleteFraudReport(req, res) {
   const report = await FraudReport.findByIdAndDelete(id);
   if (!report) throw new AppError(404, "রিপোর্ট পাওয়া যায়নি।");
   res.json({ success: true, message: "রিপোর্টটি মুছে ফেলা হয়েছে।" });
+}
+
+// POST /api/admin/push: sends a notification to every device, or to one district and the area
+// around it. Sending runs in the background; the reply says how many devices it is going to.
+export async function sendAdminPush(req, res) {
+  if (!pushEnabled) throw new AppError(503, "নোটিফিকেশন চালু নেই (Render-এ VAPID চাবি বসানো নেই)।");
+  const { title, body, url, district } = req.validated;
+  const targets = district
+    ? await nearbySubscriptions(district)
+    : await PushSubscription.find({}, { endpoint: 1, keys: 1 }).lean();
+  if (!targets.length) throw new AppError(404, district ? `${district} এলাকায় নোটিফিকেশন চালু রাখা কেউ নেই।` : "নোটিফিকেশন চালু রাখা কেউ নেই।");
+
+  sendPush(targets, { title, body, url: url ?? "/", tag: `admin-${Date.now()}` })
+    .then((r) => console.log(`Admin notification: sent ${r.sent} of ${targets.length}.`))
+    .catch((err) => console.error("Admin notification failed:", err.message));
+  res.json({ success: true, targeted: targets.length, message: `${targets.length.toLocaleString("bn-BD")}টি ডিভাইসে নোটিফিকেশন পাঠানো হচ্ছে।` });
 }

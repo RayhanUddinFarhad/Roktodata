@@ -1,4 +1,5 @@
 import { Donor } from "../models/Donor.js";
+import { PushSubscription } from "../models/PushSubscription.js";
 import { AppError } from "../utils/AppError.js";
 import { toBanglaName } from "../utils/banglaName.js";
 import { ELIGIBILITY_DAYS, SEARCH_PAGE_SIZE } from "../config/constants.js";
@@ -16,9 +17,15 @@ function readyAgainDate(isReady, choice, lastDonationDate) {
   return date;
 }
 
+// The device the donor saved from, if it allows notifications, gets their "you can donate again"
+// reminder. The phone number was verified by SMS, so the link can be trusted.
+async function linkDevice(endpoint, donorId) {
+  if (endpoint) await PushSubscription.updateOne({ endpoint }, { $set: { donor: donorId } });
+}
+
 // POST /api/donors/register-or-update
 export async function registerOrUpdateDonor(req, res) {
-  const { phoneNumber, lastDonationDate, readyAgain, ...rest } = req.validated;
+  const { phoneNumber, lastDonationDate, readyAgain, pushEndpoint, ...rest } = req.validated;
   // Names are shown in Bangla on the site; English input is converted.
   const details = { ...rest, fullName: toBanglaName(rest.fullName) };
 
@@ -39,6 +46,7 @@ export async function registerOrUpdateDonor(req, res) {
     if (lastDonationDate) existing.lastDonationDate = lastDonationDate;
     existing.readyAgainAt = readyAgainDate(details.isReadyToDonate, readyAgain, existing.lastDonationDate);
     await existing.save();
+    await linkDevice(pushEndpoint, existing._id);
     return res.json({
       success: true,
       isNew: false,
@@ -58,6 +66,7 @@ export async function registerOrUpdateDonor(req, res) {
     readyAgainAt: readyAgainDate(details.isReadyToDonate, readyAgain, lastDonationDate),
     notReadySince: details.isReadyToDonate ? null : new Date(),
   });
+  await linkDevice(pushEndpoint, donor._id);
   res.status(201).json({
     success: true,
     isNew: true,

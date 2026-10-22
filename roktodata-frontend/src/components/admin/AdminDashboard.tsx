@@ -21,10 +21,11 @@ import AddDonorPanel from "@/components/admin/AddDonorPanel";
 import ComplaintsPanel from "@/components/admin/ComplaintsPanel";
 import DonorsPanel from "@/components/admin/DonorsPanel";
 import FraudTab from "@/components/admin/FraudTab";
+import PushPanel from "@/components/admin/PushPanel";
 import RequestsPanel from "@/components/admin/RequestsPanel";
 import { ApiError, getAdminStats, type AdminStats } from "@/lib/api";
 
-type Tab = "pending" | "donors" | "hidden" | "add" | "requests" | "fraud" | "complaints";
+type Tab = "pending" | "donors" | "hidden" | "add" | "requests" | "fraud" | "complaints" | "push";
 
 export interface AdminContext {
   token: string;
@@ -104,6 +105,7 @@ export default function AdminDashboard({
     { id: "requests", label: "রক্তের অনুরোধ", count: stats?.pendingRequests },
     { id: "fraud", label: "প্রতারণার রিপোর্ট", count: stats?.pendingFraudReports },
     { id: "complaints", label: "অভিযোগসমূহ", count: stats?.openComplaints },
+    { id: "push", label: "নোটিফিকেশন" },
   ];
 
   return (
@@ -198,6 +200,7 @@ export default function AdminDashboard({
           {tab === "requests" && <RequestsPanel ctx={ctx} />}
           {tab === "fraud" && <FraudTab ctx={ctx} />}
           {tab === "complaints" && <ComplaintsPanel ctx={ctx} />}
+          {tab === "push" && <PushPanel ctx={ctx} push={stats?.push} />}
         </div>
       </main>
 

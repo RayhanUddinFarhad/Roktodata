@@ -31,5 +31,8 @@ export const photocardLimiter = limiter(60, 120);
 // Only reports that were actually saved count, so typos and validation errors don't lock people out.
 export const fraudReportLimiter = limiter(60, 5, { skipFailedRequests: true });
 
+// Notification sign-ups; the app refreshes its own once per visit.
+export const pushLimiter = limiter(60, 30);
+
 // Only failed attempts count, to slow down password guessing.
 export const adminLoginLimiter = limiter(15, 10, { skipSuccessfulRequests: true });
