@@ -353,7 +353,7 @@ export default function PatientSearch() {
         </p>
 
         {awaitingCode ? (
-          <div ref={otpRef} className="scroll-mt-24 rounded-xl border border-red-100 bg-red-50/40 p-5 sm:col-span-2">
+          <div ref={otpRef} className="scroll-mt-24 rounded-xl border border-red-100 bg-red-50/40 px-3 py-5 sm:p-5 sm:col-span-2">
             <p className="flex items-center justify-center gap-2 text-center font-bold text-slate-900">
               <MessageSquareText className="h-5 w-5 text-red-600" />
               মোবাইল নাম্বার যাচাই করুন

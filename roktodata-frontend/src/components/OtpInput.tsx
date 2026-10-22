@@ -70,7 +70,7 @@ export default function OtpInput({
           onKeyDown={(e) => handleKeyDown(index, e)}
           onPaste={(e) => handlePaste(index, e)}
           onFocus={(e) => e.target.select()}
-          className={`h-12 w-11 rounded-xl border-2 bg-slate-50 text-center font-mono text-xl font-bold text-slate-900 transition-colors focus:bg-white focus:outline-none disabled:opacity-60 sm:h-14 sm:w-12 ${
+          className={`h-12 w-10 rounded-xl border-2 bg-slate-50 text-center font-mono text-xl font-bold text-slate-900 transition-colors focus:bg-white focus:outline-none disabled:opacity-60 min-[400px]:w-11 sm:h-14 sm:w-12 ${
             invalid
               ? "border-red-400 bg-red-50"
               : value[index]
