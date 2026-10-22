@@ -39,9 +39,11 @@ export default function DonorsPanel({ ctx, fixedStatus, hidden = false }: { ctx:
   const [page, setPage] = useState(1);
   // "contacts": the donors whose call / WhatsApp buttons were tapped most come first.
   const [sort, setSort] = useState<"" | "contacts">("");
+  // In the hidden list: "oldest" shows who hid longest ago first.
+  const [order, setOrder] = useState<"" | "oldest">("");
   const [data, setData] = useState<{ donors: AdminDonor[]; total: number; pages: number } | null>(null);
   // Loading until the response for the current filters/page/refresh has arrived.
-  const requestKey = `${refreshKey}|${status}|${debouncedQuery}|${page}|${sort}`;
+  const requestKey = `${refreshKey}|${status}|${debouncedQuery}|${page}|${sort}|${order}`;
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const loading = loadedKey !== requestKey;
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function DonorsPanel({ ctx, fixedStatus, hidden = false }: { ctx:
 
   useEffect(() => {
     let cancelled = false;
-    getAdminDonors(token, { status: status || undefined, q: debouncedQuery || undefined, page, sort: sort || undefined, ready: hidden ? "hidden" : undefined })
+    getAdminDonors(token, { status: status || undefined, q: debouncedQuery || undefined, page, sort: sort || undefined, ready: hidden ? "hidden" : undefined, order: (hidden && order) || undefined })
       .then((result) => {
         if (cancelled) return;
         // Acting on the last item of a page can leave it empty; step back a page.
@@ -69,7 +71,7 @@ export default function DonorsPanel({ ctx, fixedStatus, hidden = false }: { ctx:
     return () => {
       cancelled = true;
     };
-  }, [token, requestKey, status, debouncedQuery, page, sort, hidden, onError]);
+  }, [token, requestKey, status, debouncedQuery, page, sort, hidden, order, onError]);
 
   async function act(donor: AdminDonor, action: () => Promise<{ message: string }>) {
     setBusyId(donor.id);
@@ -117,6 +119,19 @@ export default function DonorsPanel({ ctx, fixedStatus, hidden = false }: { ctx:
               </option>
             ))}
           </select>
+          {hidden && (
+            <select
+              value={order}
+              onChange={(e) => {
+                setOrder(e.target.value as "" | "oldest");
+                setPage(1);
+              }}
+              className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm focus:border-red-500 focus:outline-none sm:w-56"
+            >
+              <option value="">নতুন লুকানো আগে</option>
+              <option value="oldest">পুরোনো লুকানো আগে</option>
+            </select>
+          )}
           {!hidden && (
           <select
             value={sort}
@@ -137,7 +152,7 @@ export default function DonorsPanel({ ctx, fixedStatus, hidden = false }: { ctx:
         {fixedStatus
           ? FIXED_TEXT[fixedStatus]?.intro
           : hidden
-            ? `যাঁরা "এখন প্রস্তুত নই" দিয়েছেন: মোট ${data?.total ?? "…"} জন, সবশেষে লুকানো আগে। ফেরার তারিখ থাকলে সেদিন নিজে থেকেই তালিকায় ফেরেন।`
+            ? `যাঁরা "এখন প্রস্তুত নই" দিয়েছেন: মোট ${data?.total ?? "…"} জন। ফেরার তারিখ থাকলে সেদিন নিজে থেকেই তালিকায় ফেরেন।`
             : `মোট ${data?.total ?? "…"} জন ডোনার`}
       </p>
 

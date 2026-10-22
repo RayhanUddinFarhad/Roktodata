@@ -142,8 +142,9 @@ export const adminDonorListSchema = z.object({
   page: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(1000).default(1)),
   // "contacts": most call / WhatsApp taps first; otherwise newest first.
   sort: z.preprocess(emptyToUndefined, z.enum(["contacts"]).optional()),
-  // "hidden": donors who chose "not ready", most recently hidden first.
+  // "hidden": donors who chose "not ready", most recently hidden first ("oldest" turns that round).
   ready: z.preprocess(emptyToUndefined, z.enum(["hidden"]).optional()),
+  order: z.preprocess(emptyToUndefined, z.enum(["oldest"]).optional()),
 });
 
 // Blocking needs a reason: it is shown publicly in the fraud list.

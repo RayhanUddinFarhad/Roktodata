@@ -96,7 +96,7 @@ export async function getStats(_req, res) {
 
 // GET /api/admin/donors?status=&q=&page=
 export async function listDonors(req, res) {
-  const { status, q, page, sort, ready } = req.validated;
+  const { status, q, page, sort, ready, order } = req.validated;
 
   const filter = {};
   if (status) filter.status = status;
@@ -114,7 +114,9 @@ export async function listDonors(req, res) {
         sort === "contacts"
           ? { "contacts.total": -1, lastContactedAt: -1 }
           : ready === "hidden"
-            ? { notReadySince: -1, updatedAt: -1 }
+            ? order === "oldest"
+              ? { notReadySince: 1, _id: 1 }
+              : { notReadySince: -1, _id: -1 }
             : { createdAt: -1 },
       )
       .skip((page - 1) * PAGE_SIZE)

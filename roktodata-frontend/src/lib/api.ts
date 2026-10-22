@@ -321,7 +321,7 @@ export function getAdminStats(token: string) {
   return request<{ stats: AdminStats }>("/api/admin/stats", { headers: auth(token) });
 }
 
-export function getAdminDonors(token: string, params: { status?: DonorStatus; q?: string; page?: number; sort?: "contacts"; ready?: "hidden" }) {
+export function getAdminDonors(token: string, params: { status?: DonorStatus; q?: string; page?: number; sort?: "contacts"; ready?: "hidden"; order?: "oldest" }) {
   return request<Paginated & { donors: AdminDonor[] }>(`/api/admin/donors?${toQuery(params)}`, {
     headers: auth(token),
   });
