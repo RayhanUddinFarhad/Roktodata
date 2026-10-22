@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, MapPin, Phone, PhoneCall } from "lucide-react";
+import { CalendarDays, ChevronRight, EyeOff, MapPin, Phone, PhoneCall } from "lucide-react";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import ComplaintButton from "@/components/ComplaintButton";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -59,8 +59,19 @@ export default function DonorCard({ donor }: { donor: Donor }) {
             কল করুন
           </a>
         </div>
-        <Link href={hideLink(donor)} prefetch={false} className="mt-2.5 block text-right text-[11px] text-slate-500 hover:text-indigo-700 hover:underline">
-          এটা আপনার নাম্বার? সাময়িকভাবে লুকান →
+        <Link
+          href={hideLink(donor)}
+          prefetch={false}
+          className="group mt-3 flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/60 px-2.5 py-2 text-[11px] leading-snug text-slate-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50"
+        >
+          <EyeOff className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
+          <span className="flex-1">
+            এটি আপনার নাম্বার? রক্ত দিতে না চাইলে{" "}
+            <span className="font-semibold text-indigo-700 underline decoration-indigo-300 underline-offset-2 group-hover:decoration-indigo-700">
+              সাময়িকভাবে লুকান
+            </span>
+          </span>
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-indigo-500 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
     </div>
