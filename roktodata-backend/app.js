@@ -12,6 +12,7 @@ import complaintRoutes from "./routes/complaintRoutes.js";
 import donorRoutes from "./routes/donorRoutes.js";
 import fraudRoutes from "./routes/fraudRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
+import appRoutes from "./routes/appRoutes.js";
 import pushRoutes from "./routes/pushRoutes.js";
 import otpRoutes from "./routes/otpRoutes.js";
 import patientRoutes from "./routes/patientRoutes.js";
@@ -57,6 +58,7 @@ app.use("/api/photocards", photocardRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/push", pushRoutes);
+app.use("/api/app", appRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

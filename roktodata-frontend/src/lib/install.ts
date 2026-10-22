@@ -33,6 +33,27 @@ function remembered() {
   }
 }
 
+// Counts this device once for the admin panel's "app installs": when the browser reports the
+// install, or the first time the app is opened (iPhones never report installs, and apps installed
+// before counting began are caught this way). Retried on a later visit if it fails.
+const COUNTED_KEY = "rd-app-counted";
+function countInstall() {
+  try {
+    if (localStorage.getItem(COUNTED_KEY)) return;
+    let device = localStorage.getItem("rd-device");
+    if (!device) {
+      device = crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+      localStorage.setItem("rd-device", device);
+    }
+    const ua = navigator.userAgent;
+    const platform = /Android/i.test(ua) ? "android" : /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? "ios" : /Windows|Macintosh|Linux|CrOS/i.test(ua) ? "desktop" : "other";
+    import("@/lib/api")
+      .then(({ reportAppInstall }) => reportAppInstall(device, platform))
+      .then(() => localStorage.setItem(COUNTED_KEY, "1"))
+      .catch(() => {});
+  } catch {}
+}
+
 const isStandalone = () =>
   window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone === true;
 const listeners = new Set<() => void>();
@@ -59,7 +80,10 @@ function gotPrompt(e: InstallPromptEvent) {
 }
 
 export function captureInstallPrompt() {
-  if (isStandalone()) remember(true);
+  if (isStandalone()) {
+    remember(true);
+    countInstall();
+  }
   if (window.__rdInstall) gotPrompt(window.__rdInstall);
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault(); // no mini-infobar; the site's own button shows the prompt
@@ -69,6 +93,7 @@ export function captureInstallPrompt() {
     deferred = null;
     installed = true;
     remember(true);
+    countInstall();
     notify();
   });
 
@@ -81,6 +106,7 @@ export function captureInstallPrompt() {
       if (deferred || !apps.length) return;
       relatedInstalled = true;
       remember(true);
+      countInstall();
       notify();
     })
     .catch(() => {});

@@ -9,6 +9,7 @@ import { DonorContact } from "../models/DonorContact.js";
 import { FraudReport } from "../models/FraudReport.js";
 import { PatientRequest } from "../models/PatientRequest.js";
 import { PushSubscription } from "../models/PushSubscription.js";
+import { AppInstall } from "../models/AppInstall.js";
 import { photoCardsMade } from "./photocardController.js";
 import { AppError } from "../utils/AppError.js";
 import { toBanglaName } from "../utils/banglaName.js";
@@ -63,9 +64,21 @@ async function contactSummary() {
   return { today: pick(result.today), week: pick(result.week), total: pick(result.total) };
 }
 
+// Devices that installed the app: today (Bangladesh day), the last 7 days and in total.
+async function appInstallSummary() {
+  const today = new Date(`${dhakaDay()}T00:00:00+06:00`);
+  const week = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+  const [total, todayCount, weekCount] = await Promise.all([
+    AppInstall.estimatedDocumentCount(),
+    AppInstall.countDocuments({ createdAt: mongoose.trusted({ $gte: today }) }),
+    AppInstall.countDocuments({ createdAt: mongoose.trusted({ $gte: week }) }),
+  ]);
+  return { total, today: todayCount, week: weekCount };
+}
+
 // GET /api/admin/stats
 export async function getStats(_req, res) {
-  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards, contacts, hiddenDonors, pushDevices, pushDonors] = await Promise.all([
+  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards, contacts, hiddenDonors, pushDevices, pushDonors, appInstalls] = await Promise.all([
     Donor.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
     Complaint.countDocuments({ status: "Open" }),
     PatientRequest.countDocuments({ status: "Pending" }),
@@ -80,6 +93,7 @@ export async function getStats(_req, res) {
     }),
     PushSubscription.estimatedDocumentCount(),
     PushSubscription.countDocuments({ donor: mongoose.trusted({ $ne: null }) }),
+    appInstallSummary(),
   ]);
   const count = (status) => byStatus.find((row) => row._id === status)?.count ?? 0;
 
@@ -96,6 +110,7 @@ export async function getStats(_req, res) {
       contacts,
       hiddenDonors,
       push: { enabled: pushEnabled, devices: pushDevices, donors: pushDonors },
+      appInstalls,
     },
   });
 }

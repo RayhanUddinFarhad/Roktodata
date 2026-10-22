@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Copy, Download, Loader2, Share2, X } from "lucide-react";
-import "@/lib/canvasCompat";
+import { alignTextManually } from "@/lib/canvasCompat";
 import { toBanglaNumber, type BloodRequest } from "@/lib/data";
 
 // The Facebook poster for a blood request (for the requester right after submitting, and for the
@@ -56,7 +56,7 @@ export async function drawPoster(request: BloodRequest): Promise<HTMLCanvasEleme
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = alignTextManually(canvas.getContext("2d")!);
   const font = (weight: number, size: number, family = fonts) => (ctx.font = `${weight} ${size}px ${family}`);
   ctx.textBaseline = "alphabetic";
 

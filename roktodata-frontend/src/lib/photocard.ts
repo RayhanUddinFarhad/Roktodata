@@ -2,7 +2,7 @@
 // shaped by the browser with the site's fonts) in a 1080 x 1350 card; the story size (1080 x 1920)
 // draws the same card in the middle of a taller background.
 // Each design returns where its editable parts are, so the page can make them tappable.
-import "@/lib/canvasCompat";
+import { alignTextManually } from "@/lib/canvasCompat";
 import { toBanglaNumber, type BloodGroup } from "@/lib/data";
 
 export const CARD_W = 1080;
@@ -662,8 +662,8 @@ function drawCertificate(ctx: CanvasRenderingContext2D, s: CardState, o: Options
   ctx.fillStyle = p.main; setFont(ctx, 400, 44, fonts.deco); ctx.fillText("রক্তদাতা পরিবার", 770, 1130);
   ctx.fillStyle = p.text; setFont(ctx, 400, 24, fonts.body);
   const today = new Date(Date.now() + 6 * 3600e3).toISOString().slice(0, 10);
-  ctx.fillText(bnDate(today), 770, 1190);
-  if (s.district) { setFont(ctx, 600, 26, fonts.body); ctx.fillText(s.district, 770, 1226); }
+  // date and district on one line under the signature, clear of the phone line below
+  fitText(ctx, [bnDate(today), s.district].filter(Boolean).join(" · "), 770, 1190, 300, 24, 400, fonts.body, 16);
   const regions: Regions = { name: { x: 210, y: 530, w: 660, h: 130 }, group: { x: x0 - 10, y: 696, w: Math.max(gw + 20, 80), h: 48 }, counter: { x: 330, y: 760, w: 420, h: 120 }, photo: { cx: 540, cy: 230, r: 100, ry: 116 } };
   if (o.preview && !s.name.trim()) hint(ctx, regions.name, p.main, anim.t);
   footer(ctx, s, fonts, 1264, p.text, p.main);
@@ -808,6 +808,7 @@ const STORY_BG: Record<DesignId, (palette: number) => string> = {
 // Draws the whole card on a canvas already sized to the card (1080 x 1350 or 1080 x 1920) and
 // returns the editable regions in canvas pixels.
 export function drawCard(ctx: CanvasRenderingContext2D, s: CardState, o: Options): Regions {
+  alignTextManually(ctx);
   const h = s.size === "story" ? STORY_H : CARD_H;
   ctx.save();
   ctx.clearRect(0, 0, CARD_W, h);
@@ -820,8 +821,9 @@ export function drawCard(ctx: CanvasRenderingContext2D, s: CardState, o: Options
   ctx.translate(0, dy);
   const r = DRAW[s.design](ctx, s, o);
   ctx.restore();
-  if (s.size === "story") {
-    // continue the card's own background into the extra space by stretching its edges
+  // continue the card's own background into the extra space by stretching its edges (not for the
+  // blood bag: its drop pattern would turn into stripes; its plain colour is already there)
+  if (s.size === "story" && s.design !== "bag") {
     ctx.drawImage(ctx.canvas, 0, dy, CARD_W, 2, 0, 0, CARD_W, dy);
     ctx.drawImage(ctx.canvas, 0, dy + CARD_H - 2, CARD_W, 2, 0, dy + CARD_H, CARD_W, dy);
   }

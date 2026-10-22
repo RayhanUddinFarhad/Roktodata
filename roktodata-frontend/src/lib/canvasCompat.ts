@@ -25,3 +25,23 @@ function roundRect(this: CanvasRenderingContext2D, x: number, y: number, w: numb
 if (typeof CanvasRenderingContext2D !== "undefined" && !CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = roundRect;
 }
+
+// Some phone browsers (seen in an Android in-app browser) ignore textAlign "center"/"right" for Bangla
+// text, so it starts at the anchor instead of ending or centring there, while measureText still gives
+// the right width. This makes one context align text itself: each string is measured and drawn
+// left-aligned at the computed position. Only the given context changes; calling it again is harmless.
+export function alignTextManually(ctx: CanvasRenderingContext2D) {
+  if (Object.prototype.hasOwnProperty.call(ctx, "fillText")) return ctx;
+  const native = CanvasRenderingContext2D.prototype.fillText;
+  ctx.fillText = function (text: string, x: number, y: number, maxWidth?: number) {
+    const align = this.textAlign;
+    const rtl = this.direction === "rtl";
+    const shift = align === "center" ? 0.5 : align === "right" || (align === "end" && !rtl) || (align === "start" && rtl) ? 1 : 0;
+    if (!shift) return native.call(this, text, x, y, maxWidth);
+    const width = Math.min(this.measureText(text).width, maxWidth ?? Infinity);
+    this.textAlign = "left";
+    native.call(this, text, x - width * shift, y, maxWidth);
+    this.textAlign = align;
+  };
+  return ctx;
+}

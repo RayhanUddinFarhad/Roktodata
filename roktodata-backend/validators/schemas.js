@@ -11,6 +11,7 @@ import {
   REQUEST_STATUS,
 } from "../config/constants.js";
 import { thanasOf } from "../config/locations.js";
+import { APP_PLATFORMS } from "../models/AppInstall.js";
 import { dhakaDay, dhakaDayPlus } from "../utils/dhakaDate.js";
 
 // Treat empty strings (e.g. "?district=") as "not provided".
@@ -282,4 +283,10 @@ export const adminPushSchema = z.object({
   body: text("বার্তা", 200),
   url: z.preprocess(emptyToUndefined, z.string().trim().max(200).regex(/^\/(?!\/)/,"লিংক / দিয়ে শুরু হতে হবে, যেমন /learn").optional()),
   district: z.preprocess(emptyToUndefined, district.optional()),
+});
+
+// A device that installed the app: its random id on the site, and what kind of device it is.
+export const appInstallSchema = z.object({
+  device: z.string().regex(/^[A-Za-z0-9-]{16,64}$/),
+  platform: z.enum(APP_PLATFORMS).default("other"),
 });

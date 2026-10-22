@@ -200,6 +200,13 @@ export function searchForPatient(payload: PatientRequestPayload, verificationTok
   );
 }
 
+// ---- App installs ----
+
+// Counts this device as having the app (the server ignores repeats from the same device).
+export function reportAppInstall(device: string, platform: "android" | "ios" | "desktop" | "other") {
+  return request<{ success: boolean }>("/api/app/install", { ...jsonRequest("POST", { device, platform }), keepalive: true });
+}
+
 // ---- Notifications ----
 
 export function getPushKey() {
@@ -298,6 +305,8 @@ export interface AdminStats {
   hiddenDonors: number; // approved donors who chose "not ready" and haven't reached their return date
   // Devices with notifications on, and how many of them belong to a registered donor.
   push: { enabled: boolean; devices: number; donors: number };
+  // Devices that installed the app: today, the last 7 days and in total.
+  appInstalls: { today: number; week: number; total: number };
 }
 
 export interface ContactCounts {

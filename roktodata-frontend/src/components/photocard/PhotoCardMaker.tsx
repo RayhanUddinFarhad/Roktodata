@@ -86,6 +86,12 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
       setFonts({ body, deco: decoFont });
     });
   }, [decoFont]);
+  // A font that arrives after the card was first drawn (slow network): draw everything again with it.
+  useEffect(() => {
+    const redraw = () => setFonts((f) => (f ? { ...f } : f));
+    document.fonts?.addEventListener?.("loadingdone", redraw);
+    return () => document.fonts?.removeEventListener?.("loadingdone", redraw);
+  }, []);
   useEffect(() => {
     if (!restored.current) return;
     try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch { /* storage unavailable */ }
@@ -264,6 +270,11 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
   }
   async function render(card: CardState): Promise<Blob | null> {
     if (!fonts) return null;
+    // the saved image must use the real fonts: give a slow font a last moment to arrive
+    await Promise.race([
+      Promise.allSettled(["400", "600", "700"].map((w) => document.fonts?.load(`${w} 40px ${fonts.body}`, "রক্তদাতা ০১২৩"))),
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+    ]);
     const c = document.createElement("canvas");
     c.width = CARD_W;
     c.height = cardHeight(card.size);
