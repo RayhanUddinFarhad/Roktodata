@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { CircleCheck, EyeOff, Loader2, MapPin, MessageSquareText, Pencil, Phone, RotateCw, ShieldCheck, UserCheck } from "lucide-react";
+import AppInstallButton from "@/components/AppInstallButton";
 import OtpInput from "@/components/OtpInput";
 import ThanaSelect from "@/components/ThanaSelect";
 import PushOfferCard from "@/components/PushOfferCard";
@@ -607,6 +608,7 @@ export default function DonorRegisterForm() {
             <ShieldCheck className="h-3.5 w-3.5" />
             যাচাইকৃত নাম্বার: {prettyPhone(phone)}
           </span>
+          <AppInstallButton className="mt-5" />
           {isReadyToDonate && verification && (
             <PushOfferCard
               className="mt-5 w-full max-w-md"
