@@ -89,6 +89,18 @@ export function warmUpApi() {
   fetch(`${API_URL}/api/health`, { cache: "no-store" }).catch(() => {});
 }
 
+// Counts a tap on a donor's call or WhatsApp button for the admin panel. Sent as a beacon, so the
+// call or chat opens straight away and the count still arrives if the page is left.
+export function trackDonorContact(donorId: string, type: "call" | "whatsapp") {
+  const url = `${API_URL}/api/donors/${donorId}/contact?type=${type}`;
+  try {
+    if (navigator.sendBeacon?.(url)) return;
+  } catch {
+    /* fall back to fetch */
+  }
+  fetch(url, { method: "POST", keepalive: true }).catch(() => {});
+}
+
 export interface SearchResult {
   message?: string;
   count: number;
@@ -256,12 +268,23 @@ export interface AdminStats {
   pendingRequests: number;
   pendingFraudReports: number;
   photoCards: number; // photo cards made so far (downloaded or shared)
+  // Taps on donors' call / WhatsApp buttons, and how many different donors they were for.
+  contacts: Record<"today" | "week" | "total", ContactCounts>;
+}
+
+export interface ContactCounts {
+  call: number;
+  whatsapp: number;
+  donors: number;
 }
 
 export interface AdminDonor extends Donor {
   isReadyToDonate: boolean;
   // While not ready: the date they become ready again by themselves (YYYY-MM-DD), or null.
   readyAgainAt: string | null;
+  // Taps on this donor's call / WhatsApp buttons on the site.
+  contacts: { call: number; whatsapp: number };
+  lastContactedAt: string | null;
   status: DonorStatus;
   // Why the admin blocked them (shown in the public fraud list); "" unless Blocked.
   blockReason: string;
@@ -295,7 +318,7 @@ export function getAdminStats(token: string) {
   return request<{ stats: AdminStats }>("/api/admin/stats", { headers: auth(token) });
 }
 
-export function getAdminDonors(token: string, params: { status?: DonorStatus; q?: string; page?: number }) {
+export function getAdminDonors(token: string, params: { status?: DonorStatus; q?: string; page?: number; sort?: "contacts" }) {
   return request<Paginated & { donors: AdminDonor[] }>(`/api/admin/donors?${toQuery(params)}`, {
     headers: auth(token),
   });

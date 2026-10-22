@@ -5,10 +5,12 @@ import { env } from "../config/env.js";
 import { COMPLAINT_REASONS, FRAUD_REASONS } from "../config/constants.js";
 import { Complaint } from "../models/Complaint.js";
 import { Donor } from "../models/Donor.js";
+import { DonorContact } from "../models/DonorContact.js";
 import { FraudReport } from "../models/FraudReport.js";
 import { PatientRequest } from "../models/PatientRequest.js";
 import { photoCardsMade } from "./photocardController.js";
 import { AppError } from "../utils/AppError.js";
+import { dhakaDay } from "../utils/dhakaDate.js";
 import { escapeRegex } from "../utils/findDonors.js";
 import { toPublicRequest } from "./patientController.js";
 
@@ -36,14 +38,37 @@ export async function login(req, res) {
   res.json({ success: true, token, message: "সফলভাবে লগইন হয়েছে।" });
 }
 
+// Call / WhatsApp taps today (Bangladesh time), in the last 7 days and in total, with how many
+// different donors were contacted.
+async function contactSummary() {
+  const today = new Date(`${dhakaDay()}T00:00:00+06:00`);
+  const week = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+  const bucket = (from) => [
+    ...(from ? [{ $match: { createdAt: { $gte: from } } }] : []),
+    {
+      $group: {
+        _id: null,
+        call: { $sum: { $cond: [{ $eq: ["$type", "call"] }, 1, 0] } },
+        whatsapp: { $sum: { $cond: [{ $eq: ["$type", "whatsapp"] }, 1, 0] } },
+        donors: { $addToSet: "$donor" },
+      },
+    },
+    { $project: { _id: 0, call: 1, whatsapp: 1, donors: { $size: "$donors" } } },
+  ];
+  const [result] = await DonorContact.aggregate([{ $facet: { today: bucket(today), week: bucket(week), total: bucket() } }]);
+  const pick = (rows) => rows[0] ?? { call: 0, whatsapp: 0, donors: 0 };
+  return { today: pick(result.today), week: pick(result.week), total: pick(result.total) };
+}
+
 // GET /api/admin/stats
 export async function getStats(_req, res) {
-  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards] = await Promise.all([
+  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards, contacts] = await Promise.all([
     Donor.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
     Complaint.countDocuments({ status: "Open" }),
     PatientRequest.countDocuments({ status: "Pending" }),
     FraudReport.countDocuments({ status: "Pending" }),
     photoCardsMade(),
+    contactSummary(),
   ]);
   const count = (status) => byStatus.find((row) => row._id === status)?.count ?? 0;
 
@@ -57,13 +82,14 @@ export async function getStats(_req, res) {
       pendingRequests,
       pendingFraudReports,
       photoCards,
+      contacts,
     },
   });
 }
 
 // GET /api/admin/donors?status=&q=&page=
 export async function listDonors(req, res) {
-  const { status, q, page } = req.validated;
+  const { status, q, page, sort } = req.validated;
 
   const filter = {};
   if (status) filter.status = status;
@@ -76,7 +102,7 @@ export async function listDonors(req, res) {
 
   const [donors, total] = await Promise.all([
     Donor.find(filter)
-      .sort({ createdAt: -1 })
+      .sort(sort === "contacts" ? { "contacts.total": -1, lastContactedAt: -1 } : { createdAt: -1 })
       .skip((page - 1) * PAGE_SIZE)
       .limit(PAGE_SIZE)
       .lean(),
@@ -104,6 +130,8 @@ export async function listDonors(req, res) {
       lastDonationDate: toDate(donor.lastDonationDate),
       isReadyToDonate: donor.isReadyToDonate,
       readyAgainAt: toDate(donor.readyAgainAt),
+      contacts: { call: donor.contacts?.call ?? 0, whatsapp: donor.contacts?.whatsapp ?? 0 },
+      lastContactedAt: donor.lastContactedAt ? donor.lastContactedAt.toISOString() : null,
       status: donor.status,
       blockReason: donor.blockReason ?? "",
       // Blocked donors are listed publicly as fraudulent unless the admin hid them.

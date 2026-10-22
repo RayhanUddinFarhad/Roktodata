@@ -134,11 +134,14 @@ export const adminLoginSchema = z.object({
 });
 
 export const idParamSchema = z.object({ id: objectId("আইডি") });
+export const contactTypeSchema = z.object({ type: z.enum(["call", "whatsapp"], { error: "সঠিক ধরন দিন।" }) });
 
 export const adminDonorListSchema = z.object({
   status: z.preprocess(emptyToUndefined, z.enum(DONOR_STATUS).optional()),
   q: optionalText("খোঁজার শব্দ", 60),
   page: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(1000).default(1)),
+  // "contacts": most call / WhatsApp taps first; otherwise newest first.
+  sort: z.preprocess(emptyToUndefined, z.enum(["contacts"]).optional()),
 });
 
 // Blocking needs a reason: it is shown publicly in the fraud list.

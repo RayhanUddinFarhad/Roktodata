@@ -9,11 +9,13 @@ import {
   ClipboardList,
   IdCard,
   LogOut,
+  PhoneCall,
   MessageSquareWarning,
   ShieldAlert,
   UserCheck,
   UserX,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/BrandIcons";
 import LogoMark from "@/components/Logo";
 import ComplaintsPanel from "@/components/admin/ComplaintsPanel";
 import DonorsPanel from "@/components/admin/DonorsPanel";
@@ -135,6 +137,35 @@ export default function AdminDashboard({
             </div>
           ))}
         </div>
+
+        {/* taps on donors' call / WhatsApp buttons */}
+        <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 className="font-bold text-slate-900">ডোনারদের সাথে যোগাযোগ</h2>
+            <p className="text-xs text-slate-500">সাইটে ডোনারের &quot;কল করুন&quot; ও &quot;WhatsApp&quot; বাটনে চাপের হিসাব</p>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {([["today", "আজ"], ["week", "গত ৭ দিন"], ["total", "মোট"]] as const).map(([key, label]) => {
+              const c = stats?.contacts?.[key];
+              return (
+                <div key={key} className="rounded-lg bg-slate-50 p-3">
+                  <p className="text-xs font-semibold text-slate-500">{label}</p>
+                  <div className="mt-2 flex items-center gap-4">
+                    <span className="flex items-center gap-1.5 text-sm text-slate-700">
+                      <PhoneCall className="h-4 w-4 text-emerald-700" />
+                      <strong className="text-lg text-slate-900">{c?.call ?? "–"}</strong> কল
+                    </span>
+                    <span className="flex items-center gap-1.5 text-sm text-slate-700">
+                      <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
+                      <strong className="text-lg text-slate-900">{c?.whatsapp ?? "–"}</strong> WhatsApp
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">{c ? `${c.donors} জন ডোনারের সাথে` : "–"}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
         <div className="mt-6 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-200">
           {tabs.map((t) => (

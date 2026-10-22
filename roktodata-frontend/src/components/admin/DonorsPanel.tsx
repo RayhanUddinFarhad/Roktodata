@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Ban, CalendarDays, Check, Eye, EyeOff, MapPin, MessageSquareWarning, Phone, RotateCw, Search, Trash2 } from "lucide-react";
+import { Ban, CalendarDays, Check, Eye, EyeOff, MapPin, MessageSquareWarning, Phone, PhoneCall, RotateCw, Search, Trash2 } from "lucide-react";
 import type { AdminContext } from "@/components/admin/AdminDashboard";
 import {
   ActionButton,
@@ -36,9 +36,11 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [page, setPage] = useState(1);
+  // "contacts": the donors whose call / WhatsApp buttons were tapped most come first.
+  const [sort, setSort] = useState<"" | "contacts">("");
   const [data, setData] = useState<{ donors: AdminDonor[]; total: number; pages: number } | null>(null);
   // Loading until the response for the current filters/page/refresh has arrived.
-  const requestKey = `${refreshKey}|${status}|${debouncedQuery}|${page}`;
+  const requestKey = `${refreshKey}|${status}|${debouncedQuery}|${page}|${sort}`;
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const loading = loadedKey !== requestKey;
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
 
   useEffect(() => {
     let cancelled = false;
-    getAdminDonors(token, { status: status || undefined, q: debouncedQuery || undefined, page })
+    getAdminDonors(token, { status: status || undefined, q: debouncedQuery || undefined, page, sort: sort || undefined })
       .then((result) => {
         if (cancelled) return;
         // Acting on the last item of a page can leave it empty; step back a page.
@@ -66,7 +68,7 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
     return () => {
       cancelled = true;
     };
-  }, [token, requestKey, status, debouncedQuery, page, onError]);
+  }, [token, requestKey, status, debouncedQuery, page, sort, onError]);
 
   async function act(donor: AdminDonor, action: () => Promise<{ message: string }>) {
     setBusyId(donor.id);
@@ -113,6 +115,17 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
                 {label}
               </option>
             ))}
+          </select>
+          <select
+            value={sort}
+            onChange={(e) => {
+              setSort(e.target.value as "" | "contacts");
+              setPage(1);
+            }}
+            className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm focus:border-red-500 focus:outline-none sm:w-56"
+          >
+            <option value="">নতুন ডোনার আগে</option>
+            <option value="contacts">সবচেয়ে বেশি যোগাযোগ আগে</option>
           </select>
         </div>
       )}
@@ -179,6 +192,11 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
                       শেষ রক্তদান: {donor.lastDonationDate ?? NOT_MENTIONED}
                     </span>
                     <span>রেজিস্ট্রেশন: {formatDate(donor.createdAt)}</span>
+                    <span className="flex items-center gap-1" title="সাইটে এই ডোনারের কল / WhatsApp বাটনে চাপ">
+                      <PhoneCall className="h-3 w-3 text-emerald-700" />
+                      কল {donor.contacts.call} · WhatsApp {donor.contacts.whatsapp}
+                      {donor.lastContactedAt && <span className="text-slate-400">(শেষ: {formatDate(donor.lastContactedAt)})</span>}
+                    </span>
                   </div>
                   {donor.status === "Blocked" && (
                     <p

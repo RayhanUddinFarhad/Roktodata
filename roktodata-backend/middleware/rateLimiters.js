@@ -22,6 +22,8 @@ export const otpSendLimiter = limiter(60, 10);
 export const otpSendDailyLimiter = limiter(24 * 60, 15);
 export const otpVerifyLimiter = limiter(15, 30);
 export const patientSearchLimiter = limiter(15, 30);
+// Call / WhatsApp tap counts; generous, since one person may try many donors.
+export const contactLimiter = limiter(60, 120);
 export const complaintLimiter = limiter(60, 10);
 // Photo card serial reservations; generous because many mobile users share one IP address, but
 // stops someone draining the numbers.

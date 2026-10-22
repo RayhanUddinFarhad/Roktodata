@@ -8,7 +8,7 @@ import ComplaintButton from "@/components/ComplaintButton";
 import { RequestPosterPanel } from "@/components/RequestPoster";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ThanaSelect from "@/components/ThanaSelect";
-import { ApiError, searchForPatient } from "@/lib/api";
+import { ApiError, searchForPatient, trackDonorContact } from "@/lib/api";
 import {
   BLOOD_GROUPS,
   type BloodGroup,
@@ -402,9 +402,15 @@ function DonorList({
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <ComplaintButton donor={donor} />
-                <WhatsAppButton phone={donor.phoneNumber} message={donorWhatsAppMessage(donor.bloodGroup)} size="md" />
+                <WhatsAppButton
+                  phone={donor.phoneNumber}
+                  message={donorWhatsAppMessage(donor.bloodGroup)}
+                  size="md"
+                  onClick={() => trackDonorContact(donor.id, "whatsapp")}
+                />
                 <a
                   href={`tel:${donor.phoneNumber}`}
+                  onClick={() => trackDonorContact(donor.id, "call")}
                   className="flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
                 >
                   <PhoneCall className="h-3.5 w-3.5" />

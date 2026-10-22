@@ -24,6 +24,13 @@ const donorSchema = new mongoose.Schema(
     readyAgainAt: { type: Date, default: null },
     // The last donation date the "you can donate again" SMS was sent for, so it goes once per donation.
     eligibleReminderFor: { type: Date, default: null },
+    // Taps on this donor's call / WhatsApp buttons on the site (see DonorContact).
+    contacts: {
+      call: { type: Number, default: 0 },
+      whatsapp: { type: Number, default: 0 },
+      total: { type: Number, default: 0 },
+    },
+    lastContactedAt: { type: Date, default: null },
     status: { type: String, enum: DONOR_STATUS, default: "Pending" },
     // Set while Blocked: a blocked donor is listed publicly as fraudulent with this reason.
     blockReason: { type: String, trim: true, maxlength: 300, default: "" },

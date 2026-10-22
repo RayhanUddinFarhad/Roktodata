@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { CalendarDays, MapPin, Phone, PhoneCall } from "lucide-react";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import ComplaintButton from "@/components/ComplaintButton";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { trackDonorContact } from "@/lib/api";
 import { type Donor, donorWhatsAppMessage, formatLocation, NOT_MENTIONED } from "@/lib/data";
 
 // The update page with this donor's public details filled in and "not ready" chosen, for a donor
@@ -42,9 +45,14 @@ export default function DonorCard({ donor }: { donor: Donor }) {
         </span>
         <div className="mt-2.5 flex flex-wrap items-center justify-end gap-2">
           <ComplaintButton donor={donor} />
-          <WhatsAppButton phone={donor.phoneNumber} message={donorWhatsAppMessage(donor.bloodGroup)} />
+          <WhatsAppButton
+            phone={donor.phoneNumber}
+            message={donorWhatsAppMessage(donor.bloodGroup)}
+            onClick={() => trackDonorContact(donor.id, "whatsapp")}
+          />
           <a
             href={`tel:${donor.phoneNumber}`}
+            onClick={() => trackDonorContact(donor.id, "call")}
             className="flex items-center gap-1 rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
           >
             <PhoneCall className="h-3 w-3" />

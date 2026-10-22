@@ -8,15 +8,18 @@ export default function WhatsAppButton({
   message,
   label = "WhatsApp",
   size = "sm",
+  onClick,
 }: {
   phone: string;
   message: string;
   label?: string;
   size?: "sm" | "md";
+  onClick?: () => void;
 }) {
   return (
     <a
       href={whatsappLink(phone, message)}
+      onClick={onClick}
       target="_blank"
       rel="noopener noreferrer"
       title="এই নাম্বারে WhatsApp থাকলে মেসেজ পাঠান"
