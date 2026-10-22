@@ -388,7 +388,26 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
 
       {/* ---- controls ---- */}
       <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:order-1">
-        {/* what every card needs comes first, so phones see it right under the card */}
+        <section>
+          <h2 className="text-sm font-bold text-slate-900">ডিজাইন</h2>
+          {/* right under the card on phones: one row to swipe through; all six in a row on wider screens */}
+          <div ref={picker} className="-mx-4 mt-2 flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-6 sm:overflow-visible sm:px-0">
+            {DESIGNS.map((d) => (
+              <button key={d.id} type="button" onClick={() => update({ design: d.id, palette: 0 })}
+                className={`w-20 shrink-0 snap-start overflow-hidden rounded-xl border-2 text-center transition sm:w-auto ${s.design === d.id ? "border-red-600 shadow-md" : "border-transparent hover:border-slate-300"}`}>
+                <span className="block aspect-[4/5] bg-slate-100">
+                  {thumbs[d.id] && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={thumbs[d.id]} alt="" className="h-full w-full object-cover" />
+                  )}
+                </span>
+                <span className="block py-1 text-[11px] font-semibold text-slate-700">{d.label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* then what every card needs */}
         <section className="grid gap-4 sm:grid-cols-2">
           <label className="block">
             <span className="text-sm font-bold text-slate-900">আপনার নাম</span>
@@ -446,25 +465,6 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
               <p className="mt-1 text-[11px] text-amber-700">কার্ডটা অনেকে দেখবে; নাম্বার দিলে অচেনা কল আসতে পারে।</p>
             </div>
           )}
-        </section>
-
-        <section>
-          <h2 className="text-sm font-bold text-slate-900">ডিজাইন</h2>
-          {/* one row to swipe through on phones, all six in a row on wider screens */}
-          <div ref={picker} className="-mx-4 mt-2 flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-6 sm:overflow-visible sm:px-0">
-            {DESIGNS.map((d) => (
-              <button key={d.id} type="button" onClick={() => update({ design: d.id, palette: 0 })}
-                className={`w-24 shrink-0 snap-start overflow-hidden rounded-xl border-2 text-center transition sm:w-auto ${s.design === d.id ? "border-red-600 shadow-md" : "border-transparent hover:border-slate-300"}`}>
-                <span className="block aspect-[4/5] bg-slate-100">
-                  {thumbs[d.id] && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumbs[d.id]} alt="" className="h-full w-full object-cover" />
-                  )}
-                </span>
-                <span className="block py-1 text-[11px] font-semibold text-slate-700">{d.label}</span>
-              </button>
-            ))}
-          </div>
         </section>
 
         <section>
