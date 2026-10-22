@@ -33,7 +33,9 @@ export async function registerOrUpdateDonor(req, res) {
     if (existing.status === "Blocked") {
       throw new AppError(403, "এই প্রোফাইলটি ব্লক করা হয়েছে। বিস্তারিত জানতে Roktodatainfo@gmail.com-এ ইমেইল করুন।");
     }
-    existing.set(details);
+    // Switching to "not ready" starts the hidden period; staying not ready keeps its start.
+    const notReadySince = details.isReadyToDonate ? null : existing.isReadyToDonate || !existing.notReadySince ? new Date() : existing.notReadySince;
+    existing.set({ ...details, notReadySince });
     if (lastDonationDate) existing.lastDonationDate = lastDonationDate;
     existing.readyAgainAt = readyAgainDate(details.isReadyToDonate, readyAgain, existing.lastDonationDate);
     await existing.save();
@@ -54,6 +56,7 @@ export async function registerOrUpdateDonor(req, res) {
     phoneNumber,
     lastDonationDate: lastDonationDate ?? null,
     readyAgainAt: readyAgainDate(details.isReadyToDonate, readyAgain, lastDonationDate),
+    notReadySince: details.isReadyToDonate ? null : new Date(),
   });
   res.status(201).json({
     success: true,

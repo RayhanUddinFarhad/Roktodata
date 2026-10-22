@@ -23,7 +23,7 @@ import FraudTab from "@/components/admin/FraudTab";
 import RequestsPanel from "@/components/admin/RequestsPanel";
 import { ApiError, getAdminStats, type AdminStats } from "@/lib/api";
 
-type Tab = "pending" | "donors" | "requests" | "fraud" | "complaints";
+type Tab = "pending" | "donors" | "hidden" | "requests" | "fraud" | "complaints";
 
 export interface AdminContext {
   token: string;
@@ -98,6 +98,7 @@ export default function AdminDashboard({
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "pending", label: "অনুমোদনের অপেক্ষায়", count: stats?.pending },
     { id: "donors", label: "সকল ডোনার" },
+    { id: "hidden", label: "লুকানো ডোনার", count: stats?.hiddenDonors },
     { id: "requests", label: "রক্তের অনুরোধ", count: stats?.pendingRequests },
     { id: "fraud", label: "প্রতারণার রিপোর্ট", count: stats?.pendingFraudReports },
     { id: "complaints", label: "অভিযোগসমূহ", count: stats?.openComplaints },
@@ -190,6 +191,7 @@ export default function AdminDashboard({
         <div className="mt-5">
           {tab === "pending" && <DonorsPanel key="pending" ctx={ctx} fixedStatus="Pending" />}
           {tab === "donors" && <DonorsPanel key="donors" ctx={ctx} />}
+          {tab === "hidden" && <DonorsPanel key="hidden" ctx={ctx} hidden />}
           {tab === "requests" && <RequestsPanel ctx={ctx} />}
           {tab === "fraud" && <FraudTab ctx={ctx} />}
           {tab === "complaints" && <ComplaintsPanel ctx={ctx} />}

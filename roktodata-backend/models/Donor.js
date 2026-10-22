@@ -22,6 +22,8 @@ const donorSchema = new mongoose.Schema(
     // While not ready: when the donor becomes ready again on their own (chosen as "1/3/6 months");
     // null means not until they change it themselves.
     readyAgainAt: { type: Date, default: null },
+    // When the donor last switched to "not ready" (null while ready), for the admin's hidden-donor list.
+    notReadySince: { type: Date, default: null },
     // The last donation date the "you can donate again" SMS was sent for, so it goes once per donation.
     eligibleReminderFor: { type: Date, default: null },
     // Taps on this donor's call / WhatsApp buttons on the site (see DonorContact).

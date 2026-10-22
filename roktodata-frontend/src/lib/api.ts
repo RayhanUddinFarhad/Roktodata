@@ -270,6 +270,7 @@ export interface AdminStats {
   photoCards: number; // photo cards made so far (downloaded or shared)
   // Taps on donors' call / WhatsApp buttons, and how many different donors they were for.
   contacts: Record<"today" | "week" | "total", ContactCounts>;
+  hiddenDonors: number; // approved donors who chose "not ready" and haven't reached their return date
 }
 
 export interface ContactCounts {
@@ -282,6 +283,8 @@ export interface AdminDonor extends Donor {
   isReadyToDonate: boolean;
   // While not ready: the date they become ready again by themselves (YYYY-MM-DD), or null.
   readyAgainAt: string | null;
+  // When they last chose "not ready" (YYYY-MM-DD), or null while ready.
+  notReadySince: string | null;
   // Taps on this donor's call / WhatsApp buttons on the site.
   contacts: { call: number; whatsapp: number };
   lastContactedAt: string | null;
@@ -318,7 +321,7 @@ export function getAdminStats(token: string) {
   return request<{ stats: AdminStats }>("/api/admin/stats", { headers: auth(token) });
 }
 
-export function getAdminDonors(token: string, params: { status?: DonorStatus; q?: string; page?: number; sort?: "contacts" }) {
+export function getAdminDonors(token: string, params: { status?: DonorStatus; q?: string; page?: number; sort?: "contacts"; ready?: "hidden" }) {
   return request<Paginated & { donors: AdminDonor[] }>(`/api/admin/donors?${toQuery(params)}`, {
     headers: auth(token),
   });

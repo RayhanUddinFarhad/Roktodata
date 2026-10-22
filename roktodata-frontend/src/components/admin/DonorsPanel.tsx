@@ -16,7 +16,8 @@ import { deleteDonor, getAdminDonors, setDonorFraudListing, setDonorStatus, type
 import { type DonorStatus, formatLocation, NOT_MENTIONED } from "@/lib/data";
 
 // Lists donors. With fixedStatus="Pending" it is the approval queue, with fixedStatus="Blocked" the blocked
-// donors behind the public fraud list; otherwise it has a status filter and search.
+// donors behind the public fraud list; with hidden, the donors who chose "not ready" (most recently hidden
+// first); otherwise it has a status filter and search.
 const FIXED_TEXT: Partial<Record<DonorStatus, { intro: string; empty: string }>> = {
   Pending: {
     intro: "নতুন রেজিস্ট্রেশনগুলো যাচাই করে অনুমোদন দিন। অনুমোদনের আগে এরা ওয়েবসাইটে দেখা যাবে না।",
@@ -28,7 +29,7 @@ const FIXED_TEXT: Partial<Record<DonorStatus, { intro: string; empty: string }>>
     empty: "কোনো ব্লক করা ডোনার নেই।",
   },
 };
-export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; fixedStatus?: DonorStatus }) {
+export default function DonorsPanel({ ctx, fixedStatus, hidden = false }: { ctx: AdminContext; fixedStatus?: DonorStatus; hidden?: boolean }) {
   const { token, refreshKey, runAction, onError } = ctx;
   // Today in Bangladesh (YYYY-MM-DD), to tell whether a "not ready" donor's return date has come.
   const [today] = useState(() => new Date(Date.now() + 6 * 3600e3).toISOString().slice(0, 10));
@@ -52,7 +53,7 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
 
   useEffect(() => {
     let cancelled = false;
-    getAdminDonors(token, { status: status || undefined, q: debouncedQuery || undefined, page, sort: sort || undefined })
+    getAdminDonors(token, { status: status || undefined, q: debouncedQuery || undefined, page, sort: sort || undefined, ready: hidden ? "hidden" : undefined })
       .then((result) => {
         if (cancelled) return;
         // Acting on the last item of a page can leave it empty; step back a page.
@@ -68,7 +69,7 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
     return () => {
       cancelled = true;
     };
-  }, [token, requestKey, status, debouncedQuery, page, sort, onError]);
+  }, [token, requestKey, status, debouncedQuery, page, sort, hidden, onError]);
 
   async function act(donor: AdminDonor, action: () => Promise<{ message: string }>) {
     setBusyId(donor.id);
@@ -116,6 +117,7 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
               </option>
             ))}
           </select>
+          {!hidden && (
           <select
             value={sort}
             onChange={(e) => {
@@ -127,17 +129,22 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
             <option value="">নতুন ডোনার আগে</option>
             <option value="contacts">সবচেয়ে বেশি যোগাযোগ আগে</option>
           </select>
+          )}
         </div>
       )}
 
       <p className="mb-3 text-sm text-slate-500">
-        {fixedStatus ? FIXED_TEXT[fixedStatus]?.intro : `মোট ${data?.total ?? "…"} জন ডোনার`}
+        {fixedStatus
+          ? FIXED_TEXT[fixedStatus]?.intro
+          : hidden
+            ? `যাঁরা "এখন প্রস্তুত নই" দিয়েছেন: মোট ${data?.total ?? "…"} জন, সবশেষে লুকানো আগে। ফেরার তারিখ থাকলে সেদিন নিজে থেকেই তালিকায় ফেরেন।`
+            : `মোট ${data?.total ?? "…"} জন ডোনার`}
       </p>
 
       <ListState
         loading={loading}
         empty={donors.length === 0}
-        emptyText={(fixedStatus && FIXED_TEXT[fixedStatus]?.empty) || "কোনো ডোনার পাওয়া যায়নি।"}
+        emptyText={(fixedStatus && FIXED_TEXT[fixedStatus]?.empty) || (hidden ? "কেউ নিজেকে লুকাননি।" : "কোনো ডোনার পাওয়া যায়নি।")}
       />
 
       <ul className={`space-y-3 ${loading ? "opacity-60" : ""}`}>
@@ -192,6 +199,12 @@ export default function DonorsPanel({ ctx, fixedStatus }: { ctx: AdminContext; f
                       শেষ রক্তদান: {donor.lastDonationDate ?? NOT_MENTIONED}
                     </span>
                     <span>রেজিস্ট্রেশন: {formatDate(donor.createdAt)}</span>
+                    {!donor.isReadyToDonate && donor.notReadySince && (
+                      <span className="flex items-center gap-1 font-semibold text-amber-700">
+                        <EyeOff className="h-3 w-3" />
+                        লুকিয়েছেন: {donor.notReadySince}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1" title="সাইটে এই ডোনারের কল / WhatsApp বাটনে চাপ">
                       <PhoneCall className="h-3 w-3 text-emerald-700" />
                       কল {donor.contacts.call} · WhatsApp {donor.contacts.whatsapp}

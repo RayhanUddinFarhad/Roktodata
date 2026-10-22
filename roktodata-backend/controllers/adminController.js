@@ -62,13 +62,19 @@ async function contactSummary() {
 
 // GET /api/admin/stats
 export async function getStats(_req, res) {
-  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards, contacts] = await Promise.all([
+  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards, contacts, hiddenDonors] = await Promise.all([
     Donor.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
     Complaint.countDocuments({ status: "Open" }),
     PatientRequest.countDocuments({ status: "Pending" }),
     FraudReport.countDocuments({ status: "Pending" }),
     photoCardsMade(),
     contactSummary(),
+    // approved donors who chose "not ready" and haven't reached their return date
+    Donor.countDocuments({
+      status: "Active",
+      isReadyToDonate: false,
+      $or: [{ readyAgainAt: null }, { readyAgainAt: mongoose.trusted({ $gt: new Date() }) }],
+    }),
   ]);
   const count = (status) => byStatus.find((row) => row._id === status)?.count ?? 0;
 
@@ -83,16 +89,18 @@ export async function getStats(_req, res) {
       pendingFraudReports,
       photoCards,
       contacts,
+      hiddenDonors,
     },
   });
 }
 
 // GET /api/admin/donors?status=&q=&page=
 export async function listDonors(req, res) {
-  const { status, q, page, sort } = req.validated;
+  const { status, q, page, sort, ready } = req.validated;
 
   const filter = {};
   if (status) filter.status = status;
+  if (ready === "hidden") filter.isReadyToDonate = false;
   if (q) {
     // Digits search the phone number by prefix; anything else searches the name.
     filter.$or = /^\d+$/.test(q)
@@ -102,7 +110,13 @@ export async function listDonors(req, res) {
 
   const [donors, total] = await Promise.all([
     Donor.find(filter)
-      .sort(sort === "contacts" ? { "contacts.total": -1, lastContactedAt: -1 } : { createdAt: -1 })
+      .sort(
+        sort === "contacts"
+          ? { "contacts.total": -1, lastContactedAt: -1 }
+          : ready === "hidden"
+            ? { notReadySince: -1, updatedAt: -1 }
+            : { createdAt: -1 },
+      )
       .skip((page - 1) * PAGE_SIZE)
       .limit(PAGE_SIZE)
       .lean(),
@@ -130,6 +144,7 @@ export async function listDonors(req, res) {
       lastDonationDate: toDate(donor.lastDonationDate),
       isReadyToDonate: donor.isReadyToDonate,
       readyAgainAt: toDate(donor.readyAgainAt),
+      notReadySince: toDate(donor.notReadySince),
       contacts: { call: donor.contacts?.call ?? 0, whatsapp: donor.contacts?.whatsapp ?? 0 },
       lastContactedAt: donor.lastContactedAt ? donor.lastContactedAt.toISOString() : null,
       status: donor.status,
