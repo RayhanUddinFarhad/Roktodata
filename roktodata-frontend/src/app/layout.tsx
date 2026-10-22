@@ -10,7 +10,8 @@ import "./globals.css";
 
 const hindSiliguri = Hind_Siliguri({
   variable: "--font-hind-siliguri",
-  subsets: ["bengali", "latin"],
+  // Only the Bangla files are preloaded; the Latin ones still load when English text needs them.
+  subsets: ["bengali"],
   weight: ["400", "600", "700"], // 500 is not used: fewer fonts to load before text shows
 });
 

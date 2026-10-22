@@ -127,11 +127,6 @@ export default function BloodRequestsFeed() {
             </select>
           </label>
         </div>
-        <PushOfferCard
-          className="mt-4"
-          title="নতুন অনুরোধ এলে জানতে চান?"
-          text="আপনার এলাকায় কারো জরুরি রক্ত লাগলে সাথে সাথে নোটিফিকেশন পাবেন। দিনে সর্বোচ্চ ৩টি।"
-        />
       </section>
 
       {error ? (
@@ -191,6 +186,15 @@ export default function BloodRequestsFeed() {
             </div>
           )}
         </>
+      )}
+
+      {/* after the list, so it never pushes the requests down when it appears */}
+      {!loading && (
+        <PushOfferCard
+          className="mt-6"
+          title="নতুন অনুরোধ এলে জানতে চান?"
+          text="আপনার এলাকায় কারো জরুরি রক্ত লাগলে সাথে সাথে নোটিফিকেশন পাবেন। দিনে সর্বোচ্চ ৩টি।"
+        />
       )}
     </>
   );

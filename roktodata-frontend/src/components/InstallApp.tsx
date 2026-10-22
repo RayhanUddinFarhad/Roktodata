@@ -35,7 +35,7 @@ export default function InstallApp() {
   const [copied, setCopied] = useState(false);
 
   if (!state || !platform) {
-    return <div className="flex h-40 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>;
+    return <div className="flex h-24 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>;
   }
 
   if (state === "installed") {

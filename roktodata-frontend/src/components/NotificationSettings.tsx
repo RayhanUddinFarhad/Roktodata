@@ -43,7 +43,7 @@ export default function NotificationSettings() {
     }
   }
 
-  if (!status) return <div className="flex h-16 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-slate-400" /></div>;
+  if (!status) return <div className="flex h-40 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-slate-400" /></div>;
 
   const heading = (
     <p className="flex items-center gap-2 font-bold text-slate-900">
