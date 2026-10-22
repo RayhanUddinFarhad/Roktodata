@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Copy, Download, Loader2, Share2, X } from "lucide-react";
+import "@/lib/canvasCompat";
 import { toBanglaNumber, type BloodRequest } from "@/lib/data";
 
 // The Facebook poster for a blood request (for the requester right after submitting, and for the
@@ -41,9 +42,16 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
 
 export async function drawPoster(request: BloodRequest): Promise<HTMLCanvasElement> {
   // The page's font stack (Hind Siliguri, with Noto Sans Bengali for digits); wait until it is loaded.
+  // Some phone browsers reject or never settle font loading: then draw anyway after at most 3 seconds
+  // rather than failing.
   const fonts = getComputedStyle(document.body).fontFamily;
-  await Promise.all(["400", "600", "700"].map((w) => document.fonts.load(`${w} 40px ${fonts}`, "রক্তদাতা প্রয়োজন ০১২৩৪৫৬৭৮৯")));
-  await document.fonts.ready;
+  await Promise.race([
+    Promise.allSettled([
+      ...["400", "600", "700"].map(async (w) => document.fonts?.load(`${w} 40px ${fonts}`, "রক্তদাতা প্রয়োজন ০১২৩৪৫৬৭৮৯")),
+      document.fonts?.ready,
+    ]),
+    new Promise((resolve) => setTimeout(resolve, 3000)),
+  ]);
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -194,6 +202,7 @@ type PosterImageState = { url: string; file: File } | null;
 function usePoster(request: BloodRequest) {
   const [image, setImage] = useState<PosterImageState>(null);
   const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let cancelled = false;
     let url = "";
@@ -204,23 +213,35 @@ function usePoster(request: BloodRequest) {
         url = URL.createObjectURL(blob);
         setImage({ url, file: new File([blob], fileName(request), { type: "image/png" }) });
       })
-      .catch(() => !cancelled && setError("পোস্টার তৈরি করা যায়নি। আবার চেষ্টা করুন।"));
+      .catch((err) => {
+        console.error("Poster could not be drawn:", err);
+        if (!cancelled) setError("পোস্টার তৈরি করা যায়নি। আবার চেষ্টা করুন।");
+      });
     return () => {
       cancelled = true;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [request]);
-  return { image, error };
+  }, [request, attempt]);
+  const retry = () => {
+    setError("");
+    setAttempt((n) => n + 1);
+  };
+  return { image, error, retry };
 }
 
-function PosterImage({ request, image, error }: { request: BloodRequest; image: PosterImageState; error: string }) {
+function PosterImage({ request, image, error, onRetry }: { request: BloodRequest; image: PosterImageState; error: string; onRetry: () => void }) {
   return (
     <div className="flex aspect-[4/5] items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 shadow-sm">
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={image.url} alt={`${request.requiredBloodGroup} রক্তের অনুরোধের পোস্টার`} className="h-full w-full object-contain" />
       ) : error ? (
-        <p className="p-4 text-center text-sm text-red-600">{error}</p>
+        <div className="p-4 text-center">
+          <p className="text-sm text-red-600">{error}</p>
+          <button type="button" onClick={onRetry} className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
+            আবার চেষ্টা করুন
+          </button>
+        </div>
       ) : (
         <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
       )}
@@ -292,7 +313,7 @@ export function RequestPosterPanel({ request }: { request: BloodRequest }) {
   return (
     <div className="mt-6 grid gap-5 rounded-2xl border border-red-100 bg-linear-to-br from-red-50 to-white p-4 sm:grid-cols-[240px_minmax(0,1fr)] sm:items-center sm:p-5">
       <div className="mx-auto w-full max-w-[260px]">
-        <PosterImage request={request} image={poster.image} error={poster.error} />
+        <PosterImage request={request} image={poster.image} error={poster.error} onRetry={poster.retry} />
       </div>
       <div>
         <p className="text-lg font-bold text-slate-900">🎉 আপনার অনুরোধের পোস্টার তৈরি</p>
@@ -319,7 +340,7 @@ export function RequestPosterDialog({ request, onClose }: { request: BloodReques
             <X className="h-5 w-5" />
           </button>
         </div>
-        <PosterImage request={request} image={poster.image} error={poster.error} />
+        <PosterImage request={request} image={poster.image} error={poster.error} onRetry={poster.retry} />
         <div className="mt-3">
           <PosterActions request={request} image={poster.image} />
         </div>

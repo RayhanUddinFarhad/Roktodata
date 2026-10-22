@@ -66,13 +66,18 @@ export default function PhotoCardMaker({ decoFont }: { decoFont: string }) {
 
   const update = useCallback((patch: Partial<CardState>) => setS((prev) => ({ ...prev, ...patch })), []);
 
-  // load the fonts, then restore the saved card
+  // load the fonts, then restore the saved card. Some phone browsers reject or never settle font
+  // loading: then the card is drawn anyway after at most 3 seconds.
   const restored = useRef(false);
   useEffect(() => {
     const body = getComputedStyle(document.body).fontFamily;
-    Promise.all([
-      ...["400", "600", "700"].map((w) => document.fonts.load(`${w} 40px ${body}`, "রক্তদাতা ০১২৩")),
-      document.fonts.load(`400 60px ${decoFont}`, "রক্তযোদ্ধা সম্মাননা"),
+    const load = async (font: string, text: string) => document.fonts?.load(font, text);
+    Promise.race([
+      Promise.allSettled([
+        ...["400", "600", "700"].map((w) => load(`${w} 40px ${body}`, "রক্তদাতা ০১২৩")),
+        load(`400 60px ${decoFont}`, "রক্তযোদ্ধা সম্মাননা"),
+      ]),
+      new Promise((resolve) => setTimeout(resolve, 3000)),
     ]).finally(() => {
       if (!restored.current) setS(loadSaved());
       restored.current = true;

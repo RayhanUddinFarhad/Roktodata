@@ -2,6 +2,7 @@
 // shaped by the browser with the site's fonts) in a 1080 x 1350 card; the story size (1080 x 1920)
 // draws the same card in the middle of a taller background.
 // Each design returns where its editable parts are, so the page can make them tappable.
+import "@/lib/canvasCompat";
 import { toBanglaNumber, type BloodGroup } from "@/lib/data";
 
 export const CARD_W = 1080;
