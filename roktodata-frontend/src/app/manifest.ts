@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/seo";
 
 // Makes the site installable as an app (Android, desktop Chrome/Edge; iPhone through "Add to Home
 // Screen"). The same manifest is what an Android Play Store build (TWA) would wrap later.
@@ -17,6 +18,8 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#ffffff",
     theme_color: "#dc2626",
     categories: ["health", "medical", "social"],
+    // Lets the site ask the browser whether the app is already installed (getInstalledRelatedApps).
+    related_applications: [{ platform: "webapp", url: `${SITE_URL}/manifest.webmanifest` }],
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },

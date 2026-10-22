@@ -1,6 +1,12 @@
-// The browser's "install this app" prompt. Chrome/Edge fire `beforeinstallprompt` once, early, on
-// whatever page the visitor lands on, so it is caught here (by PwaSetup in the root layout) and kept
-// until the install page's button asks for it.
+// Whether the app is installed, and the browser's "install this app" prompt. Chrome/Edge fire
+// `beforeinstallprompt` once, early, on whatever page the visitor lands on (only while the app is
+// not installed), so it is caught here (by PwaSetup in the root layout) and kept until an install
+// button asks for it.
+//
+// Opening the site in the browser after installing must not offer the install again. The browser
+// says so through getInstalledRelatedApps() (Chrome on Android and desktop, with the manifest's
+// related_applications), and a note kept when the app was installed or opened covers browsers
+// without it (the app and the browser share the site's storage on Android).
 export interface InstallPromptEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -8,6 +14,27 @@ export interface InstallPromptEvent extends Event {
 
 let deferred: InstallPromptEvent | null = null;
 let installed = false;
+// getInstalledRelatedApps() found the app; false once the install prompt shows it isn't installed.
+let relatedInstalled: boolean | null = null;
+const INSTALLED_KEY = "rd-app-installed";
+
+function remember(value: boolean) {
+  try {
+    if (value) localStorage.setItem(INSTALLED_KEY, "1");
+    else localStorage.removeItem(INSTALLED_KEY);
+  } catch {}
+}
+
+function remembered() {
+  try {
+    return localStorage.getItem(INSTALLED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+const isStandalone = () =>
+  window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone === true;
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((l) => l());
 
@@ -22,21 +49,41 @@ declare global {
 export const EARLY_INSTALL_CAPTURE =
   "addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__rdInstall=e;})";
 
+// The prompt only fires while the app is not installed, so it also clears an outdated note (the
+// app was uninstalled).
+function gotPrompt(e: InstallPromptEvent) {
+  deferred = e;
+  relatedInstalled = false;
+  remember(false);
+  notify();
+}
+
 export function captureInstallPrompt() {
-  if (window.__rdInstall) {
-    deferred = window.__rdInstall;
-    notify();
-  }
+  if (isStandalone()) remember(true);
+  if (window.__rdInstall) gotPrompt(window.__rdInstall);
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault(); // no mini-infobar; the site's own button shows the prompt
-    deferred = e as InstallPromptEvent;
-    notify();
+    gotPrompt(e as InstallPromptEvent);
   });
   window.addEventListener("appinstalled", () => {
     deferred = null;
     installed = true;
+    remember(true);
     notify();
   });
+
+  const nav = navigator as { getInstalledRelatedApps?: () => Promise<unknown[]> };
+  nav
+    .getInstalledRelatedApps?.()
+    .then((apps) => {
+      // Only a "yes" is trusted: an empty answer can also mean the browser couldn't tell, and an
+      // uninstall is caught by the install prompt firing again.
+      if (deferred || !apps.length) return;
+      relatedInstalled = true;
+      remember(true);
+      notify();
+    })
+    .catch(() => {});
 }
 
 export function subscribeInstall(listener: () => void) {
@@ -47,8 +94,10 @@ export function subscribeInstall(listener: () => void) {
 export type InstallState = "installed" | "ready" | "unavailable";
 
 export function installState(): InstallState {
-  if (installed || window.matchMedia("(display-mode: standalone)").matches) return "installed";
-  return deferred ? "ready" : "unavailable";
+  if (installed || isStandalone()) return "installed";
+  if (deferred) return "ready";
+  if (relatedInstalled ?? remembered()) return "installed";
+  return "unavailable";
 }
 
 // Shows the browser's install dialog; true if the visitor installed.
