@@ -1,8 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Hind_Siliguri } from "next/font/google";
 import localFont from "next/font/local";
 import JsonLd from "@/components/JsonLd";
+import PwaSetup from "@/components/PwaSetup";
 import { CONTACT_EMAIL, FACEBOOK_URL } from "@/lib/data";
+import { EARLY_INSTALL_CAPTURE } from "@/lib/install";
 import { OG_IMAGE, SITE_NAME, SITE_NAME_EN, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
@@ -32,7 +34,11 @@ export const metadata: Metadata = {
   keywords: ["রক্তদাতা", "রক্ত", "রক্তদান", "ব্লাড ডোনার", "blood donor", "blood donor Bangladesh", "Roktodata", "জরুরি রক্ত"],
   openGraph: { type: "website", siteName: `${SITE_NAME} (${SITE_NAME_EN})`, locale: "bn_BD", images: [OG_IMAGE] },
   twitter: { card: "summary_large_image", images: [OG_IMAGE.url] },
+  appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: "default" },
 };
+
+// Colours the phone's status bar and the installed app's title bar.
+export const viewport: Viewport = { themeColor: "#dc2626" };
 
 // Tells search engines who runs the site and what it is called.
 const SITE_JSON_LD = {
@@ -65,7 +71,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="bn" className={`${hindSiliguri.variable} ${digits.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
+        <script dangerouslySetInnerHTML={{ __html: EARLY_INSTALL_CAPTURE }} />
         <JsonLd data={SITE_JSON_LD} />
+        <PwaSetup />
         {children}
       </body>
     </html>

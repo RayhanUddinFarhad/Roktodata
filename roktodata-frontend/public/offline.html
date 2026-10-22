@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#dc2626">
+<title>ইন্টারনেট সংযোগ নেই | রক্তদাতা</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;
+    font-family:"Hind Siliguri","Noto Sans Bengali",system-ui,sans-serif;background:#f8fafc;color:#0f172a}
+  .card{max-width:380px;width:100%;text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:32px 24px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
+  img{width:72px;height:72px}
+  h1{font-size:22px;margin:16px 0 8px}
+  p{font-size:15px;line-height:1.7;color:#475569;margin:0}
+  button{margin-top:22px;border:0;border-radius:12px;background:#dc2626;color:#fff;font:inherit;font-weight:700;font-size:16px;padding:12px 28px;cursor:pointer}
+  button:active{background:#b91c1c}
+  .tip{margin-top:18px;font-size:13px;color:#64748b}
+</style>
+</head>
+<body>
+  <main class="card">
+    <img src="/icons/icon-192.png" alt="রক্তদাতা">
+    <h1>ইন্টারনেট সংযোগ নেই</h1>
+    <p>রক্তদাতাদের তালিকা দেখতে ইন্টারনেট লাগে। মোবাইল ডেটা বা ওয়াইফাই চালু করে আবার চেষ্টা করুন।</p>
+    <button type="button" onclick="location.reload()">আবার চেষ্টা করুন</button>
+    <p class="tip">সংযোগ ফিরলে পাতাটা নিজে থেকেই খুলে যাবে।</p>
+  </main>
+  <script>window.addEventListener("online", function () { location.reload(); });</script>
+</body>
+</html>

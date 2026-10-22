@@ -14,6 +14,7 @@ const QUICK_LINKS = [
   { href: "/fraud-donors", label: "প্রতারক ডোনার তালিকা" },
   { href: "/register", label: "ডোনার রেজিস্ট্রেশন" },
   { href: "/learn", label: "রক্তদান ও ডেঙ্গু: জানুন" },
+  { href: "/app", label: "অ্যাপ ডাউনলোড করুন" },
   { href: "/about", label: "আমাদের সম্পর্কে" },
 ];
 

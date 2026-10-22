@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Download, Menu, X } from "lucide-react";
 import DonorCTA from "@/components/DonorCTA";
 import LogoMark from "@/components/Logo";
 import { NAV_LINKS } from "@/lib/data";
@@ -89,6 +89,16 @@ export default function Navbar() {
               </Link>
             </li>
           ))}
+          <li className="mt-1 border-t border-slate-100 pt-1">
+            <Link
+              href="/app"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
+            >
+              <Download className="h-4 w-4" />
+              অ্যাপ ডাউনলোড করুন
+            </Link>
+          </li>
         </ul>
       )}
     </header>
