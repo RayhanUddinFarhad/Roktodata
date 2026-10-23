@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createDonor,
   deleteDonor,
+  updateDonor,
   deleteFraudReport,
   deleteRequest,
   sendAdminPush,
@@ -28,6 +29,7 @@ import {
   adminFraudListSchema,
   adminLoginSchema,
   adminPushSchema,
+  adminUpdateDonorSchema,
   adminRequestListSchema,
   complaintStatusSchema,
   donorStatusSchema,
@@ -49,6 +51,7 @@ router.get("/stats", getStats);
 
 router.get("/donors", validate(adminDonorListSchema, "query"), listDonors);
 router.post("/donors", validate(adminCreateDonorSchema, "body"), createDonor);
+router.patch("/donors/:id", validate(idParamSchema, "params"), validate(adminUpdateDonorSchema, "body"), updateDonor);
 router.patch(
   "/donors/:id/status",
   validate(idParamSchema, "params"),

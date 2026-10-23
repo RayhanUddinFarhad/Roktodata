@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Ban, CalendarDays, Check, Eye, EyeOff, MapPin, MessageSquareWarning, Phone, PhoneCall, RotateCw, Search, Trash2 } from "lucide-react";
+import { Ban, CalendarDays, Check, Eye, EyeOff, MapPin, MessageSquareWarning, Pencil, Phone, PhoneCall, RotateCw, Search, Trash2 } from "lucide-react";
 import type { AdminContext } from "@/components/admin/AdminDashboard";
+import EditDonorForm from "@/components/admin/EditDonorForm";
 import {
   ActionButton,
   askBlockReason,
@@ -47,6 +48,7 @@ export default function DonorsPanel({ ctx, fixedStatus, hidden = false }: { ctx:
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const loading = loadedKey !== requestKey;
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300);
@@ -241,6 +243,9 @@ export default function DonorsPanel({ ctx, fixedStatus, hidden = false }: { ctx:
                 </div>
 
                 <div className="flex flex-wrap gap-2">
+                  <ActionButton tone="gray" disabled={busy} onClick={() => setEditingId(editingId === donor.id ? null : donor.id)}>
+                    <Pencil className="h-3.5 w-3.5" /> এডিট
+                  </ActionButton>
                   {donor.status === "Pending" && (
                     <>
                       <ActionButton tone="green" disabled={busy} onClick={() => changeStatus(donor, "Active")}>
@@ -305,6 +310,9 @@ export default function DonorsPanel({ ctx, fixedStatus, hidden = false }: { ctx:
                   )}
                 </div>
               </div>
+              {editingId === donor.id && (
+                <EditDonorForm donor={donor} token={token} onSaved={(run) => runAction(run)} onCancel={() => setEditingId(null)} />
+              )}
             </li>
           );
         })}

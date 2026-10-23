@@ -384,6 +384,11 @@ export function sendAdminPush(token: string, body: { title: string; body: string
   return request<{ message: string; targeted: number }>("/api/admin/push", jsonRequest("POST", body, auth(token)));
 }
 
+// The admin corrects a donor: every detail, and (while not ready) the day they can donate again.
+export function updateAdminDonor(token: string, id: string, donor: AdminDonorInput & { readyAgainAt?: string }) {
+  return request<{ message: string }>(`/api/admin/donors/${id}`, jsonRequest("PATCH", donor, auth(token)));
+}
+
 // Blocking needs a reason, which is shown publicly in the fraud list.
 export function setDonorStatus(token: string, id: string, status: DonorStatus, reason?: string) {
   return request<{ message: string }>(

@@ -87,6 +87,24 @@ export const adminCreateDonorSchema = z.object({
   isReadyToDonate: z.boolean().default(true),
 }).superRefine(thanaInDistrict("district", "upazila"));
 
+// The admin editing a donor: every detail, and when a "not ready" donor is ready again
+// (readyAgainAt, any date; empty = until changed). An empty last donation date clears it.
+const anyDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "তারিখ YYYY-MM-DD ফরম্যাটে দিন।")
+  .transform((value) => new Date(`${value}T00:00:00.000Z`))
+  .refine((date) => !Number.isNaN(date.getTime()), "সঠিক তারিখ দিন।");
+export const adminUpdateDonorSchema = z.object({
+  fullName: text("পূর্ণ নাম", 100),
+  phoneNumber: phone("মোবাইল নাম্বার"),
+  bloodGroup,
+  district,
+  upazila: optionalThana,
+  lastDonationDate: z.preprocess(emptyToUndefined, pastDate.optional()),
+  isReadyToDonate: z.boolean({ error: "রক্ত দিতে প্রস্তুত কিনা নির্বাচন করুন।" }),
+  readyAgainAt: z.preprocess(emptyToUndefined, anyDate.optional()),
+}).superRefine(thanaInDistrict("district", "upazila"));
+
 export const searchDonorsSchema = z.object({
   bloodGroup: z.preprocess(emptyToUndefined, bloodGroup.optional()),
   district: z.preprocess(emptyToUndefined, district.optional()),

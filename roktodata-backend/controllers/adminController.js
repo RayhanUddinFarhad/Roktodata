@@ -241,6 +241,32 @@ export async function createDonor(req, res) {
   res.status(201).json({ success: true, message: `${donor.fullName} ডোনার হিসেবে যুক্ত হয়েছেন।`, donor: { id: donor._id.toString(), fullName: donor.fullName } });
 }
 
+// PATCH /api/admin/donors/:id: the admin corrects a donor's details, including whether they are
+// ready to donate and, if not, the day they are ready again (they return to search that day).
+export async function updateDonor(req, res) {
+  const { id, phoneNumber, lastDonationDate, isReadyToDonate, readyAgainAt, upazila, fullName, ...rest } = req.validated;
+  const donor = await Donor.findById(id);
+  if (!donor) throw new AppError(404, "ডোনার পাওয়া যায়নি।");
+  if (phoneNumber !== donor.phoneNumber) {
+    const other = await Donor.findOne({ phoneNumber }, { fullName: 1 }).lean();
+    if (other) throw new AppError(409, `এই নাম্বারে আরেকজন ডোনার আছেন: ${other.fullName}`, "DUPLICATE_PHONE");
+  }
+  // Switching to "not ready" starts the hidden period; staying not ready keeps its start.
+  const notReadySince = isReadyToDonate ? null : donor.isReadyToDonate || !donor.notReadySince ? new Date() : donor.notReadySince;
+  donor.set({
+    ...rest,
+    fullName: toBanglaName(fullName),
+    phoneNumber,
+    upazila: upazila ?? "",
+    lastDonationDate: lastDonationDate ?? null,
+    isReadyToDonate,
+    readyAgainAt: isReadyToDonate ? null : readyAgainAt ?? null,
+    notReadySince,
+  });
+  await donor.save();
+  res.json({ success: true, message: `${donor.fullName}-এর তথ্য আপডেট হয়েছে।` });
+}
+
 // DELETE /api/admin/donors/:id (reject a registration or remove a donor)
 export async function deleteDonor(req, res) {
   const { id } = req.validated;
