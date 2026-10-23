@@ -68,9 +68,9 @@ export const registerDonorSchema = z.object({
   upazila: thana,
   lastDonationDate: z.preprocess(emptyToUndefined, pastDate.optional()),
   isReadyToDonate: z.boolean({ error: "রক্ত দিতে প্রস্তুত কিনা নির্বাচন করুন।" }),
-  // With "not ready": ready again by itself after 1/3/6 months, or "eligible" = once 90 days have
-  // passed since the last donation (none = until changed).
-  readyAgain: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal("eligible")]).nullish(),
+  // With "not ready": ready again by itself after 1/3/6 months, or "eligible" / "eligible120" = once 90 /
+  // 120 days have passed since the last donation (none = until changed).
+  readyAgain: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal("eligible"), z.literal("eligible120")]).nullish(),
   // This device's notification address, if it allowed notifications: links it to the donor for
   // the "you can donate again" reminder.
   pushEndpoint: z.preprocess(emptyToUndefined, z.string().max(1000).optional()),

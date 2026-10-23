@@ -5,12 +5,14 @@ import { toBanglaName } from "../utils/banglaName.js";
 import { ELIGIBILITY_DAYS, SEARCH_PAGE_SIZE } from "../config/constants.js";
 import { findDonors, visibleDonorFilter } from "../utils/findDonors.js";
 
-// When a "not ready" donor is ready again: 1/3/6 months from now, or "eligible" = ELIGIBILITY_DAYS
-// after their last donation. Null when ready, with no end chosen, or "eligible" without a date.
+// When a "not ready" donor is ready again: 1/3/6 months from now, "eligible" = ELIGIBILITY_DAYS after
+// their last donation, or "eligible120" = 120 days after it (the longer gap often advised for women).
+// Null when ready, with no end chosen, or a day count without a last donation date.
+const AFTER_DONATION_DAYS = { eligible: ELIGIBILITY_DAYS, eligible120: 120 };
 function readyAgainDate(isReady, choice, lastDonationDate) {
   if (isReady || !choice) return null;
-  if (choice === "eligible") {
-    return lastDonationDate ? new Date(lastDonationDate.getTime() + ELIGIBILITY_DAYS * 24 * 60 * 60 * 1000) : null;
+  if (choice in AFTER_DONATION_DAYS) {
+    return lastDonationDate ? new Date(lastDonationDate.getTime() + AFTER_DONATION_DAYS[choice] * 24 * 60 * 60 * 1000) : null;
   }
   const date = new Date();
   date.setMonth(date.getMonth() + choice);

@@ -27,19 +27,21 @@ const ELIGIBILITY_DAYS = 90;
 const MONTHS = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
 const bnDate = (date: Date) => `${toBanglaNumber(date.getDate())} ${MONTHS[date.getMonth()]} ${toBanglaNumber(date.getFullYear())}`;
 
+// Days after the last donation for the "after the last donation" choices.
+const AFTER_DONATION_DAYS = { eligible: ELIGIBILITY_DAYS, eligible120: 120 } as const;
 // The date a choice brings a "not ready" donor back (the same date the server works out), or null.
 function readyAgainDate(choice: ReadyAgain | null, lastDonated: string) {
   if (!choice) return null;
-  if (choice === "eligible") {
-    return lastDonated ? new Date(new Date(`${lastDonated}T00:00:00Z`).getTime() + ELIGIBILITY_DAYS * 864e5) : null;
+  if (choice === "eligible" || choice === "eligible120") {
+    return lastDonated ? new Date(new Date(`${lastDonated}T00:00:00Z`).getTime() + AFTER_DONATION_DAYS[choice] * 864e5) : null;
   }
   const date = new Date();
   date.setMonth(date.getMonth() + choice);
   return date;
 }
-// The day 90 days after the last donation, if that is still to come (then it is offered as a choice).
-function eligibleLater(lastDonated: string) {
-  const date = readyAgainDate("eligible", lastDonated);
+// The day 90 (or 120) days after the last donation, if that is still to come (then it is offered as a choice).
+function eligibleLater(lastDonated: string, choice: "eligible" | "eligible120" = "eligible") {
+  const date = readyAgainDate(choice, lastDonated);
   return date && date.getTime() > Date.now() ? date : null;
 }
 
@@ -114,15 +116,18 @@ export default function DonorRegisterForm() {
     }
   }
   const eligibleOn = eligibleLater(lastDonated);
+  const eligible120On = eligibleLater(lastDonated, "eligible120");
   const readyAgain: ReadyAgain | null =
-    readyAgainChoice === "auto" || (readyAgainChoice === "eligible" && !eligibleOn)
+    readyAgainChoice === "auto" || (readyAgainChoice === "eligible" && !eligibleOn) || (readyAgainChoice === "eligible120" && !eligible120On)
       ? eligibleOn ? "eligible" : 3
       : readyAgainChoice;
   // Worked out only once "not ready" is picked (the page is prerendered without a current date).
   const readyAgainOn = isReadyToDonate ? null : readyAgainDate(readyAgain, lastDonated);
-  const readyAgainOptions = eligibleOn
-    ? [{ value: "eligible" as const, label: `শেষ রক্তদানের ৯০ দিন পূর্ণ হলে (${bnDate(eligibleOn)})` }, ...READY_AGAIN_OPTIONS]
-    : READY_AGAIN_OPTIONS;
+  const readyAgainOptions: { value: ReadyAgain | null; label: string }[] = [
+    ...(eligibleOn ? [{ value: "eligible" as const, label: `শেষ রক্তদানের ৯০ দিন পূর্ণ হলে (${bnDate(eligibleOn)})` }] : []),
+    ...(eligible120On ? [{ value: "eligible120" as const, label: `শেষ রক্তদানের ১২০ দিন পূর্ণ হলে (${bnDate(eligible120On)})` }] : []),
+    ...READY_AGAIN_OPTIONS,
+  ];
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -427,7 +432,7 @@ export default function DonorRegisterForm() {
                     <label
                       key={option.label}
                       className={`flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-center text-xs font-semibold transition-colors ${
-                        option.value === "eligible" ? "col-span-2 sm:col-span-4" : ""
+                        option.value === "eligible" || option.value === "eligible120" ? "col-span-2 sm:col-span-4" : ""
                       } ${
                         readyAgain === option.value
                           ? "border-amber-600 bg-amber-500 text-white shadow-sm"
