@@ -6,6 +6,8 @@ import {
   COMPLAINT_STATUS,
   DISTRICTS,
   DONOR_STATUS,
+  FEEDBACK_ROLES,
+  FEEDBACK_STATUS,
   FRAUD_REASONS,
   FRAUD_STATUS,
   REQUEST_STATUS,
@@ -308,3 +310,43 @@ export const appInstallSchema = z.object({
   device: z.string().regex(/^[A-Za-z0-9-]{16,64}$/),
   platform: z.enum(APP_PLATFORMS).default("other"),
 });
+
+// ---- Feedback ----
+
+const feedbackFields = {
+  name: text("আপনার নাম", 60),
+  district,
+  upazila: optionalThana,
+  role: z.enum(Object.keys(FEEDBACK_ROLES), { error: "আপনি কে হিসেবে লিখছেন, বেছে নিন।" }),
+  message: z
+    .string({ error: "আপনার অভিজ্ঞতা লিখুন।" })
+    .trim()
+    .min(10, "আপনার অভিজ্ঞতা একটু বিস্তারিত লিখুন (কমপক্ষে ১০ অক্ষর)।")
+    .max(500, "লেখা সর্বোচ্চ ৫০০ অক্ষরের হতে পারে।"),
+};
+
+// `website` is a hidden field people never see; bots that fill it are ignored (see createFeedback).
+export const feedbackSchema = z
+  .object({
+    ...feedbackFields,
+    phoneNumber: z.preprocess(emptyToUndefined, phone("মোবাইল নাম্বার").optional()),
+    website: z.string().max(200).optional(),
+  })
+  .superRefine(thanaInDistrict("district", "upazila"));
+
+export const feedbackListSchema = z.object({
+  page,
+  limit: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(24).default(12)),
+});
+
+export const adminFeedbackListSchema = z.object({
+  status: z.preprocess(emptyToUndefined, z.enum(FEEDBACK_STATUS).optional()),
+  page,
+});
+
+export const feedbackStatusSchema = z.object({
+  status: z.enum(FEEDBACK_STATUS, { error: "সঠিক স্ট্যাটাস দিন।" }),
+});
+
+// The admin may fix spelling before approving.
+export const adminUpdateFeedbackSchema = z.object(feedbackFields).partial().superRefine(thanaInDistrict("district", "upazila"));

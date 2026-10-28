@@ -17,6 +17,12 @@ export const FRAUD_REASONS = {
   other: "অন্যান্য",
 };
 
+// Feedback about Roktodata is "Pending" until an admin approves it for the site.
+export const FEEDBACK_STATUS = ["Pending", "Approved", "Rejected"];
+
+// Who is writing: someone helped on a patient's behalf, or a donor.
+export const FEEDBACK_ROLES = { patient: "রোগীর পক্ষ থেকে", donor: "রক্তদাতা হিসেবে" };
+
 // Patient blood requests are "Pending" until an admin approves them for the public feed.
 export const REQUEST_STATUS = ["Pending", "Approved", "Rejected", "Fulfilled"];
 

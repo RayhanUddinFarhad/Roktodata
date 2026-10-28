@@ -10,6 +10,7 @@ import { FraudReport } from "../models/FraudReport.js";
 import { PatientRequest } from "../models/PatientRequest.js";
 import { PushSubscription } from "../models/PushSubscription.js";
 import { AppInstall } from "../models/AppInstall.js";
+import { pendingFeedbackCount } from "./feedbackController.js";
 import { photoCardsMade } from "./photocardController.js";
 import { AppError } from "../utils/AppError.js";
 import { toBanglaName } from "../utils/banglaName.js";
@@ -78,7 +79,7 @@ async function appInstallSummary() {
 
 // GET /api/admin/stats
 export async function getStats(_req, res) {
-  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards, contacts, hiddenDonors, pushDevices, pushDonors, appInstalls] = await Promise.all([
+  const [byStatus, openComplaints, pendingRequests, pendingFraudReports, photoCards, contacts, hiddenDonors, pushDevices, pushDonors, appInstalls, pendingFeedback] = await Promise.all([
     Donor.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
     Complaint.countDocuments({ status: "Open" }),
     PatientRequest.countDocuments({ status: "Pending" }),
@@ -94,6 +95,7 @@ export async function getStats(_req, res) {
     PushSubscription.estimatedDocumentCount(),
     PushSubscription.countDocuments({ donor: mongoose.trusted({ $ne: null }) }),
     appInstallSummary(),
+    pendingFeedbackCount(),
   ]);
   const count = (status) => byStatus.find((row) => row._id === status)?.count ?? 0;
 
@@ -106,6 +108,7 @@ export async function getStats(_req, res) {
       openComplaints,
       pendingRequests,
       pendingFraudReports,
+      pendingFeedback,
       photoCards,
       contacts,
       hiddenDonors,

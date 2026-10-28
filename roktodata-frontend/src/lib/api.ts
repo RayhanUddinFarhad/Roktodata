@@ -8,6 +8,9 @@ import type {
   FraudEntry,
   FraudReason,
   FraudReportStatus,
+  Feedback,
+  FeedbackRole,
+  FeedbackStatus,
   RequestStatus,
 } from "@/lib/data";
 
@@ -250,6 +253,27 @@ export function submitComplaint(payload: ComplaintPayload) {
   return request<{ message: string }>("/api/complaints", jsonRequest("POST", payload));
 }
 
+// ---- Feedback ----
+
+export interface FeedbackPayload {
+  name: string;
+  district: string;
+  upazila?: string;
+  role: FeedbackRole;
+  message: string;
+  phoneNumber?: string;
+  // Hidden from people; a bot that fills it is ignored.
+  website?: string;
+}
+
+export function submitFeedback(payload: FeedbackPayload) {
+  return request<{ message: string }>("/api/feedback", jsonRequest("POST", payload));
+}
+
+export function getFeedback(page = 1, limit = 12) {
+  return request<Paginated & { feedback: Feedback[] }>(`/api/feedback?${toQuery({ page, limit })}`, undefined, { retries: 2 });
+}
+
 // ---- Fraud reports ----
 
 export interface FraudReportPayload {
@@ -299,6 +323,7 @@ export interface AdminStats {
   openComplaints: number;
   pendingRequests: number;
   pendingFraudReports: number;
+  pendingFeedback: number;
   photoCards: number; // photo cards made so far (downloaded or shared)
   // Taps on donors' call / WhatsApp buttons, and how many different donors they were for.
   contacts: Record<"today" | "week" | "total", ContactCounts>;
@@ -474,4 +499,27 @@ export function setFraudReportStatus(token: string, id: string, status: FraudRep
 
 export function deleteFraudReport(token: string, id: string) {
   return request<{ message: string }>(`/api/admin/fraud-reports/${id}`, jsonRequest("DELETE", undefined, auth(token)));
+}
+
+export interface AdminFeedback extends Feedback {
+  // Optional, never shown on the site.
+  phoneNumber: string | null;
+  status: FeedbackStatus;
+  createdAt: string;
+}
+
+export function getAdminFeedback(token: string, params: { status?: FeedbackStatus; page?: number }) {
+  return request<Paginated & { feedback: AdminFeedback[] }>(`/api/admin/feedback?${toQuery(params)}`, { headers: auth(token) });
+}
+
+export function setFeedbackStatus(token: string, id: string, status: FeedbackStatus) {
+  return request<{ message: string }>(`/api/admin/feedback/${id}/status`, jsonRequest("PATCH", { status }, auth(token)));
+}
+
+export function updateAdminFeedback(token: string, id: string, changes: Pick<FeedbackPayload, "name" | "district" | "upazila" | "message">) {
+  return request<{ message: string }>(`/api/admin/feedback/${id}`, jsonRequest("PATCH", changes, auth(token)));
+}
+
+export function deleteFeedback(token: string, id: string) {
+  return request<{ message: string }>(`/api/admin/feedback/${id}`, jsonRequest("DELETE", undefined, auth(token)));
 }

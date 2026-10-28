@@ -15,6 +15,7 @@ const QUICK_LINKS = [
   { href: "/register", label: "ডোনার রেজিস্ট্রেশন" },
   { href: "/learn", label: "রক্তদান ও ডেঙ্গু: জানুন" },
   { href: "/app", label: "অ্যাপ ডাউনলোড করুন" },
+  { href: "/feedback", label: "ফিডব্যাক ও অভিজ্ঞতা" },
   { href: "/about", label: "আমাদের সম্পর্কে" },
 ];
 

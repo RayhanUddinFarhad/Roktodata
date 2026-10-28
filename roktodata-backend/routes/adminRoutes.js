@@ -19,6 +19,7 @@ import {
   updateRequestNote,
   updateRequestStatus,
 } from "../controllers/adminController.js";
+import { deleteFeedback, listFeedbackAdmin, updateFeedback, updateFeedbackStatus } from "../controllers/feedbackController.js";
 import { adminLoginLimiter } from "../middleware/rateLimiters.js";
 import { requireAdmin } from "../middleware/requireAdmin.js";
 import { validate } from "../middleware/validate.js";
@@ -26,6 +27,9 @@ import {
   adminComplaintListSchema,
   adminCreateDonorSchema,
   adminDonorListSchema,
+  adminFeedbackListSchema,
+  adminUpdateFeedbackSchema,
+  feedbackStatusSchema,
   adminFraudListSchema,
   adminLoginSchema,
   adminPushSchema,
@@ -99,5 +103,15 @@ router.patch(
   updateFraudReportStatus,
 );
 router.delete("/fraud-reports/:id", validate(idParamSchema, "params"), deleteFraudReport);
+
+router.get("/feedback", validate(adminFeedbackListSchema, "query"), listFeedbackAdmin);
+router.patch(
+  "/feedback/:id/status",
+  validate(idParamSchema, "params"),
+  validate(feedbackStatusSchema, "body"),
+  updateFeedbackStatus,
+);
+router.patch("/feedback/:id", validate(idParamSchema, "params"), validate(adminUpdateFeedbackSchema, "body"), updateFeedback);
+router.delete("/feedback/:id", validate(idParamSchema, "params"), deleteFeedback);
 
 export default router;

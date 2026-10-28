@@ -73,6 +73,23 @@ export const FRAUD_REASONS = {
 export type FraudReason = keyof typeof FRAUD_REASONS;
 export type FraudReportStatus = "Pending" | "Approved" | "Rejected";
 
+// Feedback about Roktodata: who is writing (same keys as the backend).
+export const FEEDBACK_ROLES = { patient: "রোগীর পক্ষ থেকে", donor: "রক্তদাতা হিসেবে" } as const;
+export type FeedbackRole = keyof typeof FEEDBACK_ROLES;
+export type FeedbackStatus = "Pending" | "Approved" | "Rejected";
+
+// One approved feedback as shown on the site.
+export interface Feedback {
+  id: string;
+  name: string;
+  district: string;
+  upazila: string;
+  role: FeedbackRole;
+  roleLabel: string;
+  message: string;
+  date: string;
+}
+
 // One fraudulent number in the public list: every admin-approved fraud report against it and,
 // if it belongs to a donor the admin blocked, the block reason and complaint reasons.
 export interface FraudEntry {
@@ -114,6 +131,8 @@ export const NAV_LINKS = [
   { href: "/fraud-donors", label: "প্রতারক ডোনার" },
   { href: "/celebrate", label: "রক্তদান ফটোকার্ড" },
   { href: "/learn", label: "জানুন" },
+  // The wide-screen bar is full; this one is in the ☰ menu and the footer.
+  { href: "/feedback", label: "ফিডব্যাক", menuOnly: true },
   { href: "/about", label: "আমাদের সম্পর্কে" },
 ];
 

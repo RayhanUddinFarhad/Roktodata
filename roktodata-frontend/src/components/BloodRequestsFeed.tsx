@@ -11,6 +11,7 @@ import {
   Loader2,
   MapPin,
   Megaphone,
+  MessageSquareHeart,
   MessageSquareText,
   PhoneCall,
   Plus,
@@ -278,6 +279,20 @@ function RequestPost({
             {request.adminNote}
           </span>
         </p>
+      )}
+
+      {/* The moment people are most thankful: ask for a few lines about it. */}
+      {fulfilled && (
+        <Link
+          href="/feedback#write"
+          prefetch={false}
+          className="mt-4 flex items-center gap-2 rounded-lg border border-rose-100 bg-rose-50/70 px-3 py-2 text-xs text-slate-600 hover:border-rose-300"
+        >
+          <MessageSquareHeart className="h-4 w-4 shrink-0 text-red-500" />
+          <span className="flex-1">
+            রক্তদাতা কাজে লাগলে <span className="font-semibold text-red-700 underline underline-offset-2">দুই লাইন লিখে জানান</span> 🙏
+          </span>
+        </Link>
       )}
 
       {!fulfilled && (

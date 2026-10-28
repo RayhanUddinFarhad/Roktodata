@@ -46,7 +46,7 @@ export default function Navbar() {
         </Link>
 
         <ul className="hidden items-center gap-x-5 text-sm lg:flex">
-          {NAV_LINKS.map((link) => (
+          {NAV_LINKS.filter((link) => !("menuOnly" in link)).map((link) => (
             <li key={link.href}>
               <Link href={link.href} className={`whitespace-nowrap ${linkClass(link.href)}`}>
                 {link.label}

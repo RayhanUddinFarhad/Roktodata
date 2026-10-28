@@ -4,6 +4,7 @@ import { ArrowRight, Heart, MapPin } from "lucide-react";
 import DonationBenefits from "@/components/home/DonationBenefits";
 import HeroSearch from "@/components/home/HeroSearch";
 import FacebookPage from "@/components/home/FacebookPage";
+import FeedbackSection from "@/components/home/FeedbackSection";
 import HowItWorks from "@/components/home/HowItWorks";
 import LearnTeaser from "@/components/home/LearnTeaser";
 import AppBanner from "@/components/home/AppBanner";
@@ -88,6 +89,7 @@ export default async function Home() {
       )}
 
       <HowItWorks />
+      <FeedbackSection />
       <DonationBenefits />
       <LearnTeaser />
       <ShareDonorList />
