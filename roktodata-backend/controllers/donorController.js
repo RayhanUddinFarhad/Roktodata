@@ -2,8 +2,8 @@ import { Donor } from "../models/Donor.js";
 import { PushSubscription } from "../models/PushSubscription.js";
 import { AppError } from "../utils/AppError.js";
 import { toBanglaName } from "../utils/banglaName.js";
-import { ELIGIBILITY_DAYS, SEARCH_PAGE_SIZE } from "../config/constants.js";
-import { findDonors, visibleDonorFilter } from "../utils/findDonors.js";
+import { ELIGIBILITY_DAYS, SEARCH_PAGE_SIZE, TIME_ZONE } from "../config/constants.js";
+import { findDonors, searchHiddenReason, visibleDonorFilter } from "../utils/findDonors.js";
 
 // When a "not ready" donor is ready again: 1/3/6 months from now, "eligible" = ELIGIBILITY_DAYS after
 // their last donation, or "eligible120" = 120 days after it (the longer gap often advised for women).
@@ -17,6 +17,16 @@ function readyAgainDate(isReady, choice, lastDonationDate) {
   const date = new Date();
   date.setMonth(date.getMonth() + choice);
   return date;
+}
+
+// A ready donor who gave blood under ELIGIBILITY_DAYS ago is left out of the search until then; the
+// success message tells them the day, so they do not think the registration failed.
+const banglaDate = new Intl.DateTimeFormat("bn-BD", { day: "numeric", month: "long", year: "numeric", timeZone: TIME_ZONE });
+function searchWaitNote(donor) {
+  const hidden = donor.isReadyToDonate ? searchHiddenReason(donor) : null;
+  return hidden?.until
+    ? ` শেষ রক্তদানের ${ELIGIBILITY_DAYS.toLocaleString("bn-BD")} দিন পূর্ণ হলে, ${banglaDate.format(hidden.until)} থেকে আপনাকে ডোনার সার্চে দেখা যাবে।`
+    : "";
 }
 
 // The device the donor saved from, if it allows notifications, gets their "you can donate again"
@@ -57,7 +67,7 @@ export async function registerOrUpdateDonor(req, res) {
       message:
         existing.status === "Pending"
           ? "আপনার তথ্য আপডেট করা হয়েছে। অ্যাডমিন অনুমোদনের পর প্রোফাইলটি ওয়েবসাইটে দেখা যাবে।"
-          : "আপনার তথ্য সফলভাবে আপডেট করা হয়েছে।",
+          : "আপনার তথ্য সফলভাবে আপডেট করা হয়েছে।" + searchWaitNote(existing),
     });
   }
 
@@ -74,7 +84,7 @@ export async function registerOrUpdateDonor(req, res) {
     isNew: true,
     fullName: donor.fullName,
     status: donor.status,
-    message: "ধন্যবাদ! আপনার রেজিস্ট্রেশন সম্পন্ন হয়েছে। অ্যাডমিন অনুমোদনের পর আপনার প্রোফাইল ওয়েবসাইটে দেখা যাবে।",
+    message: "ধন্যবাদ! আপনার রেজিস্ট্রেশন সম্পন্ন হয়েছে। অ্যাডমিন অনুমোদনের পর আপনার প্রোফাইল ওয়েবসাইটে দেখা যাবে।" + searchWaitNote(donor),
   });
 }
 

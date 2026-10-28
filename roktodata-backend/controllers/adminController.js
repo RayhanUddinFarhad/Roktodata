@@ -14,7 +14,7 @@ import { photoCardsMade } from "./photocardController.js";
 import { AppError } from "../utils/AppError.js";
 import { toBanglaName } from "../utils/banglaName.js";
 import { dhakaDay } from "../utils/dhakaDate.js";
-import { escapeRegex } from "../utils/findDonors.js";
+import { escapeRegex, searchHiddenReason } from "../utils/findDonors.js";
 import { nearbySubscriptions, notifyBloodRequestLater, pushEnabled, sendPush } from "../utils/push.js";
 import { toPublicRequest } from "./patientController.js";
 
@@ -116,6 +116,13 @@ export async function getStats(_req, res) {
 }
 
 // GET /api/admin/donors?status=&q=&page=
+// An approved donor can still be left out of the public search (not ready, or gave blood less than
+// ELIGIBILITY_DAYS ago); the panel says so, so "approved but not on the site" is not a mystery.
+function publicVisibility(donor) {
+  const hidden = donor.status === "Active" ? searchHiddenReason(donor) : null;
+  return { searchHidden: hidden?.reason ?? null, searchHiddenUntil: hidden ? toDate(hidden.until) : null };
+}
+
 export async function listDonors(req, res) {
   const { status, q, page, sort, ready, order } = req.validated;
 
@@ -158,6 +165,7 @@ export async function listDonors(req, res) {
     page,
     pages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
     donors: donors.map((donor) => ({
+      ...publicVisibility(donor),
       id: donor._id.toString(),
       fullName: donor.fullName,
       phoneNumber: donor.phoneNumber,

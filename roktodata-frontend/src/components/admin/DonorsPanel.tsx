@@ -195,6 +195,17 @@ export default function DonorsPanel({ ctx, fixedStatus, hidden = false }: { ctx:
                         </span>
                       );
                     })()}
+                    {/* "Not ready" already has its own badge; this one is for the 90-day rule, alone or pushing the return date later. */}
+                    {donor.searchHidden && (donor.searchHidden === "recent_donation" || donor.searchHiddenUntil !== donor.readyAgainAt) && (
+                      <span
+                        className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600"
+                        title="অনুমোদিত, কিন্তু এখন ওয়েবসাইটের সার্চে দেখাচ্ছে না"
+                      >
+                        <EyeOff className="h-3 w-3" />
+                        {donor.searchHidden === "recent_donation" ? "৯০ দিন হয়নি · সাইটে দেখাচ্ছে না" : "সাইটে দেখাচ্ছে না"}
+                        {donor.searchHiddenUntil ? ` · ${donor.searchHiddenUntil} থেকে দেখাবে` : ""}
+                      </span>
+                    )}
                     {donor.openComplaints > 0 && (
                       <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
                         <MessageSquareWarning className="h-3 w-3" />

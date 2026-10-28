@@ -24,6 +24,18 @@ export function visibleDonorFilter() {
   };
 }
 
+// The same rule as visibleDonorFilter for one approved donor: why the public search leaves them out
+// ("not_ready" or "recent_donation") and the day they come back (null if they never come back by
+// themselves), or null while they are shown.
+export function searchHiddenReason(donor, now = new Date()) {
+  const notReady = !donor.isReadyToDonate && !(donor.readyAgainAt && donor.readyAgainAt <= now);
+  const eligibleAt = donor.lastDonationDate ? new Date(donor.lastDonationDate.getTime() + ELIGIBILITY_DAYS * DAY_MS) : null;
+  const recent = eligibleAt && eligibleAt > now;
+  if (!notReady && !recent) return null;
+  const until = notReady ? (donor.readyAgainAt && recent && eligibleAt > donor.readyAgainAt ? eligibleAt : donor.readyAgainAt) : eligibleAt;
+  return { reason: notReady ? "not_ready" : "recent_donation", until: until ?? null };
+}
+
 // Finds visible donors (see visibleDonorFilter). Self-registered donors come first, then those with a
 // name, then whoever donated longest ago.
 // `upazila` keeps donors in that thana/upazila; `excludeUpazila` drops them instead.

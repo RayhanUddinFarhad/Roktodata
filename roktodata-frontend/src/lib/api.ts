@@ -331,6 +331,10 @@ export interface AdminDonor extends Donor {
   inFraudList: boolean;
   createdAt: string;
   openComplaints: number;
+  // Approved but left out of the public search: chose "not ready", or gave blood under 90 days ago.
+  searchHidden: "not_ready" | "recent_donation" | null;
+  // The day they appear in the search again (YYYY-MM-DD); null if hidden until they change it.
+  searchHiddenUntil: string | null;
 }
 
 export interface AdminComplaint {
