@@ -36,8 +36,13 @@ export function searchHiddenReason(donor, now = new Date()) {
   return { reason: notReady ? "not_ready" : "recent_donation", until: until ?? null };
 }
 
-// Finds visible donors (see visibleDonorFilter). Self-registered donors come first, then those with a
-// name, then whoever donated longest ago.
+// Website registrations have needed an SMS code since this time; ones saved before verifiedAt existed
+// count as verified from their creation.
+const SMS_CODE_SINCE = new Date("2026-10-18T05:53:46Z");
+
+// Finds visible donors (see visibleDonorFilter). Donors who registered or updated themselves with an
+// SMS code come first (an imported donor too, once they update), then those with a name, then whoever
+// donated longest ago.
 // `upazila` keeps donors in that thana/upazila; `excludeUpazila` drops them instead.
 // Returns one page of donors plus the total number of matches.
 export async function findDonors({ bloodGroup, district, upazila, excludeUpazila, page = 1, limit = SEARCH_PAGE_SIZE }) {
@@ -53,12 +58,16 @@ export async function findDonors({ bloodGroup, district, upazila, excludeUpazila
     { $match: filter },
     {
       $addFields: {
-        // Donors who registered themselves (not from an imported list) come first.
-        registered: { $ne: [{ $substrCP: [{ $ifNull: ["$source", "website"] }, 0, 7] }, "import:"] },
+        verified: {
+          $or: [
+            { $ne: [{ $ifNull: ["$verifiedAt", null] }, null] },
+            { $and: [{ $eq: [{ $ifNull: ["$source", "website"] }, "website"] }, { $gte: ["$createdAt", SMS_CODE_SINCE] }] },
+          ],
+        },
         hasName: { $ne: ["$fullName", NO_NAME] },
       },
     },
-    { $sort: { registered: -1, hasName: -1, lastDonationDate: 1, _id: 1 } },
+    { $sort: { verified: -1, hasName: -1, lastDonationDate: 1, _id: 1 } },
     {
       $facet: {
         donors: [

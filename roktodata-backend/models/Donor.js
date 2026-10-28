@@ -42,6 +42,9 @@ const donorSchema = new mongoose.Schema(
     // Where the record came from: "website" for self-registration, or an import batch name
     // (e.g. "import:blooddoner-docx-2026-10") so a batch can be reviewed or removed together.
     source: { type: String, trim: true, maxlength: 60, default: "website" },
+    // Last time the donor registered or updated themselves with an SMS code; such donors come first in
+    // every search. Admin edits and imports leave it alone (see findDonors for older registrations).
+    verifiedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

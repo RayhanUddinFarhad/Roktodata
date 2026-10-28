@@ -54,7 +54,7 @@ export async function registerOrUpdateDonor(req, res) {
     }
     // Switching to "not ready" starts the hidden period; staying not ready keeps its start.
     const notReadySince = details.isReadyToDonate ? null : existing.isReadyToDonate || !existing.notReadySince ? new Date() : existing.notReadySince;
-    existing.set({ ...details, notReadySince });
+    existing.set({ ...details, notReadySince, verifiedAt: new Date() });
     if (lastDonationDate) existing.lastDonationDate = lastDonationDate;
     existing.readyAgainAt = readyAgainDate(details.isReadyToDonate, readyAgain, existing.lastDonationDate);
     await existing.save();
@@ -73,6 +73,7 @@ export async function registerOrUpdateDonor(req, res) {
 
   const donor = await Donor.create({
     ...details,
+    verifiedAt: new Date(),
     phoneNumber,
     lastDonationDate: lastDonationDate ?? null,
     readyAgainAt: readyAgainDate(details.isReadyToDonate, readyAgain, lastDonationDate),
