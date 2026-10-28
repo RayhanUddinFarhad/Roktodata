@@ -1,3 +1,4 @@
+import type { MouseEvent } from "react";
 import { WhatsAppIcon } from "@/components/BrandIcons";
 import { whatsappLink } from "@/lib/data";
 
@@ -14,7 +15,7 @@ export default function WhatsAppButton({
   message: string;
   label?: string;
   size?: "sm" | "md";
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
 }) {
   return (
     <a

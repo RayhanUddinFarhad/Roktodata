@@ -38,6 +38,10 @@ body {
 }
 @keyframes nd-fill { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 @keyframes nd-plus { from { transform: scale(0); } to { transform: scale(1); } }
+/* The donor-contact rules sheet slides up from the bottom. */
+.cp-up { animation: cp-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes cp-up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
+  .cp-up { animation: none; }
   .nd-animate .nd-drop, .nd-animate .nd-fill, .nd-animate .nd-plus, .nd-animate .nd-bag { animation: none; }
 }

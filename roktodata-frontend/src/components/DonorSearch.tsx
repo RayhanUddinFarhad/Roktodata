@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CircleAlert, Funnel, Loader2, RotateCw, SearchX } from "lucide-react";
 import { WhatsAppIcon } from "@/components/BrandIcons";
+import ContactPledge from "@/components/ContactPledge";
 import DonorCard from "@/components/DonorCard";
 import { DonorCardSkeletons } from "@/components/DonorSearchSkeleton";
 import Pagination from "@/components/Pagination";
@@ -204,6 +205,7 @@ export default function DonorSearch({
         <DonorCardSkeletons />
       ) : donors.length > 0 ? (
         <>
+          <ContactPledge className="mt-4" />
           <div className={`mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${loading ? "opacity-60" : ""}`}>
             {donors.map((donor) => (
               <DonorCard key={donor.id} donor={donor} />

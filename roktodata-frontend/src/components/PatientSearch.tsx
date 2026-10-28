@@ -19,10 +19,12 @@ import {
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import OtpInput from "@/components/OtpInput";
 import ComplaintButton from "@/components/ComplaintButton";
+import ContactPledge from "@/components/ContactPledge";
 import { RequestPosterPanel } from "@/components/RequestPoster";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ThanaSelect from "@/components/ThanaSelect";
 import { ApiError, searchForPatient, sendOtp, trackDonorContact, verifyOtp } from "@/lib/api";
+import { guardContact } from "@/lib/contactPledge";
 import {
   BLOOD_GROUPS,
   type BloodGroup,
@@ -512,6 +514,7 @@ function FoundDonors({ result }: { result: Extract<Result, { kind: "found" }> })
         </div>
       ) : (
         <>
+          <ContactPledge className="mt-6" />
           <DonorList
             title={`${area} এলাকার ${bloodGroup} ডোনার (${toBanglaNumber(result.total)} জন)`}
             donors={donors}
@@ -577,11 +580,11 @@ function DonorList({
                   phone={donor.phoneNumber}
                   message={donorWhatsAppMessage(donor.bloodGroup)}
                   size="md"
-                  onClick={() => trackDonorContact(donor.id, "whatsapp")}
+                  onClick={(e) => guardContact(e, "whatsapp", () => trackDonorContact(donor.id, "whatsapp"))}
                 />
                 <a
                   href={`tel:${donor.phoneNumber}`}
-                  onClick={() => trackDonorContact(donor.id, "call")}
+                  onClick={(e) => guardContact(e, "call", () => trackDonorContact(donor.id, "call"))}
                   className="flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
                 >
                   <PhoneCall className="h-3.5 w-3.5" />
