@@ -45,6 +45,9 @@ const donorSchema = new mongoose.Schema(
     // Last time the donor registered or updated themselves with an SMS code; such donors come first in
     // every search. Admin edits and imports leave it alone (see findDonors for older registrations).
     verifiedAt: { type: Date, default: null },
+    // Higher comes earlier in search, after the SMS-verified donors: e.g. 1 for a trusted list the
+    // admin imported (a local blood bank's own sign-up form). 0 for everyone else.
+    listPriority: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

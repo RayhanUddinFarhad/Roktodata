@@ -41,8 +41,8 @@ export function searchHiddenReason(donor, now = new Date()) {
 const SMS_CODE_SINCE = new Date("2026-10-18T05:53:46Z");
 
 // Finds visible donors (see visibleDonorFilter). Donors who registered or updated themselves with an
-// SMS code come first (an imported donor too, once they update), then those with a name, then whoever
-// donated longest ago.
+// SMS code come first (an imported donor too, once they update), then donors from a prioritised list
+// (listPriority), then those with a name, then whoever donated longest ago.
 // `upazila` keeps donors in that thana/upazila; `excludeUpazila` drops them instead.
 // Returns one page of donors plus the total number of matches.
 export async function findDonors({ bloodGroup, district, upazila, excludeUpazila, page = 1, limit = SEARCH_PAGE_SIZE }) {
@@ -65,9 +65,11 @@ export async function findDonors({ bloodGroup, district, upazila, excludeUpazila
           ],
         },
         hasName: { $ne: ["$fullName", NO_NAME] },
+        // Donors saved before listPriority existed count as 0.
+        priority: { $ifNull: ["$listPriority", 0] },
       },
     },
-    { $sort: { verified: -1, hasName: -1, lastDonationDate: 1, _id: 1 } },
+    { $sort: { verified: -1, priority: -1, hasName: -1, lastDonationDate: 1, _id: 1 } },
     {
       $facet: {
         donors: [
