@@ -42,7 +42,7 @@ export default function ContactPledge({ className = "", banner = true }: { class
       >
         <TriangleAlert className="h-4 w-4 shrink-0 text-amber-600" />
         <p className="flex-1">
-          <span className="font-bold">ডোনারকে অগ্রিম টাকা দেবেন না।</span> কেউ টাকা চাইলে কার্ডের &quot;অভিযোগ&quot; বাটনে জানান।
+          <span className="font-bold">ডোনারকে অগ্রিম টাকা দেবেন না।</span> কেউ টাকা চাইলে বা খারাপ ব্যবহার করলে কার্ডের &quot;অভিযোগ&quot; বাটনে জানান।
         </p>
         <button
           type="button"
