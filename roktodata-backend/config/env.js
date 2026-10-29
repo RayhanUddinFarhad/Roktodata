@@ -32,6 +32,16 @@ const envSchema = z.object({
   VAPID_PUBLIC_KEY: z.string().trim().default(""),
   VAPID_PRIVATE_KEY: z.string().trim().default(""),
   VAPID_SUBJECT: z.string().trim().default("mailto:Roktodatainfo@gmail.com"),
+  // Google Gemini for the AI assistant ("রক্তদাতা সহকারী"). While the key is empty, the assistant is off.
+  // When the main model is out of quota (429), the fallback model answers instead.
+  GEMINI_API_KEY: z.string().trim().default(""),
+  // gemini-3.6-flash: quick on the free tier in testing (2026-10-29); 3.8 Flash kept timing out there.
+  GEMINI_MODEL: z.string().trim().default("gemini-3.6-flash"),
+  GEMINI_FALLBACK_MODEL: z.string().trim().default("gemini-3.5-flash-lite"),
+  // Site-wide cap on assistant questions per Bangladesh day, to stay inside the free quota.
+  ASSISTANT_DAILY_LIMIT: z.coerce.number().int().positive().default(500),
+  // Questions one visitor (IP address) may ask per day.
+  ASSISTANT_PER_VISITOR_LIMIT: z.coerce.number().int().positive().default(20),
   JOBS_SECRET: z.string().trim().refine((v) => v === "" || v.length >= 32, "JOBS_SECRET must be at least 32 characters").default(""),
 });
 

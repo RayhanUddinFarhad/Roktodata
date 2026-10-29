@@ -16,6 +16,7 @@ const QUICK_LINKS = [
   { href: "/learn", label: "রক্তদান ও ডেঙ্গু: জানুন" },
   { href: "/app", label: "অ্যাপ ডাউনলোড করুন" },
   { href: "/feedback", label: "ফিডব্যাক ও অভিজ্ঞতা" },
+  { href: "/assistant", label: "এআই সহকারীকে প্রশ্ন করুন" },
   { href: "/about", label: "আমাদের সম্পর্কে" },
 ];
 

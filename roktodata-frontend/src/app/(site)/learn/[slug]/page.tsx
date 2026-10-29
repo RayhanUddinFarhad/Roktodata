@@ -9,6 +9,7 @@ import ReadingProgress from "@/components/learn/ReadingProgress";
 import { toBanglaNumber } from "@/lib/data";
 import { ARTICLES, articleDate, CATEGORIES, getArticle, readingMinutes } from "@/lib/articles";
 import { pageMetadata, SITE_NAME, SITE_URL } from "@/lib/seo";
+import AssistantLauncher from "@/components/assistant/AssistantLauncher";
 
 export function generateStaticParams() {
   return ARTICLES.map((a) => ({ slug: a.slug }));
@@ -220,6 +221,7 @@ export default async function ArticlePage({ params }: PageProps<"/learn/[slug]">
           ))}
         </ul>
       </section>
+      <AssistantLauncher />
     </main>
   );
 }

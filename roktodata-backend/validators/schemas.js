@@ -350,3 +350,19 @@ export const feedbackStatusSchema = z.object({
 
 // The admin may fix spelling before approving.
 export const adminUpdateFeedbackSchema = z.object(feedbackFields).partial().superRefine(thanaInDistrict("district", "upazila"));
+
+// ---- AI assistant ----
+
+// The visible conversation so far (the browser keeps it), ending with the visitor's new question.
+export const assistantChatSchema = z.object({
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        text: z.string().trim().min(1, "প্রশ্ন লিখুন।").max(1500, "প্রশ্ন একটু ছোট করে লিখুন (সর্বোচ্চ ১৫০০ অক্ষর)।"),
+      }),
+    )
+    .min(1)
+    .max(12, "কথোপকথন অনেক লম্বা হয়ে গেছে। নতুন করে শুরু করুন।")
+    .refine((messages) => messages[0].role === "user" && messages.at(-1).role === "user", "শেষে আপনার প্রশ্ন থাকতে হবে।"),
+});

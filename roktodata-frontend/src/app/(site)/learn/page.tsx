@@ -6,6 +6,7 @@ import JsonLd from "@/components/JsonLd";
 import { toBanglaNumber } from "@/lib/data";
 import { ARTICLES, articlesIn, CATEGORIES, type Category } from "@/lib/articles";
 import { pageMetadata, SITE_URL } from "@/lib/seo";
+import AssistantLauncher from "@/components/assistant/AssistantLauncher";
 
 export const metadata: Metadata = pageMetadata({
   title: "জানুন: রক্তদান ও ডেঙ্গু নিয়ে যা জানা জরুরি | রক্তদাতা",
@@ -124,6 +125,7 @@ export default function LearnPage() {
           </div>
         </section>
       </div>
+      <AssistantLauncher />
     </main>
   );
 }

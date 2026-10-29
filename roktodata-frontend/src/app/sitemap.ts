@@ -27,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ["/learn", 0.8, "weekly"],
     ["/app", 0.6, "monthly"],
     ["/feedback", 0.6, "weekly"],
+    ["/assistant", 0.6, "monthly"],
     ["/about", 0.5, "monthly"],
   ];
   const entries: MetadataRoute.Sitemap = pages.map(([path, priority, changeFrequency]) => ({

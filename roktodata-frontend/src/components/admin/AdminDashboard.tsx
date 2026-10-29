@@ -19,6 +19,7 @@ import {
 import { WhatsAppIcon } from "@/components/BrandIcons";
 import LogoMark from "@/components/Logo";
 import AddDonorPanel from "@/components/admin/AddDonorPanel";
+import AssistantStats from "@/components/admin/AssistantStats";
 import ComplaintsPanel from "@/components/admin/ComplaintsPanel";
 import DonorsPanel from "@/components/admin/DonorsPanel";
 import FeedbackPanel from "@/components/admin/FeedbackPanel";
@@ -151,6 +152,8 @@ export default function AdminDashboard({
             </div>
           ))}
         </div>
+
+        <AssistantStats assistant={stats?.assistant} />
 
         {/* taps on donors' call / WhatsApp buttons */}
         <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

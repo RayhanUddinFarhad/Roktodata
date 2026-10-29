@@ -332,6 +332,18 @@ export interface AdminStats {
   push: { enabled: boolean; devices: number; donors: number };
   // Devices that installed the app: today, the last 7 days and in total.
   appInstalls: { today: number; week: number; total: number };
+  // The AI assistant over the last 7 days (counts only).
+  assistant: {
+    enabled: boolean;
+    today: number;
+    week: number;
+    fallbacks: number;
+    failures: number;
+    capped: number;
+    inputTokens: number;
+    outputTokens: number;
+    tools: Record<string, number>;
+  };
 }
 
 export interface ContactCounts {

@@ -29,12 +29,14 @@ const RULES = [
 const noPending = () => null;
 
 // A slim reminder above a donor list, plus the rules sheet that opens on the first call / WhatsApp
-// tap (see lib/contactPledge). Put it once on every page that lists donors.
-export default function ContactPledge({ className = "" }: { className?: string }) {
+// tap (see lib/contactPledge). Put it once on every page that lists donors; `banner={false}` keeps
+// only the sheet (e.g. inside the assistant chat).
+export default function ContactPledge({ className = "", banner = true }: { className?: string; banner?: boolean }) {
   const contact = useSyncExternalStore(subscribePledge, pendingContact, noPending);
 
   return (
     <>
+      {banner && (
       <div
         className={`flex items-center gap-2.5 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2.5 text-xs leading-snug text-amber-900 ${className}`}
       >
@@ -51,6 +53,7 @@ export default function ContactPledge({ className = "" }: { className?: string }
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>
+      )}
       {contact && <PledgeSheet kind={contact.kind} />}
     </>
   );

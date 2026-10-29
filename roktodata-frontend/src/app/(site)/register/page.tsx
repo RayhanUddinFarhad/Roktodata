@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import DonorRegisterForm from "@/components/DonorRegisterForm";
 import { pageMetadata } from "@/lib/seo";
+import AssistantLauncher from "@/components/assistant/AssistantLauncher";
 
 export const metadata: Metadata = pageMetadata({
   title: "ডোনার রেজিস্ট্রেশন | রক্তদাতা",
@@ -15,6 +16,7 @@ export default function RegisterPage() {
       <div className="mx-auto max-w-[440px] px-4 py-8">
         <DonorRegisterForm />
       </div>
+      <AssistantLauncher />
     </main>
   );
 }

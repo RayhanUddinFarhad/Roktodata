@@ -1,4 +1,5 @@
 import { rateLimit } from "express-rate-limit";
+import { env } from "../config/env.js";
 
 function limiter(windowMinutes, limit, options = {}) {
   return rateLimit({
@@ -30,6 +31,11 @@ export const complaintLimiter = limiter(60, 10);
 export const photocardLimiter = limiter(60, 120);
 // Only reports that were actually saved count, so typos and validation errors don't lock people out.
 export const fraudReportLimiter = limiter(60, 5, { skipFailedRequests: true });
+
+// AI assistant questions per visitor per day; the site-wide cap is ASSISTANT_DAILY_LIMIT.
+export const assistantLimiter = limiter(24 * 60, env.ASSISTANT_PER_VISITOR_LIMIT, {
+  message: { success: false, message: "আজ আপনি সহকারীকে অনেক প্রশ্ন করেছেন। কাল আবার আসুন, অথবা সরাসরি ডোনার খুঁজুন।" },
+});
 
 // Feedback needs no SMS code, so a few saved ones per hour per visitor is the spam guard.
 export const feedbackLimiter = limiter(60, 3, { skipFailedRequests: true });

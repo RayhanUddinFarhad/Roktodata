@@ -14,6 +14,7 @@ import ShareDonorList from "@/components/home/ShareDonorList";
 import { toBanglaNumber } from "@/lib/data";
 import { districtSlug, pageMetadata } from "@/lib/seo";
 import { getDonorStats } from "@/lib/stats";
+import AssistantLauncher from "@/components/assistant/AssistantLauncher";
 
 export const metadata: Metadata = pageMetadata({
   title: "রক্তদাতা | রক্তের ডোনার খুঁজুন · Blood Donor Bangladesh",
@@ -94,6 +95,7 @@ export default async function Home() {
       <LearnTeaser />
       <ShareDonorList />
       <FacebookPage />
+      <AssistantLauncher />
     </main>
   );
 }
