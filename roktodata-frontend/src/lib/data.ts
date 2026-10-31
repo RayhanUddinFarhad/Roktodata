@@ -151,4 +151,5 @@ export const donorWhatsAppMessage = (bloodGroup: string) =>
 export const requestWhatsAppMessage = (bloodGroup: string) =>
   `আসসালামু আলাইকুম। রক্তদাতা (roktodata.org)-তে আপনার ${bloodGroup} রক্তের অনুরোধটি দেখেছি। আমি রক্ত দিতে আগ্রহী।`;
 
-export const DEVELOPER_NAME = "রায়হান উদ্দিন ফরহাদ";
+export const DEVELOPER_NAME = "NokshaByte";
+export const DEVELOPER_URL = "https://www.nokshabyte.com";

@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Building2, Code2, HandHeart, Heart, Mail, Search, ShieldCheck, Zap, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Building2, Code2, Globe, HandHeart, Heart, Search, ShieldCheck, Zap, type LucideIcon } from "lucide-react";
 import { SectionHeading } from "@/components/home/HowItWorks";
-import developerPic from "@/lib/developer-pic.jpg";
-import { CONTACT_EMAIL } from "@/lib/data";
+import { DEVELOPER_NAME, DEVELOPER_URL } from "@/lib/data";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -78,18 +77,11 @@ export default function AboutPage() {
       {/* Developer */}
       <section className="bg-white px-4 py-14">
         <div className="mx-auto max-w-[808px]">
-          <SectionHeading eyebrow="যিনি তৈরি করেছেন" title="ডেভেলপার" />
+          <SectionHeading eyebrow="যারা তৈরি করেছে" title="ডেভেলপার" />
 
           <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg md:grid md:grid-cols-[17rem_1fr]">
-            <div className="relative aspect-[4/5] md:aspect-auto md:h-full">
-              <Image
-                src={developerPic}
-                alt="রায়হান উদ্দিন ফরহাদ"
-                fill
-                placeholder="blur"
-                sizes="(min-width: 768px) 272px, 100vw"
-                className="object-cover object-[50%_18%]"
-              />
+            <div className="flex items-center justify-center bg-slate-50 p-8">
+              <Image src="/nokshabyte-logo.svg" alt={DEVELOPER_NAME} width={514} height={336} className="h-auto w-full max-w-52" />
             </div>
 
             <div className="flex flex-col justify-center p-7 sm:p-8">
@@ -97,14 +89,14 @@ export default function AboutPage() {
                 <Code2 className="h-3.5 w-3.5" />
                 ডেভেলপার
               </span>
-              <h3 className="mt-3 text-2xl font-bold text-slate-900">রায়হান উদ্দিন ফরহাদ</h3>
+              <h3 className="mt-3 text-2xl font-bold text-slate-900">{DEVELOPER_NAME}</h3>
               <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-indigo-900">
                 <Building2 className="h-4 w-4" />
-                Senior Software Engineer, Ctech Inc, USA
+                সফটওয়্যার স্টুডিও
               </p>
 
               <p className="mt-4 text-sm leading-relaxed text-slate-600">
-                রক্তদাতা প্ল্যাটফর্মটির পরিকল্পনা, ডিজাইন ও ডেভেলপমেন্ট করেছেন রায়হান উদ্দিন ফরহাদ। প্রযুক্তিকে মানুষের
+                রক্তদাতা প্ল্যাটফর্মটির পরিকল্পনা, ডিজাইন ও ডেভেলপমেন্ট করেছে {DEVELOPER_NAME}। প্রযুক্তিকে মানুষের
                 সত্যিকারের প্রয়োজনে কাজে লাগানোর লক্ষ্যে তৈরি এই প্ল্যাটফর্ম, যাতে রক্তের জন্য কাউকে অসহায় হয়ে অপেক্ষা
                 করতে না হয়।
               </p>
@@ -121,11 +113,13 @@ export default function AboutPage() {
               </ul>
 
               <a
-                href={`mailto:${CONTACT_EMAIL}`}
+                href={DEVELOPER_URL}
+                target="_blank"
+                rel="noopener"
                 className="mt-6 flex w-fit items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
-                <Mail className="h-4 w-4 text-red-600" />
-                {CONTACT_EMAIL}
+                <Globe className="h-4 w-4 text-red-600" />
+                www.nokshabyte.com
               </a>
             </div>
           </div>

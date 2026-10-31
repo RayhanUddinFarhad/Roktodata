@@ -63,3 +63,6 @@ Simpler version of that poster, only the cropped post and a call to give blood: 
 Second wording of the simple poster ("আপনি রক্ত দিচ্ছেন না বলেই হাহাকার থামছে না"): `src/give-blood-cry-2.html` → `posters/give-blood-cry-2.png`.
 
 Poster on the rules shown before calling a donor ("রক্ত দেন বিনামূল্যে, সম্মান তাঁর প্রাপ্য"): `src/donor-honor.html` → `posters/donor-honor.png`. Its rules are copied from `ContactPledge.tsx`.
+
+## Developer credit changed to NokshaByte (2026-10-31, not committed yet)
+`lib/data.ts` now has `DEVELOPER_NAME = "NokshaByte"` and `DEVELOPER_URL = "https://www.nokshabyte.com"`. The footer credit links to that site; the About page developer card shows `public/nokshabyte-logo.svg` (copied from `F:\Projectsss\Nokshabyte\logo\final\svg\nokshabyte-logo-stacked-color.svg`), "সফটওয়্যার স্টুডিও" and the website link. Its email is deliberately not shown: `hello@nokshabyte.com` delivery is unconfirmed in that project's `.context`. `src/lib/developer-pic.jpg` is now unused but kept. The old poster `Roktodata-facebook/src/kts-collab.html` still credits the previous developer.

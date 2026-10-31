@@ -3,7 +3,7 @@ import { cacheLife } from "next/cache";
 import { Mail } from "lucide-react";
 import { FacebookIcon } from "@/components/BrandIcons";
 import LogoMark from "@/components/Logo";
-import { CONTACT_EMAIL, DEVELOPER_NAME, FACEBOOK_URL } from "@/lib/data";
+import { CONTACT_EMAIL, DEVELOPER_NAME, DEVELOPER_URL, FACEBOOK_URL } from "@/lib/data";
 
 const QUICK_LINKS = [
   { href: "/", label: "হোম পেজ" },
@@ -73,9 +73,9 @@ export default async function Footer() {
       </div>
       <div className="border-t border-slate-800 px-4 py-4 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} রক্তদাতা (RoktoData)। সর্বস্বত্ব সংরক্ষিত। ডেভেলপ করেছেন{" "}
-        <Link href="/about" className="font-semibold text-slate-300 hover:text-white">
+        <a href={DEVELOPER_URL} target="_blank" rel="noopener" className="font-semibold text-slate-300 hover:text-white">
           {DEVELOPER_NAME}
-        </Link>
+        </a>
       </div>
     </footer>
   );
