@@ -136,7 +136,7 @@ export const NAV_LINKS = [
   { href: "/about", label: "আমাদের সম্পর্কে" },
 ];
 
-export const CONTACT_EMAIL = "Roktodatainfo@gmail.com";
+export const CONTACT_EMAIL = "support@roktodata.org";
 
 export const FACEBOOK_URL = "https://www.facebook.com/share/1Drs6xsScp/";
 

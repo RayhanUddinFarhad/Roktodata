@@ -53,7 +53,7 @@ function NumberCheck() {
       setResult({ phoneNumber: response.phoneNumber, entry: response.entry });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।");
-    } finally {
+    } finally { 
       setLoading(false);
     }
   }
