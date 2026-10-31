@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-// Under the hero: request blood for a patient and get a ready-to-post Facebook poster.
+// Under the hero: request blood for a patient, alert people nearby and get a ready-to-post poster.
 export default function RequestPosterBanner() {
   return (
     <section className="relative px-4 pt-8">
@@ -24,7 +24,7 @@ export default function RequestPosterBanner() {
         <span className="min-w-0 flex-1">
           <span className="block text-base font-bold text-slate-900 sm:text-lg">রোগীর জন্য রক্ত লাগবে?</span>
           <span className="mt-0.5 block text-sm text-slate-600">
-            অনুরোধ করুন, সাথে সাথে পাবেন ফেসবুকে পোস্ট করার মতো সুন্দর পোস্টার
+            অনুরোধ করুন, ৫০ কিমির মধ্যে নোটিফিকেশন চালু থাকা সবাই জানতে পারবেন। সাথে পাবেন পোস্ট করার মতো পোস্টার।
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#1e3a8a] px-4 py-2 text-sm font-bold text-white shadow-md shadow-indigo-900/20 group-hover:bg-[#1e3070]">
